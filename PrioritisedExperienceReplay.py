@@ -76,11 +76,11 @@ class PrioritizedReplayBuffer:
         self.max_priority = eps  # priority for new samples, init as eps
 
         # transition: state, action, reward, next_state, done
-        self.state = torch.empty(buffer_size, *state_size, dtype=torch.float)
-        self.action = torch.empty(buffer_size, action_size, dtype=torch.float)
+        self.state = torch.empty(buffer_size, *state_size, dtype=torch.uint8)
+        self.action = torch.empty(buffer_size, dtype=torch.long)
         self.reward = torch.empty(buffer_size, dtype=torch.float)
-        self.next_state = torch.empty(buffer_size, *state_size, dtype=torch.float)
-        self.done = torch.empty(buffer_size, dtype=torch.int)
+        self.next_state = torch.empty(buffer_size, *state_size, dtype=torch.uint8)
+        self.done = torch.empty(buffer_size, dtype=torch.bool)
 
         self.count = 0
         self.real_size = 0
@@ -93,11 +93,11 @@ class PrioritizedReplayBuffer:
         self.tree.add(self.max_priority, self.count)
 
         # store transition in the buffer
-        self.state[self.count] = torch.as_tensor(state)
-        self.action[self.count] = torch.as_tensor(action)
-        self.reward[self.count] = torch.as_tensor(reward)
-        self.next_state[self.count] = torch.as_tensor(next_state)
-        self.done[self.count] = torch.as_tensor(done)
+        self.state[self.count] = torch.as_tensor(np.array(state))
+        self.action[self.count] = torch.as_tensor(np.array(action))
+        self.reward[self.count] = torch.as_tensor(np.array(reward))
+        self.next_state[self.count] = torch.as_tensor(np.array(next_state))
+        self.done[self.count] = torch.as_tensor(np.array(done))
 
         # update counters
         self.count = (self.count + 1) % self.size
@@ -146,11 +146,11 @@ class PrioritizedReplayBuffer:
         weights = weights / weights.max()
 
         batch = (
-            self.state[sample_idxs].to(device()),
-            self.action[sample_idxs].to(device()),
-            self.reward[sample_idxs].to(device()),
-            self.next_state[sample_idxs].to(device()),
-            self.done[sample_idxs].to(device())
+            self.state[sample_idxs],
+            self.action[sample_idxs],
+            self.reward[sample_idxs],
+            self.next_state[sample_idxs],
+            self.done[sample_idxs]
         )
         return batch, weights, tree_idxs
 

@@ -1,5 +1,4 @@
 import gym
-import ale_py
 import numpy as np
 from gym.wrappers import AtariPreprocessing
 import time
@@ -7,8 +6,8 @@ from copy import deepcopy
 
 if __name__ == '__main__':
 
-    from DER_Agent import Agent
-    agent_name = "DER"
+    from DrQ_Agent import Agent
+    agent_name = "DrQ"
 
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
@@ -56,8 +55,8 @@ if __name__ == '__main__':
                 avg_score = np.mean(scores_temp[-50:])
 
                 if episodes % 2 == 0:
-                    print('DDQN {} episode {} score {:.0f} avg score {:.2f} eps {:.2f} total_steps {:.0f}'
-                          .format(True, episodes, score, avg_score, agent.epsilon.eps, steps))
+                    print('{} episode {} score {:.0f} avg score {:.2f} total_steps {:.0f}'
+                          .format(agent_name, episodes, score, avg_score, steps))
                     print("FPS: " + str(time.time() - start))
                     start = time.time()
 
@@ -75,7 +74,6 @@ if __name__ == '__main__':
                     steps += 1
                     action = agent.choose_action(observation)
                     observation_, reward, done, trun, info = env.step(action)
-                    #reward = np.clip(reward, -1., 1.)
                     score += reward
                     observation = observation_
 

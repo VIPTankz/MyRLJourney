@@ -134,8 +134,8 @@ class Agent():
         if len(self.n_states) == self.n:
             fin_reward = 0
             for i in range(self.n):
-                fin_reward += self.n_rewards.index(i) * (self.gamma ** i)
-            self.memory.store_transition(self.n_states.index(0), self.n_actions.index(0), fin_reward, \
+                fin_reward += self.n_rewards[i] * (self.gamma ** i)
+            self.memory.store_transition(self.n_states[0], self.n_actions[0], fin_reward, \
                                          state_, done)
 
         if done:
