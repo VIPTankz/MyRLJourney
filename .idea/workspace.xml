@@ -5,38 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/results/DERAlienEvaluation (0).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DERAlienExperiment (0).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DrQAlienEvaluation (0).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DrQAlienEvaluation (1).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DrQAlienEvaluation (2).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DrQAlienEvaluation (3).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DrQAlienEvaluation (4).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DrQAlienExperiment (0).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DrQAlienExperiment (1).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DrQAlienExperiment (2).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DrQAlienExperiment (3).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DrQAlienExperiment (4).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DrQOldAlienExperiment (0).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DrQOldAlienExperiment (1).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DrQOldAlienExperiment (2).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DrQOldAlienExperiment (3).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DrQOldAlienExperiment (4).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/Evaluation.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/plot.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DERAlienEvaluation (0).npy" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DERAlienExperiment (0).npy" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrQAlienEvaluation (0).npy" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrQAlienEvaluation (1).npy" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrQAlienEvaluation (2).npy" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrQAlienEvaluation (3).npy" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrQAlienEvaluation (4).npy" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrQAlienExperiment (0).npy" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrQAlienExperiment (1).npy" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrQAlienExperiment (2).npy" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrQAlienExperiment (3).npy" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrQAlienExperiment (4).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

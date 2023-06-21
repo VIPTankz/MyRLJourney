@@ -3,15 +3,22 @@ import numpy as np
 from gym.wrappers import AtariPreprocessing
 import time
 from copy import deepcopy
+import sys
 
 if __name__ == '__main__':
 
-    from DrQ_Agent import Agent
-    agent_name = "DrQ"
+    from DER_Agent import Agent
+    agent_name = "DER"
+
+    path = "results\\"
 
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
+
+    game_idx = sys.argv[1]
+    games = [games[int(game_idx)]]
+    print("Currently Playing: " + str(games[0]))
     for game in games:
         for runs in range(5):
             env = gym.make('ALE/' + game + '-v5')
@@ -60,7 +67,7 @@ if __name__ == '__main__':
                     print("FPS: " + str(time.time() - start))
                     start = time.time()
 
-            fname = agent_name + game + "Experiment (" + str(runs) + ').npy'
+            fname = path + agent_name + game + "Experiment (" + str(runs) + ').npy'
             np.save(fname, np.array(scores))
             agent.eval_mode = True
             evals = []
@@ -80,5 +87,5 @@ if __name__ == '__main__':
                 evals.append(score)
                 print("Evaluation Score: " + str(score))
 
-            fname = agent_name + game + "Evaluation (" + str(runs) + ').npy'
+            fname = path + agent_name + game + "Evaluation (" + str(runs) + ').npy'
             np.save(fname, np.array(evals))
