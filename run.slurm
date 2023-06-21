@@ -8,7 +8,7 @@
 module load conda/py3-latest
 source activate atari_work
 
-cd /home/$USER/tjc2g19
+cd /home/$USER
 pip install -e .
 
 staskfarm MyRLJourney/farm_atari.txt
