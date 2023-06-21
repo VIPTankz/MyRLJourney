@@ -63,7 +63,7 @@ if __name__ == '__main__':
 
                 if episodes % 2 == 0:
                     print('{} game {} avg score {:.2f} total_steps {:.0f} fps {:.2f}'
-                          .format(agent_name, game, avg_score, steps,str(time.time() - start)),flush=True)
+                          .format(agent_name, game, avg_score, steps,time.time() - start),flush=True)
                     start = time.time()
 
             fname = path + agent_name + game + "Experiment (" + str(runs) + ').npy'
