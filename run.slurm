@@ -4,8 +4,6 @@
 #SBATCH -p batch
 #SBATCH --job-name=RL_atari_benchmark
 #SBATCH --time=48:00:00
-#SBATCH --name=RL_atari_benchmark
-#SBATCH --name=RL_atari_benchmark
 #SBATCH --mail-type=ALL
 
 module load conda/py3-latest
