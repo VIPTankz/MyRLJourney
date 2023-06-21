@@ -12,4 +12,4 @@ source activate atari_work
 cd /home/$USER/tjc2g19
 pip install -e .
 
-staskfarm hpc/farm_atari.txt
+staskfarm farm_atari.txt
