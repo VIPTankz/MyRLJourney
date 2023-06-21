@@ -65,7 +65,7 @@ class DuelingDeepQNetwork(nn.Module):
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
-        print("Device: " + str(device))
+        print("Device: " + str(self.device))
         self.to(self.device)
 
     def conv(self,x):
