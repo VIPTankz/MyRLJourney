@@ -74,6 +74,7 @@ class PrioritizedReplayBuffer:
         self.alpha = alpha  # determines how much prioritization is used, α = 0 corresponding to the uniform case
         self.beta = beta  # determines the amount of importance-sampling correction, b = 1 fully compensate for the non-uniform probabilities
         self.max_priority = eps  # priority for new samples, init as eps
+        self.beta_inc = (1-beta) / total_frames
 
         # transition: state, action, reward, next_state, done
         self.state = torch.empty(buffer_size, *state_size, dtype=torch.uint8)
@@ -102,6 +103,7 @@ class PrioritizedReplayBuffer:
         # update counters
         self.count = (self.count + 1) % self.size
         self.real_size = min(self.size, self.real_size + 1)
+        self.beta = min(1,self.beta + self.beta_inc)
 
     def sample(self, batch_size):
         assert self.real_size >= batch_size, "buffer contains less samples than batch size"

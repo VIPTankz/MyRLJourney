@@ -76,8 +76,8 @@ class EpsilonGreedy():
 
 
 class Agent():
-    def __init__(self, discount, lr, input_dims, batch_size, n_actions,
-                 max_mem_size=1000000, replace=1, mode="default"):
+    def __init__(self, n_actions,input_dims,
+                 max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99):
 
         self.epsilon = EpsilonGreedy()
         self.lr = lr
@@ -92,7 +92,7 @@ class Agent():
         self.chkpt_dir = ""
         self.gamma = discount
         self.eval_mode = False
-        self.mode = mode
+        self.grad_steps = 1
 
         self.memory = ExperienceReplay(input_dims, max_mem_size, self.batch_size)
 
@@ -122,6 +122,9 @@ class Agent():
             action = np.random.choice(self.action_space)
 
         return action
+
+    def get_grad_steps(self):
+        return self.grad_steps
 
     def store_transition(self, state, action, reward, state_, done):
         self.n_step(state, action, reward, state_, done)

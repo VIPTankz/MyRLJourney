@@ -7,8 +7,8 @@ import sys
 
 if __name__ == '__main__':
 
-    from DER_Agent import Agent
-    agent_name = "DER"
+    from SPR_Agent import Agent
+    agent_name = "SPR"
 
     path = "results\\"
 
@@ -28,9 +28,7 @@ if __name__ == '__main__':
             print(env.observation_space)
             print(env.action_space)
 
-            agent = Agent(discount=0.99, batch_size=32, n_actions=env.action_space.n,
-                           input_dims=[4,84,84], lr=0.0001,
-                          max_mem_size=100000)
+            agent = Agent(n_actions=env.action_space.n,input_dims=[4,84,84],total_frames=100000)
 
             scores = []
             scores_temp = []
@@ -54,7 +52,9 @@ if __name__ == '__main__':
 
                     agent.store_transition(observation, action, reward,
                                                   observation_, done)
-                    agent.learn()
+
+                    for i in range(agent.get_grad_steps()):
+                        agent.learn()
                     observation = deepcopy(observation_)
                 scores.append([score,steps])
                 scores_temp.append(score)
@@ -63,8 +63,8 @@ if __name__ == '__main__':
 
                 if episodes % 2 == 0:
                     print('{} game {} avg score {:.2f} total_steps {:.0f} fps {:.2f}'
-                          .format(agent_name, game, avg_score, steps,time.time() - start),flush=True)
-                    start = time.time()
+                          .format(agent_name, game, avg_score, steps,steps / (time.time() - start)),flush=True)
+                    #start = time.time()
 
             fname = path + agent_name + game + "Experiment (" + str(runs) + ').npy'
             np.save(fname, np.array(scores))

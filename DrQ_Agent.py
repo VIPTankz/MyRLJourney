@@ -8,8 +8,6 @@ from ExperienceReplay import ExperienceReplay
 import numpy as np
 from collections import deque
 import kornia.augmentation as aug
-from torchvision.utils import save_image
-
 
 class Intensity(nn.Module):
     def __init__(self, scale):
@@ -76,8 +74,8 @@ class EpsilonGreedy():
 
 
 class Agent():
-    def __init__(self, discount, lr, input_dims, batch_size, n_actions,
-                 max_mem_size=1000000, replace=1, mode="default"):
+    def __init__(self, n_actions,input_dims,
+                 max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99):
 
         self.epsilon = EpsilonGreedy()
         self.lr = lr
@@ -92,7 +90,6 @@ class Agent():
         self.chkpt_dir = ""
         self.gamma = discount
         self.eval_mode = False
-        self.mode = mode
 
         self.memory = ExperienceReplay(input_dims, max_mem_size, self.batch_size)
 

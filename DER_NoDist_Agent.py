@@ -92,8 +92,8 @@ class EpsilonGreedy():
         self.eps = max(self.eps - (self.eps - self.eps_final) / self.steps, self.eps_final)
 
 class Agent():
-    def __init__(self, discount, lr, input_dims, batch_size, n_actions,
-                 max_mem_size=100000, replace=1,total_frames=100000):
+    def __init__(self, n_actions,input_dims,
+                 max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99):
 
         self.epsilon = EpsilonGreedy()
         self.lr = lr
@@ -107,6 +107,7 @@ class Agent():
         self.chkpt_dir = ""
         self.gamma = discount
         self.eval_mode = False
+        self.grad_steps = 1
 
         self.memory = PrioritizedReplayBuffer(input_dims, n_actions, max_mem_size, eps=1e-7, alpha=0.5, beta=0.4,
                                                   total_frames=total_frames)
@@ -133,7 +134,8 @@ class Agent():
         self.N_ATOMS = 51
         self.DELTA_Z = (self.Vmax - self.Vmin) / (self.N_ATOMS - 1)
 
-
+    def get_grad_steps(self):
+        return self.grad_steps
 
     def choose_action(self, observation):
         if np.random.random() > self.epsilon.eps or self.eval_mode:

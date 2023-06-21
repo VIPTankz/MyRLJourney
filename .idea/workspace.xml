@@ -5,7 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/PrioritisedExperienceReplaySPR.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SPR_Agent.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DER_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/DER_Agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DER_NoDist_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/DER_NoDist_Agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQ_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/DrQ_Agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/NDDDQN_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/NDDDQN_Agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PrioritisedExperienceReplay.py" beforeDir="false" afterPath="$PROJECT_DIR$/PrioritisedExperienceReplay.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -42,6 +49,11 @@
     "last_opened_file_path": "C:/Users/TYLER/Documents/GitHub/MyRLJourney"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\TYLER\Documents\GitHub\MyRLJourney" />
+    </key>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">

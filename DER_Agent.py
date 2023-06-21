@@ -128,8 +128,8 @@ class EpsilonGreedy():
         self.eps = max(self.eps - (self.eps - self.eps_final) / self.steps, self.eps_final)
 
 class Agent():
-    def __init__(self, discount, lr, input_dims, batch_size, n_actions,
-                 max_mem_size=100000, replace=1,total_frames=100000):
+    def __init__(self, n_actions,input_dims,
+                 max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99):
 
         #self.epsilon = EpsilonGreedy()
         self.lr = lr
@@ -143,6 +143,7 @@ class Agent():
         self.chkpt_dir = ""
         self.gamma = discount
         self.eval_mode = False
+        self.grad_steps = 1
 
         #n-step
         self.n = 20
@@ -172,6 +173,9 @@ class Agent():
         state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
         advantage = self.net.qvals(state)
         return T.argmax(advantage).item()
+
+    def get_grad_steps(self):
+        return self.grad_steps
 
 
     def store_transition(self, state, action, reward, state_, done):
