@@ -90,6 +90,7 @@ class Agent():
         self.chkpt_dir = ""
         self.gamma = discount
         self.eval_mode = False
+        self.grad_steps = 1
 
         self.memory = ExperienceReplay(input_dims, max_mem_size, self.batch_size)
 
@@ -109,6 +110,9 @@ class Agent():
 
         self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
         self.intensity = Intensity(scale=0.05)
+
+    def get_grad_steps(self):
+        return self.grad_steps
 
     def choose_action(self, observation):
         if np.random.random() > self.epsilon.eps or self.eval_mode:
@@ -172,9 +176,9 @@ class Agent():
 
         indices = np.arange(self.batch_size)
 
-        states_aug = self.intensity(self.random_shift(states.float())).to(T.uint8)
-        states_aug_ = self.intensity(self.random_shift(states_.float())).to(T.uint8)
-        states_aug_policy_ = self.intensity(self.random_shift(states_.float())).to(T.uint8)
+        states_aug = (self.intensity(self.random_shift(states.float()/255.)) * 255).to(T.uint8)
+        states_aug_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
+        states_aug_policy_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
 
         V_s, A_s = self.q_eval.forward(states_aug)
 

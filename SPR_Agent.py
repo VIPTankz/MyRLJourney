@@ -79,8 +79,6 @@ class TransitionModel(nn.Module):
         next_latent = self.batch_norm2(F.relu(self.conv_trans2(x)))
 
         next_latent = next_latent.view(batch_size,-1)
-        print("Predicted Latent Shape")
-        print(next_latent.shape)
 
         return next_latent
 
@@ -103,13 +101,20 @@ class DuelingDeepQNetwork(nn.Module):
         self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, 3)
 
+        self.tgt_conv1 = EMA(self.conv1,beta=0.0,update_after_step=0,update_every=1)
+        self.tgt_conv2 = EMA(self.conv2, beta=0.0, update_after_step=0, update_every=1)
+        self.tgt_conv3 = EMA(self.conv3, beta=0.0, update_after_step=0, update_every=1)
+
         self.trans_net = TransitionModel(n_actions,self.device)
-        self.tgt_trans_net = EMA(self.trans_net,beta=0.0,update_after_step=0,update_every=1)
 
         self.fc1V = nn.Linear(64 * 7 * 7, 256)
+        self.tgt_fc1V = EMA(self.fc1V,beta=0.0,update_after_step=0,update_every=1)
         self.fc1A = nn.Linear(64 * 7 * 7, 256)
+        self.tgt_fc1A = EMA(self.fc1A,beta=0.0,update_after_step=0,update_every=1)
         self.V = NoisyFactorizedLinear(256, atoms)
         self.A = NoisyFactorizedLinear(256, n_actions * atoms)
+
+        self.proj_q_head = nn.Linear(512, 512)
 
         self.register_buffer("supports", T.arange(Vmin, Vmax + self.DELTA_Z, self.DELTA_Z))
         self.softmax = nn.Softmax(dim=1)
@@ -119,16 +124,14 @@ class DuelingDeepQNetwork(nn.Module):
 
         self.to(self.device)
 
-    def get_spr_latents(self,latent):
+    def get_spr_latents(self,conv_out):
         #x should be the output of conv
 
         latents = []
-        batch_size = latent.size(dim=0)
-        print("Latent shape")
-        print(latent.shape)
+        batch_size = conv_out.size(dim=0)
         for i in range(self.K):
-            V = self.fc_val(latent).view(batch_size, 1, self.atoms)
-            A = self.fc_adv(latent).view(batch_size, -1, self.atoms)
+            V = self.fc_val(conv_out).view(batch_size, 1, self.atoms)
+            A = self.fc_adv(conv_out).view(batch_size, -1, self.atoms)
             adv_mean = A.mean(dim=1, keepdim=True)
             cat_out = V + (A - adv_mean)
             probs = self.apply_softmax(cat_out)
@@ -136,16 +139,10 @@ class DuelingDeepQNetwork(nn.Module):
             qvals = weights.sum(dim=2)
             action = T.argmax(qvals,dim=1)
 
-            conv_trans_out = self.tgt_trans_net(latent,action)
-            flat_conv_trans_out = conv_trans_out.view(batch_size, -1)
+            conv_out = self.trans_net(conv_out,action)
+            flat_conv_trans_out = conv_out.view(batch_size, -1)
 
-            latent_v = F.relu(self.fc1V(flat_conv_trans_out))
-            latent_a = F.relu(self.fc1A(flat_conv_trans_out))
-
-            latent = T.cat([latent_v,latent_a],dim=1)
-            print("Next complete latent shape")
-            print(latent.shape)
-
+            latent = self.projection(flat_conv_trans_out)
             #this outputs shape 32x512
             #that makes sense, but it needs to be 32x3136 (flattened conv output shape)
             #think they mentioned deconv layer?
@@ -154,19 +151,59 @@ class DuelingDeepQNetwork(nn.Module):
 
         return latents
 
-    def get_spr_loss(self,pred_latents,obs_latents):
-        tot_loss = 0
-        cos = T.nn.CosineSimilarity(dim=-1, eps=1e-6)
-        for i in range(self.K):
-            tot_loss += cos(pred_latents[i],obs_latents[i])
+    def projection(self,flat_conv_out,tgt=False):
+        if not tgt:
+            latent_v = F.relu(self.fc1V(flat_conv_out))
+            latent_a = F.relu(self.fc1A(flat_conv_out))
+            latent = T.cat([latent_v, latent_a], dim=1)
+            latent = self.proj_q_head(latent)
+            return latent
 
-        return -tot_loss
+        else:
+            latent_v = F.relu(self.tgt_fc1V(flat_conv_out))
+            latent_a = F.relu(self.tgt_fc1A(flat_conv_out))
+            latent = T.cat([latent_v, latent_a], dim=1)
+            return latent
+
+    def get_spr_loss(self,pred_latents,obs_latents,future_dones):
+        tot_loss = 0
+
+        batch_size = pred_latents[0].size(dim=0)
+        mask = T.zeros(batch_size,dtype=T.bool)
+
+        for i in range(self.K):
+            c_mask = T.Tensor(future_dones[i])
+            mask = T.logical_or(mask,c_mask)
+
+            # this just sets elements equal if they are during or after done, making them give 0 loss
+            pred_latents[i][mask] = obs_latents[i][mask]
+
+            tot_loss += self.spr_loss(pred_latents[i],obs_latents[i])
+
+        print(tot_loss)
+        return tot_loss
+
+    def spr_loss(self, f_x1s, f_x2s):
+        f_x1 = F.normalize(f_x1s.float(), p=2., dim=-1, eps=1e-3)
+        f_x2 = F.normalize(f_x2s.float(), p=2., dim=-1, eps=1e-3)
+        # Gradients of norrmalized L2 loss and cosine similiarity are proportional.
+        # See: https://stats.stackexchange.com/a/146279
+        loss = F.mse_loss(f_x1, f_x2, reduction="none").sum(-1).mean(0)
+        return loss
 
     def conv(self,x):
 
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
+
+        return x
+
+    def tgt_conv(self,x):
+
+        x = F.relu(self.tgt_conv1(x))
+        x = F.relu(self.tgt_conv2(x))
+        x = F.relu(self.tgt_conv3(x))
 
         return x
 
@@ -182,11 +219,14 @@ class DuelingDeepQNetwork(nn.Module):
 
         return x
 
-    def get_latent_from_obs(self,x):
+    def get_latent_from_obs(self,x,tgt=False):
         #gets latents from images
         batch_size = x.size()[0]
         fx = x.float() / 256
-        return self.conv(fx).view(batch_size, -1)
+        if not tgt:
+            return self.conv(fx).view(batch_size, -1)
+        else:
+            return self.tgt_conv(fx).view(batch_size, -1)
 
     def forward(self, x):
         batch_size = x.size()[0]
@@ -311,7 +351,12 @@ class Agent():
             return
 
         self.net.optimizer.zero_grad()
-        self.net.tgt_trans_net.update()
+
+        self.net.tgt_conv1.update()
+        self.net.tgt_conv2.update()
+        self.net.tgt_conv3.update()
+        self.net.tgt_fc1A.update()
+        self.net.tgt_fc1V.update()
 
         batch, weights, tree_idxs = self.memory.sample(self.batch_size)
 
@@ -319,7 +364,7 @@ class Agent():
 
         #BEWARE: this has a known error where we can sample from outside of current space
 
-        states, actions, rewards, new_states, dones, future_states = batch
+        states, actions, rewards, new_states, dones, future_states, future_dones = batch
 
         states = states.to(self.net.device)
         rewards = rewards.to(self.net.device)
@@ -328,17 +373,29 @@ class Agent():
         states_ = new_states.to(self.net.device)
         weights = weights.to(self.net.device)
 
+        states_aug = (self.intensity(self.random_shift(states.float()/255.)) * 255).to(T.uint8)
+        states_aug_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
+
+        for i in range(self.K):
+            future_states[i] = future_states[i].to(self.net.device)
+
+        for i in range(self.K):
+            future_states[i] = (self.intensity(self.random_shift(future_states[i].float()/255.)) * 255).to(T.uint8)
+
         obs_latents = []
         for i in range(self.K):
-            obs_latents.append(self.net.get_latent_from_obs(future_states[i].to(self.net.device)))
+            obs_latents.append(self.net.get_latent_from_obs(future_states[i],tgt=True))
+
+        for i in range(len(obs_latents)):
+            obs_latents[i] = self.net.projection(obs_latents[i],tgt=True)
 
         ##############
-        distr_v, qvals_v = self.net.both(T.cat((states, states_)))
+        distr_v, qvals_v = self.net.both(T.cat((states_aug, states_aug_)))
         next_qvals_v = qvals_v[self.batch_size:]
         distr_v = distr_v[:self.batch_size]
 
         next_actions_v = next_qvals_v.max(1)[1]
-        next_distr_v = self.net(states_)
+        next_distr_v = self.net(states_aug_)
         next_best_distr_v = next_distr_v[range(self.batch_size), next_actions_v.data]
         next_best_distr_v = self.net.apply_softmax(next_best_distr_v)
         next_best_distr = next_best_distr_v.data.cpu()
@@ -355,14 +412,13 @@ class Agent():
 
         rainbow_loss = loss_v.mean()
 
-        latents = self.net.get_latent_from_obs(states)
-        print("Latents shape")
-        print(latents.shape)
+        latents = self.net.get_latent_from_obs(states_aug)
         pred_latents = self.net.get_spr_latents(latents)
 
-        spr_loss = self.net.get_spr_loss(pred_latents,obs_latents)
+        spr_loss = self.net.get_spr_loss(pred_latents,obs_latents,future_dones)
 
         loss = rainbow_loss + self.spr_loss_coef * spr_loss
+        print("hi")
         ##############
 
         loss.backward()
@@ -371,7 +427,6 @@ class Agent():
         self.learn_step_counter += 1
 
         self.memory.update_priorities(tree_idxs, loss_v.cpu().detach().numpy())
-
 
 def distr_projection(next_distr, rewards, dones, Vmin, Vmax, n_atoms, gamma):
     """

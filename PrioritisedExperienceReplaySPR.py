@@ -112,6 +112,10 @@ class PrioritizedReplayBuffer:
         sample_idxs, tree_idxs = [], []
         priorities = torch.empty(batch_size, 1, dtype=torch.float)
 
+        # ensure no sampling from edge
+        illegal_numbers = [self.count - x for x in range(self.K)]
+
+
         # To sample a minibatch of size k, the range [0, p_total] is divided equally into k ranges.
         # Next, a value is uniformly sampled from each range. Finally the transitions that correspond
         # to each of these sampled values are retrieved from the tree. (Appendix B.2.1, Proportional prioritization)
@@ -119,10 +123,14 @@ class PrioritizedReplayBuffer:
         for i in range(batch_size):
             a, b = segment * i, segment * (i + 1)
 
-            cumsum = random.uniform(a, b)
-            # sample_idx is a sample index in buffer, needed further to sample actual transitions
-            # tree_idx is a index of a sample in the tree, needed further to update priorities
-            tree_idx, priority, sample_idx = self.tree.get(cumsum)
+            while True:
+                cumsum = random.uniform(a, b)
+                # sample_idx is a sample index in buffer, needed further to sample actual transitions
+                # tree_idx is a index of a sample in the tree, needed further to update priorities
+                tree_idx, priority, sample_idx = self.tree.get(cumsum)
+
+                if tree_idx not in illegal_numbers:
+                    break
 
             priorities[i] = priority
             tree_idxs.append(tree_idx)
@@ -148,11 +156,13 @@ class PrioritizedReplayBuffer:
         # within a reasonable range, avoiding the possibility of extremely large updates. (Appendix B.2.1, Proportional prioritization)
         weights = weights / weights.max()
 
-        future_idxs = [x+1 for x in sample_idxs]
+        future_idxs = [x+1 % self.size for x in sample_idxs]
         future_states = []
+        future_dones = []
         for i in range(self.K):
 
             future_states.append(self.state[future_idxs])
+            future_dones.append(self.done[future_idxs])
             future_idxs = [x + 1 for x in future_idxs]
 
         batch = (
@@ -161,7 +171,8 @@ class PrioritizedReplayBuffer:
             self.reward[sample_idxs],
             self.next_state[sample_idxs],
             self.done[sample_idxs],
-            future_states
+            future_states,
+            future_dones
         )
 
         return batch, weights, tree_idxs
