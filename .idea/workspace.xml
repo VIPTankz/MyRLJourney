@@ -4,7 +4,40 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="" />
+    <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/results/DERAlienEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DERAlienExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQAlienEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQAlienEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQAlienEvaluation (2).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQAlienEvaluation (3).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQAlienEvaluation (4).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQAlienExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQAlienExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQAlienExperiment (2).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQAlienExperiment (3).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQAlienExperiment (4).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQOldAlienExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQOldAlienExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQOldAlienExperiment (2).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQOldAlienExperiment (3).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQOldAlienExperiment (4).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/Evaluation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/plot.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DERAlienEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DERAlienExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQAlienEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQAlienEvaluation (1).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQAlienEvaluation (2).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQAlienEvaluation (3).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQAlienEvaluation (4).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQAlienExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQAlienExperiment (1).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQAlienExperiment (2).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQAlienExperiment (3).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQAlienExperiment (4).npy" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -24,15 +57,19 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectId" id="2RTu0sZrClijGc97DBkmfhO6auX" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "C:/Users/Tyler/Documents/GitHub/MyRLJourney"
+    "last_opened_file_path": "C:/Users/TYLER/Documents/GitHub/MyRLJourney"
   }
 }]]></component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
@@ -45,5 +82,8 @@
       <updated>1687286171809</updated>
     </task>
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
 </project>
