@@ -1,0 +1,5 @@
+I had to manually edit the environments.yaml
+
+dont't use requirements for conda, doesn't include pip
+
+cuda won't install from the environments.yaml, just remove it and install on iridis

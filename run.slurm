@@ -11,7 +11,7 @@
 module load conda/py3-latest
 source activate atari_work
 
-cd /home/$USER/capok
+cd /home/$USER/tjc2g19
 pip install -e .
 
 staskfarm hpc/farm_atari.txt
