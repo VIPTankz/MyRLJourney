@@ -62,8 +62,8 @@ if __name__ == '__main__':
                 avg_score = np.mean(scores_temp[-50:])
 
                 if episodes % 2 == 0:
-                    print('{} episode {} score {:.0f} avg score {:.2f} total_steps {:.0f}'
-                          .format(agent_name, episodes, score, avg_score, steps))
+                    print('{} game {} avg score {:.2f} total_steps {:.0f}'
+                          .format(agent_name, game, avg_score, steps))
                     print("FPS: " + str(time.time() - start))
                     start = time.time()
 
