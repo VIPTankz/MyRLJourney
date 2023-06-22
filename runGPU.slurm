@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --nodes=1
-#SBATCH --ntasks=8
-#SBATCH --mem=64000
+#SBATCH --ntasks=26
+#SBATCH --mem=96000
 #SBATCH -p batch
 #SBATCH --job-name=RL_atari_benchmark
 #SBATCH --time=48:00:00
