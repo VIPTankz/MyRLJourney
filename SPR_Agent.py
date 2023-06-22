@@ -12,6 +12,7 @@ from PrioritisedExperienceReplaySPR import PrioritizedReplayBuffer
 import kornia.augmentation as aug
 from ema_pytorch import EMA
 
+
 class Intensity(nn.Module):
     def __init__(self, scale):
         super().__init__()
@@ -22,12 +23,14 @@ class Intensity(nn.Module):
         noise = 1.0 + (self.scale * r.clamp(-2.0, 2.0))
         return x * noise
 
+
 class NoisyFactorizedLinear(nn.Linear):
     """
     NoisyNet layer with factorized gaussian noise
 
     N.B. nn.Linear already initializes weight and bias to
     """
+
     def __init__(self, in_features, out_features, sigma_zero=0.5, bias=True):
         super(NoisyFactorizedLinear, self).__init__(in_features, out_features, bias=bias)
         sigma_init = sigma_zero / math.sqrt(in_features)
@@ -37,7 +40,7 @@ class NoisyFactorizedLinear(nn.Linear):
         if bias:
             self.sigma_bias = nn.Parameter(T.full((out_features,), sigma_init))
 
-    def forward(self, input):
+    def forward(self, inp):
         self.epsilon_input.normal_()
         self.epsilon_output.normal_()
 
@@ -49,11 +52,12 @@ class NoisyFactorizedLinear(nn.Linear):
         if bias is not None:
             bias = bias + self.sigma_bias * eps_out.t()
         noise_v = T.mul(eps_in, eps_out)
-        return F.linear(input, self.weight + self.sigma_weight * noise_v, bias)
+        return F.linear(inp, self.weight + self.sigma_weight * noise_v, bias)
+
 
 class Encoder(nn.Module):
     def __init__(self):
-        super(Encoder,self).__init__()
+        super(Encoder, self).__init__()
 
         self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
         self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
@@ -61,7 +65,7 @@ class Encoder(nn.Module):
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)
 
-    def forward(self,x):
+    def forward(self, x):
         """
         takes a framestack of images or batch of framestack of images
         Note: This returns unflattened output
@@ -74,20 +78,21 @@ class Encoder(nn.Module):
 
         return x
 
+
 class MLPLayer1(nn.Module):
-    def __init__(self,input_size):
+    def __init__(self, input_size):
         """
         This is just a single layer. Is used by both the q-learning head and the projection
 
         For atari input size will be 64*7*7
         """
-        super(MLPLayer1,self).__init__()
+        super(MLPLayer1, self).__init__()
         self.fc1V = nn.Linear(input_size, 256)
         self.fc1A = nn.Linear(input_size, 256)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)
 
-    def forward(self,x):
+    def forward(self, x):
         """
         takes flattened output from the decoder
         can also take output from the transition model
@@ -95,14 +100,15 @@ class MLPLayer1(nn.Module):
         V = F.relu(self.fc1V(x))
         A = F.relu(self.fc1A(x))
 
-        return V,A
+        return V, A
+
 
 class QLearningHeadFinal(nn.Module):
     def __init__(self, n_actions, atoms, Vmax, Vmin):
         """
         This is only the final layer of the Q-Learning Head
         """
-        super(QLearningHeadFinal,self).__init__()
+        super(QLearningHeadFinal, self).__init__()
 
         self.V = NoisyFactorizedLinear(256, atoms)
         self.A = NoisyFactorizedLinear(256, n_actions * atoms)
@@ -118,7 +124,7 @@ class QLearningHeadFinal(nn.Module):
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)
 
-    def forward(self,V ,A):
+    def forward(self, V, A):
         """
         Takes input from the first MLP Layer
         """
@@ -137,34 +143,35 @@ class QLearningHeadFinal(nn.Module):
     def apply_softmax(self, t):
         return self.softmax(t.view(-1, self.atoms)).view(t.size())
 
+
 class QHead(nn.Module):
     def __init__(self):
         """
         This is the Q head for after the online projection
         NOT to be confused with the q-learning head, they are different
         """
-        super(QHead,self).__init__()
+        super(QHead, self).__init__()
 
-        self.q_head = nn.Linear(512,512)
+        self.q_head = nn.Linear(512, 512)
 
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)
 
-    def forward(self,x):
+    def forward(self, x):
         """
         Takes input from the output of the first MLP layer, which in turn comes from the transition model
-
         This produces the final online latent, or y_hat_(t+k) in mathy terms
         """
         return self.q_head(x)
+
 
 class TransitionModel(nn.Module):
     def __init__(self, n_actions):
         super(TransitionModel, self).__init__()
 
-        self.conv_trans1 = nn.Conv2d(64 + n_actions, 64, 3,padding=1)
+        self.conv_trans1 = nn.Conv2d(64 + n_actions, 64, 3, padding=1)
         self.batch_norm1 = nn.BatchNorm2d(64)
-        self.conv_trans2 = nn.Conv2d(64, 64, 3,padding=1)
+        self.conv_trans2 = nn.Conv2d(64, 64, 3, padding=1)
         self.batch_norm2 = nn.BatchNorm2d(64)
         self.n_actions = n_actions
 
@@ -174,10 +181,8 @@ class TransitionModel(nn.Module):
     def forward(self, x, actions):
         """
         Takes the output of the online encoder, and produces Z_hat_(t+k)
-
         This is also what is bootstrapped/iterated over
         ie the output of this network can go back into itself
-
         Output is not flattened for this reason
         """
         batch_size = x.size()[0]
@@ -195,7 +200,7 @@ class TransitionModel(nn.Module):
 
 
 class SPRNetwork(nn.Module):
-    def __init__(self, lr, n_actions, name, chkpt_dir,atoms, Vmax, Vmin, K, batch_size):
+    def __init__(self, lr, n_actions, name, chkpt_dir, atoms, Vmax, Vmin, K, batch_size):
         super(SPRNetwork, self).__init__()
 
         self.checkpoint_dir = chkpt_dir
@@ -290,7 +295,7 @@ class SPRNetwork(nn.Module):
         latents = T.swapaxes(latents, 0, 1)
         return latents
 
-    def calculate_tgt_latents(self,x):
+    def calculate_tgt_latents(self, x):
         """
         x should be a tensor of the next k obsevations (framestacks)
 
@@ -310,8 +315,8 @@ class SPRNetwork(nn.Module):
             latents_v, latents_a = self.tgt_mlp_layer1(conv_out)
             latents = T.cat([latents_v, latents_a], dim=1)
 
-            #reshape back to [batchsize x K x 512]
-            latents = T.reshape(latents,(self.learn_batch_size, self.K, -1))
+            # reshape back to [batch_size x K x 512]
+            latents = T.reshape(latents, (self.learn_batch_size, self.K, -1))
 
         return latents
 
@@ -322,7 +327,7 @@ class SPRNetwork(nn.Module):
         """
         f_x1 = F.normalize(f_x1s.float(), p=2., dim=-1, eps=1e-3)
         f_x2 = F.normalize(f_x2s.float(), p=2., dim=-1, eps=1e-3)
-        # Gradients of normalized L2 loss and cosine similiarity are proportional.
+        # Gradients of normalized L2 loss and cosine similarity are proportional.
         # See: https://stats.stackexchange.com/a/146279
         loss = F.mse_loss(f_x1, f_x2, reduction="none").sum(-1).mean(0)
         return loss
@@ -336,9 +341,9 @@ class SPRNetwork(nn.Module):
         self.load_state_dict(T.load(self.checkpoint_file))
 
 
-class Agent():
-    def __init__(self, n_actions,input_dims,
-                 max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99):
+class Agent:
+    def __init__(self, n_actions, input_dims,
+                 max_mem_size=100000, replace=1, total_frames=100000, lr=0.0001, batch_size=32, discount=0.99):
 
         self.lr = lr
         self.n_actions = n_actions
@@ -355,24 +360,25 @@ class Agent():
         self.spr_loss_coef = 2
         self.K = 5
 
-        #n-step
+        # n-step
         self.n = 10
         self.nstep_states = deque([], self.n)
         self.nstep_rewards = deque([], self.n)
         self.nstep_actions = deque([], self.n)
 
-        #c51
+        # c51
         self.Vmax = 10
         self.Vmin = -10
         self.N_ATOMS = 51
 
         self.memory = PrioritizedReplayBuffer(input_dims, n_actions, max_mem_size, eps=1e-5, alpha=0.5, beta=0.4,
-                              total_frames=total_frames)
+                                              total_frames=total_frames)
 
         self.net = SPRNetwork(self.lr, self.n_actions, name='lunar_lander_dueling_ddqn_q_eval',
                               chkpt_dir=self.chkpt_dir, atoms=self.N_ATOMS, Vmax=self.Vmax, Vmin=self.Vmin, K=self.K,
                               batch_size=self.batch_size)
 
+        # augmentation
         self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
         self.intensity = Intensity(scale=0.05)
 
@@ -396,8 +402,7 @@ class Agent():
             fin_reward = 0
             for i in range(self.n):
                 fin_reward += self.nstep_rewards[i] * (self.gamma ** i)
-            self.memory.add(self.nstep_states[0], self.nstep_actions[0],fin_reward, \
-                                         state_, done)
+            self.memory.add(self.nstep_states[0], self.nstep_actions[0], fin_reward, state_, done)
 
         if done:
             self.nstep_states = deque([], self.n)
@@ -436,8 +441,8 @@ class Agent():
 
         # Data Augmentation
 
-        states = (self.intensity(self.random_shift(states.float()/255.)) * 255).to(T.uint8)
-        states_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
+        states = (self.intensity(self.random_shift(states.float() / 255.)) * 255).to(T.uint8)
+        states_ = (self.intensity(self.random_shift(states_.float() / 255.)) * 255).to(T.uint8)
 
         # Forward passes on network
         states_next_states = T.cat((states, states_))
@@ -456,7 +461,8 @@ class Agent():
         next_best_distr_v = self.net.qlearning_head.apply_softmax(next_best_distr_v)
         next_best_distr = next_best_distr_v.data.cpu()
 
-        proj_distr = distr_projection(next_best_distr, rewards.cpu(), dones.cpu(), self.Vmin, self.Vmax, self.N_ATOMS, self.gamma)
+        proj_distr = distr_projection(next_best_distr, rewards.cpu(), dones.cpu(), self.Vmin, self.Vmax, self.N_ATOMS,
+                                      self.gamma)
 
         state_action_values = distr_v[range(self.batch_size), actions.data]
         state_log_sm_v = F.log_softmax(state_action_values, dim=1)
@@ -473,7 +479,7 @@ class Agent():
 
         # Remove done trajectories
         for i in range(self.K - 1):
-            future_dones[:, i + 1] = T.logical_or(future_dones[:, i], future_dones[:, i+1])
+            future_dones[:, i + 1] = T.logical_or(future_dones[:, i], future_dones[:, i + 1])
 
         # this just sets elements equal if they are during or after done, making them give 0 loss
         future_dones = future_dones.to(T.bool)
@@ -494,7 +500,7 @@ class Agent():
 
 def distr_projection(next_distr, rewards, dones, Vmin, Vmax, n_atoms, gamma):
     """
-    Perform distribution projection aka Catergorical Algorithm from the
+    Perform distribution projection aka Categorical Algorithm from the
     "A Distributional Perspective on RL" paper
     """
     batch_size = len(rewards)
@@ -528,5 +534,3 @@ def distr_projection(next_distr, rewards, dones, Vmin, Vmax, n_atoms, gamma):
             proj_distr[ne_dones, l[ne_mask]] = (u - b_j)[ne_mask]
             proj_distr[ne_dones, u[ne_mask]] = (b_j - l)[ne_mask]
     return proj_distr
-
-
