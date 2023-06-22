@@ -1,6 +1,7 @@
 import torch
 import random
 import numpy as np
+from torchvision.utils import save_image
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 # The ‘sum-tree’ data structure used here is very similar in spirit to the array representation
@@ -66,7 +67,7 @@ class SumTree:
 
 
 class PrioritizedReplayBuffer:
-    def __init__(self, state_size, action_size, buffer_size, eps=1e-2, alpha=0.1, beta=0.1,total_frames=100000,K=5):
+    def __init__(self, state_size, action_size, buffer_size, eps=1e-2, alpha=0.1, beta=0.1,total_frames=100000, K=5):
         self.tree = SumTree(size=buffer_size)
 
         # PER params
@@ -120,21 +121,25 @@ class PrioritizedReplayBuffer:
         # Next, a value is uniformly sampled from each range. Finally the transitions that correspond
         # to each of these sampled values are retrieved from the tree. (Appendix B.2.1, Proportional prioritization)
         segment = self.tree.total / batch_size
+
         for i in range(batch_size):
             a, b = segment * i, segment * (i + 1)
 
-            while True:
-                cumsum = random.uniform(a, b)
-                # sample_idx is a sample index in buffer, needed further to sample actual transitions
-                # tree_idx is a index of a sample in the tree, needed further to update priorities
-                tree_idx, priority, sample_idx = self.tree.get(cumsum)
+            cumsum = random.uniform(a, b)
+            # sample_idx is a sample index in buffer, needed further to sample actual transitions
+            # tree_idx is a index of a sample in the tree, needed further to update priorities
+            tree_idx, priority, sample_idx = self.tree.get(cumsum)
 
-                if tree_idx not in illegal_numbers:
-                    break
+            while sample_idx in illegal_numbers:
+                # just sample randomly if we try to sample something on the edge
+                cumsum = random.uniform(0,self.tree.total)
+                tree_idx, priority, sample_idx = self.tree.get(cumsum)
 
             priorities[i] = priority
             tree_idxs.append(tree_idx)
             sample_idxs.append(sample_idx)
+
+
 
         # Concretely, we define the probability of sampling transition i as P(i) = p_i^α / \sum_{k} p_k^α
         # where p_i > 0 is the priority of transition i. (Section 3.3)
@@ -156,14 +161,34 @@ class PrioritizedReplayBuffer:
         # within a reasonable range, avoiding the possibility of extremely large updates. (Appendix B.2.1, Proportional prioritization)
         weights = weights / weights.max()
 
-        future_idxs = [x+1 % self.size for x in sample_idxs]
-        future_states = []
-        future_dones = []
-        for i in range(self.K):
+        future_idxs_states = [x+1 % self.size for x in sample_idxs]
+        future_idxs_states_f = [x+self.K % self.size for x in future_idxs_states]
+        future_idxs_states = torch.Tensor([future_idxs_states, future_idxs_states_f]).int()
 
-            future_states.append(self.state[future_idxs])
-            future_dones.append(self.done[future_idxs])
-            future_idxs = [x + 1 for x in future_idxs]
+        state_indexer = np.r_[tuple([np.s_[i:j] for (i, j) in zip(future_idxs_states[0, :], future_idxs_states[1, :])])]
+
+        future_idxs = sample_idxs[:]
+        future_idxs_f = [x+self.K % self.size for x in future_idxs]
+        future_idxs = torch.Tensor([future_idxs, future_idxs_f]).int()
+
+        indexer = np.r_[tuple([np.s_[i:j] for (i, j) in zip(future_idxs[0, :], future_idxs[1, :])])]
+
+        """future_states = torch.reshape(self.state[state_indexer], (batch_size, self.K, self.state.shape[1],
+                                                             self.state.shape[2], self.state.shape[3]))"""
+
+        future_states = self.state[state_indexer] #we leave this in this form so pytorch can batch process it
+        future_actions = torch.reshape(self.action[indexer], (batch_size, self.K))
+        future_dones = torch.reshape(self.done[indexer], (batch_size, self.K))
+
+
+        """ 
+        #Here is a test you can do with images to check observations. These should be a sequence
+        save_image(future_states[0][0][0].float()/255, 'img1.png')
+        save_image(future_states[0][1][0].float()/255, 'img2.png')
+        save_image(future_states[0][2][0].float()/255, 'img3.png')
+        save_image(future_states[0][3][0].float()/255, 'img4.png')
+        save_image(future_states[0][4][0].float()/255, 'img5.png')
+        """
 
         batch = (
             self.state[sample_idxs],
@@ -172,6 +197,7 @@ class PrioritizedReplayBuffer:
             self.next_state[sample_idxs],
             self.done[sample_idxs],
             future_states,
+            future_actions,
             future_dones
         )
 

@@ -10,8 +10,6 @@ if __name__ == '__main__':
     from SPR_Agent import Agent
     agent_name = "SPR"
 
-    path = "results\\"
-
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
@@ -61,12 +59,12 @@ if __name__ == '__main__':
 
                 avg_score = np.mean(scores_temp[-50:])
 
-                if episodes % 2 == 0:
+                if episodes % 1 == 0:
                     print('{} game {} avg score {:.2f} total_steps {:.0f} fps {:.2f}'
                           .format(agent_name, game, avg_score, steps,steps / (time.time() - start)),flush=True)
                     #start = time.time()
 
-            fname = path + agent_name + game + "Experiment (" + str(runs) + ').npy'
+            fname = agent_name + game + "Experiment (" + str(runs) + ').npy'
             np.save(fname, np.array(scores))
             agent.eval_mode = True
             evals = []
@@ -86,5 +84,5 @@ if __name__ == '__main__':
                 evals.append(score)
                 print("Evaluation Score: " + str(score))
 
-            fname = path + agent_name + game + "Evaluation (" + str(runs) + ').npy'
+            fname = agent_name + game + "Evaluation (" + str(runs) + ').npy'
             np.save(fname, np.array(evals))
