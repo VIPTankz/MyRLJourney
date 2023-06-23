@@ -13,6 +13,7 @@ import kornia.augmentation as aug
 from ema_pytorch import EMA
 
 
+
 class Intensity(nn.Module):
     def __init__(self, scale):
         super().__init__()
@@ -113,13 +114,17 @@ class MLPLayer1(nn.Module):
         self.device = device
         self.to(self.device)
 
-    def forward(self, x):
+    def reset_noise(self):
+        self.fc1A.reset_noise()
+        self.fc1V.reset_noise()
+
+    def forward(self, x, use_noise=True):
         """
         takes flattened output from the decoder
         can also take output from the transition model
         """
-        V = F.relu(self.fc1V(x))
-        A = F.relu(self.fc1A(x))
+        V = F.relu(self.fc1V(x, use_noise))
+        A = F.relu(self.fc1A(x, use_noise))
 
         return V, A
 
@@ -144,6 +149,10 @@ class QLearningHeadFinal(nn.Module):
 
         self.device = device
         self.to(self.device)
+
+    def reset_noise(self):
+        self.A.reset_noise()
+        self.V.reset_noise()
 
     def forward(self, V, A):
         """
@@ -248,6 +257,10 @@ class SPRNetwork(nn.Module):
         self.device = device
         self.to(self.device)
 
+    def reset_noise(self):
+        self.mlp_layer1.reset_noise()
+        self.qlearning_head.reset_noise()
+
     def update_EMAs(self):
         self.tgt_encoder.update()
         self.tgt_mlp_layer1.update()
@@ -287,7 +300,7 @@ class SPRNetwork(nn.Module):
         _, qvals = self.decode(x)
         return qvals
 
-    def produce_online_latents(self, x, actions):
+    def produce_online_latents(self, x, actions, future_dones):
         """
         Input x should be output from encoder
 
@@ -299,6 +312,7 @@ class SPRNetwork(nn.Module):
         batch_size = x.size()[0]
         latents = []
         for i in range(self.K):
+
             # this gives what needs to be fed back into network
             x = self.transition_model(x, actions[:, i])
 
@@ -314,9 +328,14 @@ class SPRNetwork(nn.Module):
 
         latents = T.stack(latents).to(self.device)
         latents = T.swapaxes(latents, 0, 1)
+
+        # set done trajectories to 0
+        latent_shape = latents.size()[-1]
+        latents[future_dones] = T.zeros((latent_shape,)).to(self.device)
+
         return latents
 
-    def calculate_tgt_latents(self, x):
+    def calculate_tgt_latents(self, x, future_dones):
         """
         x should be a tensor of the next k obsevations (framestacks)
 
@@ -328,6 +347,7 @@ class SPRNetwork(nn.Module):
         """
         with T.no_grad():
             batch_size = x.size()[0]
+
             conv_out = self.tgt_encode(x)
 
             # flatten conv layer output
@@ -338,6 +358,10 @@ class SPRNetwork(nn.Module):
 
             # reshape back to [batch_size x K x 512]
             latents = T.reshape(latents, (self.learn_batch_size, self.K, -1))
+
+            # sets dones to zero
+            latent_shape = latents.size()[-1]
+            latents[future_dones] = T.zeros((latent_shape,)).to(self.device)
 
         return latents
 
@@ -387,6 +411,9 @@ class Agent:
         self.nstep_rewards = deque([], self.n)
         self.nstep_actions = deque([], self.n)
 
+        # This is only used for spr, not normal n-step
+        self.nstep_dones = deque([], self.n)
+
         # c51
         self.Vmax = 10
         self.Vmin = -10
@@ -404,8 +431,10 @@ class Agent:
         self.intensity = Intensity(scale=0.05)
 
     def choose_action(self, observation):
+
         state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
         with T.no_grad():
+            self.net.reset_noise()
             advantage = self.net(state)
         return T.argmax(advantage).item()
 
@@ -419,6 +448,7 @@ class Agent:
         self.nstep_states.append(state)
         self.nstep_rewards.append(reward)
         self.nstep_actions.append(action)
+        self.nstep_dones.append(done)
 
         if len(self.nstep_states) == self.n:
             fin_reward = 0
@@ -426,10 +456,14 @@ class Agent:
                 fin_reward += self.nstep_rewards[i] * (self.gamma ** i)
             self.memory.add(self.nstep_states[0], self.nstep_actions[0], fin_reward, state_, done)
 
+            self.memory.set_illegals(list(self.nstep_states)[1:self.K + 1], list(self.nstep_actions)[0:self.K], list(self.nstep_dones)[0:self.K])
+
         if done:
             self.nstep_states = deque([], self.n)
             self.nstep_rewards = deque([], self.n)
             self.nstep_actions = deque([], self.n)
+
+            self.nstep_dones = deque([], self.n)
 
     def save_models(self):
         self.net.save_checkpoint()
@@ -446,6 +480,9 @@ class Agent:
 
         # update EMAs
         self.net.update_EMAs()
+
+        # reset noise on noisy layers
+        self.net.reset_noise()
 
         batch, weights, tree_idxs = self.memory.sample(self.batch_size)
 
@@ -496,16 +533,16 @@ class Agent:
 
         rainbow_loss = loss_v.mean()
         # SPR Loss Code
-        pred_latents = self.net.produce_online_latents(encodings[:self.batch_size], future_actions)
-        target_latents = self.net.calculate_tgt_latents(future_states)
 
-        # Remove done trajectories
+        # Create mask to remove done trajectories
+
         for i in range(self.K - 1):
             future_dones[:, i + 1] = T.logical_or(future_dones[:, i], future_dones[:, i + 1])
 
-        # this just sets elements equal if they are during or after done, making them give 0 loss
         future_dones = future_dones.to(T.bool)
-        pred_latents[future_dones] = target_latents[future_dones]
+
+        pred_latents = self.net.produce_online_latents(encodings[:self.batch_size], future_actions, future_dones)
+        target_latents = self.net.calculate_tgt_latents(future_states, future_dones)
 
         spr_loss = self.net.spr_loss(pred_latents, target_latents)
         spr_loss = spr_loss.sum()

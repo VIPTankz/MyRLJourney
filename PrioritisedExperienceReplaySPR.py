@@ -88,7 +88,17 @@ class PrioritizedReplayBuffer:
         self.real_size = 0
         self.size = buffer_size
         self.total_frames = total_frames
-        self.K = 5
+        self.K = K
+
+        self.illegal_states = None
+        self.illegal_actions = None
+        self.illegal_dones = None
+
+
+    def set_illegals(self, states, actions, dones):
+        self.illegal_states = torch.as_tensor(np.array(states))
+        self.illegal_actions = torch.as_tensor(np.array(actions))
+        self.illegal_dones = torch.as_tensor(np.array(dones))
 
     def add(self, state, action, reward, next_state, done):
 
@@ -116,6 +126,7 @@ class PrioritizedReplayBuffer:
         # ensure no sampling from edge
         illegal_numbers = [self.count - x for x in range(self.K)]
 
+        checkables = []
 
         # To sample a minibatch of size k, the range [0, p_total] is divided equally into k ranges.
         # Next, a value is uniformly sampled from each range. Finally the transitions that correspond
@@ -130,15 +141,12 @@ class PrioritizedReplayBuffer:
             # tree_idx is a index of a sample in the tree, needed further to update priorities
             tree_idx, priority, sample_idx = self.tree.get(cumsum)
 
-            while sample_idx in illegal_numbers:
-                # just sample randomly if we try to sample something on the edge
-                cumsum = random.uniform(0,self.tree.total)
-                tree_idx, priority, sample_idx = self.tree.get(cumsum)
+            if sample_idx in illegal_numbers:
+                checkables.append([sample_idx, i])
 
             priorities[i] = priority
             tree_idxs.append(tree_idx)
             sample_idxs.append(sample_idx)
-
 
 
         # Concretely, we define the probability of sampling transition i as P(i) = p_i^α / \sum_{k} p_k^α
@@ -176,18 +184,33 @@ class PrioritizedReplayBuffer:
         """future_states = torch.reshape(self.state[state_indexer], (batch_size, self.K, self.state.shape[1],
                                                              self.state.shape[2], self.state.shape[3]))"""
 
-        future_states = self.state[state_indexer] #we leave this in this form so pytorch can batch process it
+        future_states = self.state[state_indexer] # we leave this in this form so pytorch can batch process it
         future_actions = torch.reshape(self.action[indexer], (batch_size, self.K))
         future_dones = torch.reshape(self.done[indexer], (batch_size, self.K))
 
+        for checkable in checkables:
 
-        """ 
+            state_ill_idx = 0
+            other_ill_idx = 0
+
+            for i in range(self.K):
+
+                if checkable[0] + i + 1 >= self.count:
+                    future_states[checkable[1] * self.K + i] = self.illegal_states[state_ill_idx]
+                    state_ill_idx += 1
+
+                if checkable[0] + i >= self.count:
+                    future_actions[checkable[1], i] = self.illegal_actions[other_ill_idx]
+                    future_dones[checkable[1], i] = self.illegal_dones[other_ill_idx]
+                    other_ill_idx += 1
+
+        """
         #Here is a test you can do with images to check observations. These should be a sequence
-        save_image(future_states[0][0][0].float()/255, 'img1.png')
-        save_image(future_states[0][1][0].float()/255, 'img2.png')
-        save_image(future_states[0][2][0].float()/255, 'img3.png')
-        save_image(future_states[0][3][0].float()/255, 'img4.png')
-        save_image(future_states[0][4][0].float()/255, 'img5.png')
+        save_image(check_states[0][0][0].float()/255, 'img1.png')
+        save_image(check_states[0][1][0].float()/255, 'img2.png')
+        save_image(check_states[0][2][0].float()/255, 'img3.png')
+        save_image(check_states[0][3][0].float()/255, 'img4.png')
+        save_image(check_states[0][4][0].float()/255, 'img5.png')
         """
 
         batch = (
