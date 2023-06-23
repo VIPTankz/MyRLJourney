@@ -15,15 +15,15 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
-games = ["Alien","Amidar","Assault","ChopperCommand","CrazyClimber","DemonAttack","Gopher","Hero","Jamesbond","MsPacman","Pong","PrivateEye"]
+games = ["Alien"]
 print(len(games))
 
 hns = []
 #games = ["Seaquest","UpNDown"]
 count = 0
 for game in games:
-    labels = ["NDDDQN","DrQ","DrQSplit","DrQAction"]
-    data_files = ["Baseline" + game + "Evaluation","DrQ" + game + "Evaluation","DrQSplit" + game + "Evaluation","DrQAction" + game + "Evaluation"]
+    labels = ["SPR"]
+    data_files = ["SPR" + game + "Evaluation"]
     
 
     for i in range(len(labels)):

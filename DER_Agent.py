@@ -41,7 +41,7 @@ class NoisyFactorizedLinear(nn.Linear):
         return F.linear(input, self.weight + self.sigma_weight * noise_v, bias)
 
 class DuelingDeepQNetwork(nn.Module):
-    def __init__(self, lr, n_actions, name, input_dims, chkpt_dir,atoms,Vmax,Vmin):
+    def __init__(self, lr, n_actions, name, input_dims, chkpt_dir,atoms,Vmax,Vmin, device):
         super(DuelingDeepQNetwork, self).__init__()
         self.checkpoint_dir = chkpt_dir
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name)
@@ -64,7 +64,7 @@ class DuelingDeepQNetwork(nn.Module):
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.device = device
         print("Device: " + str(self.device),flush=True)
         self.to(self.device)
 
@@ -128,7 +128,7 @@ class EpsilonGreedy():
         self.eps = max(self.eps - (self.eps - self.eps_final) / self.steps, self.eps_final)
 
 class Agent():
-    def __init__(self, n_actions,input_dims,
+    def __init__(self, n_actions,input_dims, device,
                  max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99):
 
         #self.epsilon = EpsilonGreedy()
@@ -160,14 +160,12 @@ class Agent():
                                                   total_frames=total_frames)
 
         self.net = DuelingDeepQNetwork(self.lr, self.n_actions,
-                                          input_dims=self.input_dims,
-                                          name='lunar_lander_dueling_ddqn_q_eval',
-                                          chkpt_dir=self.chkpt_dir,atoms=self.N_ATOMS,Vmax=self.Vmax,Vmin=self.Vmin)
+                                          input_dims=self.input_dims, name='DER_eval',
+                                          chkpt_dir=self.chkpt_dir,atoms=self.N_ATOMS,Vmax=self.Vmax,Vmin=self.Vmin, device=device)
 
         self.tgt_net = DuelingDeepQNetwork(self.lr, self.n_actions,
-                                          input_dims=self.input_dims,
-                                          name='lunar_lander_dueling_ddqn_q_next',
-                                          chkpt_dir=self.chkpt_dir,atoms=self.N_ATOMS,Vmax=self.Vmax,Vmin=self.Vmin)
+                                          input_dims=self.input_dims,name='DER_next',
+                                          chkpt_dir=self.chkpt_dir,atoms=self.N_ATOMS,Vmax=self.Vmax,Vmin=self.Vmin, device=device)
 
     def choose_action(self, observation):
         state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)

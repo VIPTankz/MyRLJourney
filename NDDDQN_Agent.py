@@ -23,7 +23,7 @@ class Intensity(nn.Module):
 
 
 class DuelingDeepQNetwork(nn.Module):
-    def __init__(self, lr, n_actions, name, input_dims, chkpt_dir):
+    def __init__(self, lr, n_actions, name, input_dims, chkpt_dir, device):
         super(DuelingDeepQNetwork, self).__init__()
         self.checkpoint_dir = chkpt_dir
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name)
@@ -39,7 +39,7 @@ class DuelingDeepQNetwork(nn.Module):
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.device = device
         self.to(self.device)
 
     def forward(self, observation):
@@ -76,7 +76,7 @@ class EpsilonGreedy():
 
 
 class Agent():
-    def __init__(self, n_actions,input_dims,
+    def __init__(self, n_actions,input_dims, device,
                  max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99):
 
         self.epsilon = EpsilonGreedy()
@@ -99,12 +99,12 @@ class Agent():
         self.q_eval = DuelingDeepQNetwork(self.lr, self.n_actions,
                                           input_dims=self.input_dims,
                                           name='lunar_lander_dueling_ddqn_q_eval',
-                                          chkpt_dir=self.chkpt_dir)
+                                          chkpt_dir=self.chkpt_dir, device=device)
 
         self.q_next = DuelingDeepQNetwork(self.lr, self.n_actions,
                                           input_dims=self.input_dims,
                                           name='lunar_lander_dueling_ddqn_q_next',
-                                          chkpt_dir=self.chkpt_dir)
+                                          chkpt_dir=self.chkpt_dir, device=device)
 
         self.n_states = deque([], self.n)
         self.n_rewards = deque([], self.n)

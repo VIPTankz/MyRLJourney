@@ -24,45 +24,66 @@ class Intensity(nn.Module):
         return x * noise
 
 
-class NoisyFactorizedLinear(nn.Linear):
-    """
-    NoisyNet layer with factorized gaussian noise
+class NoisyLinear(nn.Module):
+    def __init__(self, in_features, out_features, std_init=0.5, bias=True):
+        super(NoisyLinear, self).__init__()
+        self.bias = bias
+        self.in_features = in_features
+        self.out_features = out_features
+        self.std_init = std_init
+        self.sampling = True
+        self.noise_override = None
+        self.weight_mu = nn.Parameter(T.empty(out_features, in_features))
+        self.weight_sigma = nn.Parameter(T.empty(out_features, in_features))
+        self.register_buffer('weight_epsilon', T.empty(out_features, in_features))
+        self.bias_mu = nn.Parameter(T.empty(out_features), requires_grad=bias)
+        self.bias_sigma = nn.Parameter(T.empty(out_features), requires_grad=bias)
+        self.register_buffer('bias_epsilon', T.empty(out_features))
+        self.reset_parameters()
+        self.reset_noise()
 
-    N.B. nn.Linear already initializes weight and bias to
-    """
+    def reset_parameters(self):
+        mu_range = 1 / np.sqrt(self.in_features)
+        self.weight_mu.data.uniform_(-mu_range, mu_range)
+        self.weight_sigma.data.fill_(self.std_init / np.sqrt(self.in_features))
+        if not self.bias:
+            self.bias_mu.fill_(0)
+            self.bias_sigma.fill_(0)
+        else:
+            self.bias_sigma.data.fill_(self.std_init / np.sqrt(self.out_features))
+            self.bias_mu.data.uniform_(-mu_range, mu_range)
 
-    def __init__(self, in_features, out_features, sigma_zero=0.5, bias=True):
-        super(NoisyFactorizedLinear, self).__init__(in_features, out_features, bias=bias)
-        sigma_init = sigma_zero / math.sqrt(in_features)
-        self.sigma_weight = nn.Parameter(T.full((out_features, in_features), sigma_init))
-        self.register_buffer("epsilon_input", T.zeros(1, in_features))
-        self.register_buffer("epsilon_output", T.zeros(out_features, 1))
-        if bias:
-            self.sigma_bias = nn.Parameter(T.full((out_features,), sigma_init))
+    def _scale_noise(self, size):
+        x = T.randn(size)
+        return x.sign().mul_(x.abs().sqrt_())
 
-    def forward(self, inp):
-        self.epsilon_input.normal_()
-        self.epsilon_output.normal_()
+    def reset_noise(self):
+        epsilon_in = self._scale_noise(self.in_features)
+        epsilon_out = self._scale_noise(self.out_features)
+        self.weight_epsilon.copy_(epsilon_out.ger(epsilon_in))
+        self.bias_epsilon.copy_(epsilon_out)
 
-        func = lambda x: T.sign(x) * T.sqrt(T.abs(x))
-        eps_in = func(self.epsilon_input.data)
-        eps_out = func(self.epsilon_output.data)
-
-        bias = self.bias
-        if bias is not None:
-            bias = bias + self.sigma_bias * eps_out.t()
-        noise_v = T.mul(eps_in, eps_out)
-        return F.linear(inp, self.weight + self.sigma_weight * noise_v, bias)
+    def forward(self, input, use_noise=True):
+        # Self.training alone isn't a good-enough check, since we may need to
+        # activate .eval() during sampling even when we want to use noise
+        # (due to batchnorm, dropout, or similar).
+        # The extra "sampling" flag serves to override this behavior and causes
+        # noise to be used even when .eval() has been called.
+        if use_noise:
+            return F.linear(input, self.weight_mu + self.weight_sigma * self.weight_epsilon,
+                            self.bias_mu + self.bias_sigma * self.bias_epsilon)
+        else:
+            return F.linear(input, self.weight_mu, self.bias_mu)
 
 
 class Encoder(nn.Module):
-    def __init__(self):
+    def __init__(self, device):
         super(Encoder, self).__init__()
 
         self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
         self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, 3)
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.device = device
         self.to(self.device)
 
     def forward(self, x):
@@ -80,16 +101,16 @@ class Encoder(nn.Module):
 
 
 class MLPLayer1(nn.Module):
-    def __init__(self, input_size):
+    def __init__(self, input_size, device):
         """
         This is just a single layer. Is used by both the q-learning head and the projection
 
         For atari input size will be 64*7*7
         """
         super(MLPLayer1, self).__init__()
-        self.fc1V = nn.Linear(input_size, 256)
-        self.fc1A = nn.Linear(input_size, 256)
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.fc1V = NoisyLinear(input_size, 256)
+        self.fc1A = NoisyLinear(input_size, 256)
+        self.device = device
         self.to(self.device)
 
     def forward(self, x):
@@ -104,14 +125,14 @@ class MLPLayer1(nn.Module):
 
 
 class QLearningHeadFinal(nn.Module):
-    def __init__(self, n_actions, atoms, Vmax, Vmin):
+    def __init__(self, n_actions, atoms, Vmax, Vmin, device):
         """
         This is only the final layer of the Q-Learning Head
         """
         super(QLearningHeadFinal, self).__init__()
 
-        self.V = NoisyFactorizedLinear(256, atoms)
-        self.A = NoisyFactorizedLinear(256, n_actions * atoms)
+        self.V = NoisyLinear(256, atoms)
+        self.A = NoisyLinear(256, n_actions * atoms)
 
         self.atoms = atoms
         self.Vmax = Vmax
@@ -121,7 +142,7 @@ class QLearningHeadFinal(nn.Module):
         self.register_buffer("supports", T.arange(Vmin, Vmax + self.DELTA_Z, self.DELTA_Z))
         self.softmax = nn.Softmax(dim=1)
 
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.device = device
         self.to(self.device)
 
     def forward(self, V, A):
@@ -145,7 +166,7 @@ class QLearningHeadFinal(nn.Module):
 
 
 class QHead(nn.Module):
-    def __init__(self):
+    def __init__(self, device):
         """
         This is the Q head for after the online projection
         NOT to be confused with the q-learning head, they are different
@@ -154,7 +175,7 @@ class QHead(nn.Module):
 
         self.q_head = nn.Linear(512, 512)
 
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.device = device
         self.to(self.device)
 
     def forward(self, x):
@@ -166,7 +187,7 @@ class QHead(nn.Module):
 
 
 class TransitionModel(nn.Module):
-    def __init__(self, n_actions):
+    def __init__(self, n_actions, device):
         super(TransitionModel, self).__init__()
 
         self.conv_trans1 = nn.Conv2d(64 + n_actions, 64, 3, padding=1)
@@ -175,7 +196,7 @@ class TransitionModel(nn.Module):
         self.batch_norm2 = nn.BatchNorm2d(64)
         self.n_actions = n_actions
 
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.device = device
         self.to(self.device)
 
     def forward(self, x, actions):
@@ -200,7 +221,7 @@ class TransitionModel(nn.Module):
 
 
 class SPRNetwork(nn.Module):
-    def __init__(self, lr, n_actions, name, chkpt_dir, atoms, Vmax, Vmin, K, batch_size):
+    def __init__(self, lr, n_actions, name, chkpt_dir, atoms, Vmax, Vmin, K, batch_size, device):
         super(SPRNetwork, self).__init__()
 
         self.checkpoint_dir = chkpt_dir
@@ -208,23 +229,23 @@ class SPRNetwork(nn.Module):
         self.K = K
         self.learn_batch_size = batch_size
 
-        self.encoder = Encoder()
+        self.encoder = Encoder(device)
         self.tgt_encoder = EMA(self.encoder, beta=0.0, update_after_step=0, update_every=1)
         self.conv_output_size = 64 * 7 * 7
 
-        self.mlp_layer1 = MLPLayer1(self.conv_output_size)
+        self.mlp_layer1 = MLPLayer1(self.conv_output_size, device)
         self.tgt_mlp_layer1 = EMA(self.mlp_layer1, beta=0.0, update_after_step=0, update_every=1)
 
-        self.qlearning_head = QLearningHeadFinal(n_actions, atoms, Vmax, Vmin)
+        self.qlearning_head = QLearningHeadFinal(n_actions, atoms, Vmax, Vmin, device)
 
-        self.q_head = QHead()
+        self.q_head = QHead(device)
 
-        self.transition_model = TransitionModel(n_actions)
+        self.transition_model = TransitionModel(n_actions, device)
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
 
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.device = device
         self.to(self.device)
 
     def update_EMAs(self):
@@ -283,7 +304,7 @@ class SPRNetwork(nn.Module):
 
             flat_x = x.view(batch_size, -1)
 
-            proj_v, proj_a = self.mlp_layer1(flat_x)
+            proj_v, proj_a = self.mlp_layer1(flat_x, use_noise=False)
 
             # concat v and a
             proj = T.cat([proj_v, proj_a], dim=1)
@@ -312,7 +333,7 @@ class SPRNetwork(nn.Module):
             # flatten conv layer output
             conv_out = conv_out.view(batch_size, -1)
 
-            latents_v, latents_a = self.tgt_mlp_layer1(conv_out)
+            latents_v, latents_a = self.tgt_mlp_layer1(conv_out, use_noise=False)
             latents = T.cat([latents_v, latents_a], dim=1)
 
             # reshape back to [batch_size x K x 512]
@@ -342,7 +363,7 @@ class SPRNetwork(nn.Module):
 
 
 class Agent:
-    def __init__(self, n_actions, input_dims,
+    def __init__(self, n_actions, input_dims, device,
                  max_mem_size=100000, replace=1, total_frames=100000, lr=0.0001, batch_size=32, discount=0.99):
 
         self.lr = lr
@@ -376,7 +397,7 @@ class Agent:
 
         self.net = SPRNetwork(self.lr, self.n_actions, name='lunar_lander_dueling_ddqn_q_eval',
                               chkpt_dir=self.chkpt_dir, atoms=self.N_ATOMS, Vmax=self.Vmax, Vmin=self.Vmin, K=self.K,
-                              batch_size=self.batch_size)
+                              batch_size=self.batch_size, device=device)
 
         # augmentation
         self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
@@ -384,7 +405,8 @@ class Agent:
 
     def choose_action(self, observation):
         state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
-        advantage = self.net(state)
+        with T.no_grad():
+            advantage = self.net(state)
         return T.argmax(advantage).item()
 
     def get_grad_steps(self):

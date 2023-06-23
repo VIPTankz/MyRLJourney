@@ -4,19 +4,32 @@ from gym.wrappers import AtariPreprocessing
 import time
 from copy import deepcopy
 import sys
+import torch as T
 
 if __name__ == '__main__':
 
-    from DrQ_Agent import Agent
-    agent_name = "DrQ"
+    from SPR_Agent import Agent
+    agent_name = "SPR"
 
+    """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
+    """
 
-    game_idx = sys.argv[1]
-    games = [games[int(game_idx)]]
-    print("Currently Playing: " + str(games[0]))
+    gameset = [["Alien","Amidar","Assault","Asterix"],["BankHeist","BattleZone","Boxing","Breakout"],
+               ["ChopperCommand","CrazyClimber","DemonAttack","Freeway"],["Frostbite","Gopher","Hero","Jamesbond"],
+               ["Kangaroo","Krull","KungFuMaster","MsPacman"],["Pong","PrivateEye","Qbert"],["RoadRunner","Seaquest","UpNDown"]]
+
+    gameset_idx = int(sys.argv[1])
+
+    games = gameset[gameset_idx]
+    print("Currently Playing Games: " + str(games))
+
+    gpu = sys.argv[2]
+    device = T.device('cuda:' + gpu if T.cuda.is_available() else 'cpu')
+    print("Device: " + str(device))
+
     for game in games:
         for runs in range(5):
             env = gym.make('ALE/' + game + '-v5')
@@ -26,7 +39,7 @@ if __name__ == '__main__':
             print(env.observation_space)
             print(env.action_space)
 
-            agent = Agent(n_actions=env.action_space.n,input_dims=[4,84,84],total_frames=100000)
+            agent = Agent(n_actions=env.action_space.n,input_dims=[4,84,84],total_frames=100000,device=device)
 
             scores = []
             scores_temp = []
@@ -60,7 +73,7 @@ if __name__ == '__main__':
                 avg_score = np.mean(scores_temp[-50:])
 
                 if episodes % 1 == 0:
-                    print('{} game {} avg score {:.2f} total_steps {:.0f} fps {:.2f}'
+                    print('{} {} avg score {:.2f} total_steps {:.0f} fps {:.2f}'
                           .format(agent_name, game, avg_score, steps,steps / (time.time() - start)),flush=True)
                     #start = time.time()
 
