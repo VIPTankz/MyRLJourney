@@ -4,17 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/img1_FalseX.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img2_TrueX.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img3_TrueX.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img4_TrueX.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img5_TrueX.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PrioritisedExperienceReplaySPR.py" beforeDir="false" afterPath="$PROJECT_DIR$/PrioritisedExperienceReplaySPR.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SPR_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/SPR_Agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/runGPU.slurm" beforeDir="false" afterPath="$PROJECT_DIR$/runGPU.slurm" afterDir="false" />
-    </list>
+    <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -41,14 +31,14 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/TYLER/Documents/GitHub/MyRLJourney&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "C:/Users/Tyler/Documents/GitHub/MyRLJourney"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\TYLER\Documents\GitHub\MyRLJourney" />

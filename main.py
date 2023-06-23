@@ -8,8 +8,8 @@ import torch as T
 
 if __name__ == '__main__':
 
-    from SPR_Agent import Agent
-    agent_name = "SPR"
+    from DrQHardReset_Agent import Agent
+    agent_name = "DrQNoTarget"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
