@@ -8,8 +8,8 @@ import torch as T
 
 if __name__ == '__main__':
 
-    from DrQ_Agent import Agent
-    agent_name = "DrQ"
+    from DrQAdvanced_Agent import Agent
+    agent_name = "DrQ_SP"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\

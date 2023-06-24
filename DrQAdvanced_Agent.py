@@ -104,8 +104,8 @@ class Agent():
 
         # Resetting Parameters
         self.reset_layers_every = 40000
-        self.conv_move_amount = 0.8
-        self.reset_conv_layers = False
+        self.conv_move_amount = 0.5
+        self.reset_conv_layers = True
 
         self.net = DuelingDeepQNetwork(self.lr, self.n_actions,
                                           input_dims=self.input_dims,
@@ -117,9 +117,9 @@ class Agent():
                                           name='lunar_lander_dueling_ddqn_q_next',
                                           chkpt_dir=self.chkpt_dir, device=device)
 
-        self.n_states = deque([], self.n)
-        self.n_rewards = deque([], self.n)
-        self.n_actions = deque([], self.n)
+        self.nstep_states = deque([], self.n)
+        self.nstep_rewards = deque([], self.n)
+        self.nstep_actions = deque([], self.n)
 
         self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
         self.intensity = Intensity(scale=0.05)
@@ -145,20 +145,20 @@ class Agent():
         self.n_step(state, action, reward, state_, done)
 
     def n_step(self, state, action, reward, state_, done):
-        self.n_states.append(state)
-        self.n_rewards.append(reward)
-        self.n_actions.append(action)
+        self.nstep_states.append(state)
+        self.nstep_rewards.append(reward)
+        self.nstep_actions.append(action)
 
-        if len(self.n_states) == self.n:
+        if len(self.nstep_states) == self.n:
             fin_reward = 0
             for i in range(self.n):
-                fin_reward += self.n_rewards[i] * (self.gamma ** i)
-            self.memory.store_transition(self.n_states[0], self.n_actions[0], fin_reward, state_, done)
+                fin_reward += self.nstep_rewards[i] * (self.gamma ** i)
+            self.memory.store_transition(self.nstep_states[0], self.nstep_actions[0], fin_reward, state_, done)
 
         if done:
-            self.n_states = deque([], self.n)
-            self.n_rewards = deque([], self.n)
-            self.n_actions = deque([], self.n)
+            self.nstep_states = deque([], self.n)
+            self.nstep_rewards = deque([], self.n)
+            self.nstep_actions = deque([], self.n)
 
     def replace_target_network(self):
         if self.learn_step_counter % self.replace_target_cnt == 0:
