@@ -8,8 +8,8 @@ import torch as T
 
 if __name__ == '__main__':
 
-    from DrQ_Agent import Agent
-    agent_name = "DrQ"
+    from DrQAdvanced_Agent import Agent
+    agent_name = "DrQ_Resets"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
@@ -39,7 +39,7 @@ if __name__ == '__main__':
             print(env.observation_space)
             print(env.action_space)
 
-            agent = Agent(n_actions=env.action_space.n,input_dims=[4,84,84],total_frames=100000,device=device)
+            agent = Agent(n_actions=env.action_space.n, input_dims=[4,84,84],total_frames=100000,device=device)
 
             scores = []
             scores_temp = []

@@ -25,6 +25,7 @@ class DuelingDeepQNetwork(nn.Module):
         super(DuelingDeepQNetwork, self).__init__()
         self.checkpoint_dir = chkpt_dir
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name)
+        self.n_actions = n_actions
 
         self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
         self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
@@ -97,12 +98,14 @@ class Agent():
         self.gamma = discount
         self.grad_steps = 1
 
+        self.device = device
+
         self.memory = ExperienceReplay(input_dims, max_mem_size, self.batch_size)
 
         # Resetting Parameters
         self.reset_layers_every = 40000
         self.conv_move_amount = 0.8
-        self.reset_conv_layers = True
+        self.reset_conv_layers = False
 
         self.net = DuelingDeepQNetwork(self.lr, self.n_actions,
                                           input_dims=self.input_dims,
@@ -192,7 +195,7 @@ class Agent():
         for i in range(self.grad_steps):
             self.learn_call()
 
-    def learn(self):
+    def learn_call(self):
 
         if self.memory.mem_cntr < self.min_sampling_size:
             return
@@ -227,7 +230,7 @@ class Agent():
         net_batch = T.cat((states_aug, states_aug_policy_))
 
         # just batches these together to speed up computation
-        Vs, As = self.net.forwad(net_batch)
+        Vs, As = self.net.forward(net_batch)
 
         V_s, V_s_eval = T.tensor_split(Vs, 2, dim=0)
         A_s, A_s_eval = T.tensor_split(As, 2, dim=0)
