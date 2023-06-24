@@ -35,7 +35,7 @@ class DuelingDeepQNetwork(nn.Module):
         self.V = nn.Linear(512, 1)
         self.A = nn.Linear(512, n_actions)
 
-        self.optimizer = optim.Adam(self.parameters(), lr=lr)
+        self.optimizer = optim.Adam(self.parameters(), lr=lr, eps=0.00015)
         self.loss = nn.MSELoss()
         self.device = device
         self.to(self.device)
@@ -53,6 +53,12 @@ class DuelingDeepQNetwork(nn.Module):
         A = self.A(observationA)
 
         return V, A
+
+    def reset_mlps(self):
+        self.fc1V = nn.Linear(64 * 7 * 7, 512)
+        self.fc1A = nn.Linear(64 * 7 * 7, 512)
+        self.V = nn.Linear(512, 1)
+        self.A = nn.Linear(512, self.n_actions)
 
     def save_checkpoint(self):
         print('... saving checkpoint ...')
@@ -75,27 +81,37 @@ class EpsilonGreedy():
 
 class Agent():
     def __init__(self, n_actions, input_dims, device,
-                 max_mem_size=100000,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99):
+                 max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99):
 
         self.epsilon = EpsilonGreedy()
         self.lr = lr
         self.n_actions = n_actions
         self.input_dims = input_dims
         self.batch_size = batch_size
+        self.replace_target_cnt = replace
         self.action_space = [i for i in range(self.n_actions)]
         self.learn_step_counter = 0
         self.min_sampling_size = 1600
         self.n = 10
         self.chkpt_dir = ""
         self.gamma = discount
-        self.eval_mode = False
         self.grad_steps = 1
 
         self.memory = ExperienceReplay(input_dims, max_mem_size, self.batch_size)
 
+        # Resetting Parameters
+        self.reset_layers_every = 40000
+        self.conv_move_amount = 0.8
+        self.reset_conv_layers = True
+
         self.net = DuelingDeepQNetwork(self.lr, self.n_actions,
                                           input_dims=self.input_dims,
                                           name='lunar_lander_dueling_ddqn_q_eval',
+                                          chkpt_dir=self.chkpt_dir, device=device)
+
+        self.tgt_net = DuelingDeepQNetwork(self.lr, self.n_actions,
+                                          input_dims=self.input_dims,
+                                          name='lunar_lander_dueling_ddqn_q_next',
                                           chkpt_dir=self.chkpt_dir, device=device)
 
         self.n_states = deque([], self.n)
@@ -108,8 +124,12 @@ class Agent():
     def get_grad_steps(self):
         return self.grad_steps
 
+    def set_eval_mode(self):
+        self.epsilon.eps_final = 0.05
+        self.epsilon = 0.05
+
     def choose_action(self, observation):
-        if np.random.random() > self.epsilon.eps or self.eval_mode:
+        if np.random.random() > self.epsilon.eps:
             state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
             _, advantage = self.net.forward(state)
             action = T.argmax(advantage).item()
@@ -130,20 +150,47 @@ class Agent():
             fin_reward = 0
             for i in range(self.n):
                 fin_reward += self.n_rewards[i] * (self.gamma ** i)
-            self.memory.store_transition(self.n_states[0], self.n_actions[0], fin_reward,
-                                         state_, done)
+            self.memory.store_transition(self.n_states[0], self.n_actions[0], fin_reward, state_, done)
 
         if done:
             self.n_states = deque([], self.n)
             self.n_rewards = deque([], self.n)
             self.n_actions = deque([], self.n)
 
+    def replace_target_network(self):
+        if self.learn_step_counter % self.replace_target_cnt == 0:
+            self.tgt_net.load_state_dict(self.net.state_dict())
 
     def save_models(self):
         self.net.save_checkpoint()
+        self.tgt_net.save_checkpoint()
 
     def load_models(self):
         self.net.load_checkpoint()
+        self.tgt_net.load_checkpoint()
+
+    def shrink_and_perturb(self):
+        random_model = DuelingDeepQNetwork(self.lr, self.n_actions,
+                                          input_dims=self.input_dims,
+                                          name='lunar_lander_dueling_ddqn_q_eval',
+                                          chkpt_dir=self.chkpt_dir, device=self.device)
+
+        params1 = self.net.named_parameters()
+        params2 = random_model.named_parameters()
+
+        dict_params2 = dict(params2)
+
+        for name1, param1 in params1:
+            if name1 in dict_params2:
+                dict_params2[name1].data.copy_(self.conv_move_amount * param1.data + (1 - self.conv_move_amount) *
+                                               dict_params2[name1].data)
+
+        self.net.load_state_dict(dict_params2)
+        self.net.to(self.device)
+
+    def learn(self):
+        for i in range(self.grad_steps):
+            self.learn_call()
 
     def learn(self):
 
@@ -151,6 +198,17 @@ class Agent():
             return
 
         self.net.optimizer.zero_grad()
+
+        if self.learn_step_counter % self.reset_layers_every == 0:
+            if self.reset_conv_layers:
+                self.shrink_and_perturb()
+
+            self.net.reset_mlps()
+
+            self.net.to(self.device)
+
+        if self.learn_step_counter % self.replace_target_cnt == 0:
+            self.replace_target_network()
 
         states, actions, rewards, new_states, dones = self.memory.sample_memory()
 
@@ -166,15 +224,20 @@ class Agent():
         states_aug_ = (self.intensity(self.random_shift(states_.float() / 255.)) * 255.).to(T.uint8)
         states_aug_policy_ = (self.intensity(self.random_shift(states_.float() / 255.)) * 255.).to(T.uint8)
 
-        all_states = T.cat((states_aug, states_aug_, states_aug_policy_))
-        Vs, As = self.net.forward(all_states)
+        net_batch = T.cat((states_aug, states_aug_policy_))
 
-        V_s, V_s_, V_s_eval = T.tensor_split(Vs, 3, dim=0)
-        A_s, A_s_, A_s_eval = T.tensor_split(As, 3, dim=0)
+        # just batches these together to speed up computation
+        Vs, As = self.net.forwad(net_batch)
+
+        V_s, V_s_eval = T.tensor_split(Vs, 2, dim=0)
+        A_s, A_s_eval = T.tensor_split(As, 2, dim=0)
+
+        # even though there isn't really a target network, we still use two to avoid grad issues
+        # perhaps you could do with T.no_grad()? Might save some memory and copying
+        V_s_, A_s_ = self.tgt_net.forward(states_aug_)
 
         q_pred = T.add(V_s,
                        (A_s - A_s.mean(dim=1, keepdim=True)))[indices, actions]
-
         q_next = T.add(V_s_,
                        (A_s_ - A_s_.mean(dim=1, keepdim=True)))
 

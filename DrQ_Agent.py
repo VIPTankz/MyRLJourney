@@ -115,7 +115,7 @@ class Agent():
 
     def set_eval_mode(self):
         self.epsilon.eps_final = 0.05
-        self.epsilon = 0.05
+        self.epsilon.eps = 0.05
 
     def choose_action(self, observation):
         if np.random.random() > self.epsilon.eps:
@@ -160,6 +160,10 @@ class Agent():
         self.q_next.load_checkpoint()
 
     def learn(self):
+        for i in range(self.grad_steps):
+            self.learn_call()
+
+    def learn_call(self):
 
         if self.memory.mem_cntr < self.min_sampling_size:
             return

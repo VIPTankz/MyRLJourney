@@ -64,8 +64,8 @@ if __name__ == '__main__':
                     agent.store_transition(observation, action, reward,
                                                   observation_ , done)
 
-                    for i in range(agent.get_grad_steps()):
-                        agent.learn()
+                    agent.learn()
+
                     observation = deepcopy(observation_)
                 scores.append([score, steps])
                 scores_temp.append(score)
