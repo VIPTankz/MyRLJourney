@@ -5,10 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/DrQAlienExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DrQ_ResetsAlienExperiment (0).npy" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DER_NoDist_Agent.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrQAdvanced.py" beforeDir="false" afterPath="$PROJECT_DIR$/DrQAdvanced_Agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrQHardReset_Agent.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQAdvanced_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/DrQAdvanced_Agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/NagaQ.py" beforeDir="false" afterPath="$PROJECT_DIR$/HydraQ.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

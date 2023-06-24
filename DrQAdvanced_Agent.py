@@ -129,7 +129,7 @@ class Agent():
 
     def set_eval_mode(self):
         self.epsilon.eps_final = 0.05
-        self.epsilon = 0.05
+        self.epsilon.eps = 0.05
 
     def choose_action(self, observation):
         if np.random.random() > self.epsilon.eps:
