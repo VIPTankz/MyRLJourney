@@ -35,7 +35,7 @@ class DuelingDeepQNetwork(nn.Module):
         self.V = nn.Linear(512, 1)
         self.A = nn.Linear(512, n_actions)
 
-        self.optimizer = optim.Adam(self.parameters(), lr=lr)
+        self.optimizer = optim.Adam(self.parameters(), lr=lr, eps=0.00015)
         self.loss = nn.MSELoss()
         self.device = device
         self.to(self.device)
@@ -113,6 +113,10 @@ class Agent():
 
     def get_grad_steps(self):
         return self.grad_steps
+
+    def set_eval_mode(self):
+        self.epsilon.eps_final = 0.05
+        self.epsilon = 0.05
 
     def choose_action(self, observation):
         if np.random.random() > self.epsilon.eps or self.eval_mode:

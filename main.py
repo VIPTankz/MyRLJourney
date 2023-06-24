@@ -8,8 +8,8 @@ import torch as T
 
 if __name__ == '__main__':
 
-    from SPR_Agent import Agent
-    agent_name = "SPR"
+    from DrQ_Agent import Agent
+    agent_name = "DrQ"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
@@ -62,24 +62,23 @@ if __name__ == '__main__':
                     reward = np.clip(reward, -1., 1.)
 
                     agent.store_transition(observation, action, reward,
-                                                  observation_, done)
+                                                  observation_ , done)
 
                     for i in range(agent.get_grad_steps()):
                         agent.learn()
                     observation = deepcopy(observation_)
-                scores.append([score,steps])
+                scores.append([score, steps])
                 scores_temp.append(score)
 
                 avg_score = np.mean(scores_temp[-50:])
 
                 if episodes % 1 == 0:
                     print('{} {} avg score {:.2f} total_steps {:.0f} fps {:.2f}'
-                          .format(agent_name, game, avg_score, steps,steps / (time.time() - start)),flush=True)
-                    #start = time.time()
+                          .format(agent_name, game, avg_score, steps, steps / (time.time() - start)), flush=True)
 
             fname = agent_name + game + "Experiment (" + str(runs) + ').npy'
             np.save(fname, np.array(scores))
-            agent.eval_mode = True
+            agent.set_eval_mode()
             evals = []
             steps = 0
             while steps < 125000:

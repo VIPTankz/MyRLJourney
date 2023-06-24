@@ -1,6 +1,6 @@
 import numpy as np
 import statistics
-runs = 2
+runs = 5
 
 
 human_scores = [7127.80,1719.53,742.00,8503.33,753.13,\
@@ -15,6 +15,7 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
+print_ind = True
 games = ["Alien"]
 print(len(games))
 
@@ -22,8 +23,8 @@ hns = []
 #games = ["Seaquest","UpNDown"]
 count = 0
 for game in games:
-    labels = ["SPR"]
-    data_files = ["SPR" + game + "Evaluation"]
+    labels = ["DrQ"]
+    data_files = ["DrQ" + game + "Evaluation"]
     
 
     for i in range(len(labels)):
@@ -34,6 +35,9 @@ for game in games:
         temp = []
         for i in range(runs):
             temp.append(np.mean(np.load(exper + " (" + str(i) + ').npy')))
+
+        if print_ind:
+            print(temp[:])
         expers.append(np.mean(temp[:]))
 
     expers = np.array(expers)

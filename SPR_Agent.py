@@ -430,11 +430,14 @@ class Agent:
         self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
         self.intensity = Intensity(scale=0.05)
 
+    def set_eval_mode(self):
+        pass
+
+
     def choose_action(self, observation):
 
         state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
         with T.no_grad():
-            self.net.reset_noise()
             advantage = self.net(state)
         return T.argmax(advantage).item()
 
