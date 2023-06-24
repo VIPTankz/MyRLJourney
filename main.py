@@ -8,7 +8,7 @@ import torch as T
 
 if __name__ == '__main__':
 
-    from DrQHardReset_Agent import Agent
+    from DrQNoTarget_Agent import Agent
     agent_name = "DrQNoTarget"
 
     """
