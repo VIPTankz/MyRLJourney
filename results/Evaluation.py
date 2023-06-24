@@ -16,7 +16,9 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
 print_ind = True
-games = ["Alien"]
+games = ["Alien", "Amidar", "BankHeist", "BattleZone", "ChopperCommand", "CrazyClimber", "Frostbite", "Gopher",
+         "Kangaroo", "Krull", "Pong", "PrivateEye", "RoadRunner"]
+
 print(len(games))
 
 hns = []
@@ -25,7 +27,7 @@ count = 0
 for game in games:
     labels = ["DrQ"]
     data_files = ["DrQ" + game + "Evaluation"]
-    
+    print("\n" + game + " Evaluation Scores")
 
     for i in range(len(labels)):
         hns.append([])
@@ -41,7 +43,7 @@ for game in games:
         expers.append(np.mean(temp[:]))
 
     expers = np.array(expers)
-    print("\n" + game + " Evaluation Scores")
+
 
     for i in range(len(labels)):
         print(labels[i] + ": " + str(expers[i]))

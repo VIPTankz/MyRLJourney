@@ -89,7 +89,6 @@ class Agent():
         self.n = 10
         self.chkpt_dir = ""
         self.gamma = discount
-        self.eval_mode = False
         self.grad_steps = 1
 
         self.memory = ExperienceReplay(input_dims, max_mem_size, self.batch_size)
@@ -119,7 +118,7 @@ class Agent():
         self.epsilon = 0.05
 
     def choose_action(self, observation):
-        if np.random.random() > self.epsilon.eps or self.eval_mode:
+        if np.random.random() > self.epsilon.eps:
             state = T.tensor(np.array([observation]), dtype=T.float).to(self.q_eval.device)
             _, advantage = self.q_eval.forward(state)
             action = T.argmax(advantage).item()
