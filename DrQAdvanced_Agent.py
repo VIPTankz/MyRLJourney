@@ -8,6 +8,7 @@ from ExperienceReplay import ExperienceReplay
 import numpy as np
 from collections import deque
 import kornia.augmentation as aug
+from ema_pytorch import EMA
 
 class Intensity(nn.Module):
     def __init__(self, scale):
@@ -97,6 +98,7 @@ class Agent():
         self.chkpt_dir = ""
         self.gamma = discount
         self.grad_steps = 1
+        self.ema = True
 
         self.device = device
 
@@ -112,10 +114,13 @@ class Agent():
                                           name='lunar_lander_dueling_ddqn_q_eval',
                                           chkpt_dir=self.chkpt_dir, device=device)
 
-        self.tgt_net = DuelingDeepQNetwork(self.lr, self.n_actions,
-                                          input_dims=self.input_dims,
-                                          name='lunar_lander_dueling_ddqn_q_next',
-                                          chkpt_dir=self.chkpt_dir, device=device)
+        if self.ema:
+            self.tgt_net = EMA(self.net, beta=0.005, update_after_step=0, update_every=1)
+        else:
+            self.tgt_net = DuelingDeepQNetwork(self.lr, self.n_actions,
+                                              input_dims=self.input_dims,
+                                              name='lunar_lander_dueling_ddqn_q_next',
+                                              chkpt_dir=self.chkpt_dir, device=device)
 
         self.nstep_states = deque([], self.n)
         self.nstep_rewards = deque([], self.n)
@@ -210,8 +215,11 @@ class Agent():
 
             self.net.to(self.device)
 
-        if self.learn_step_counter % self.replace_target_cnt == 0:
-            self.replace_target_network()
+        if self.ema:
+            self.tgt_net.update()
+        else:
+            if self.learn_step_counter % self.replace_target_cnt == 0:
+                self.replace_target_network()
 
         states, actions, rewards, new_states, dones = self.memory.sample_memory()
 
@@ -237,7 +245,7 @@ class Agent():
 
         # even though there isn't really a target network, we still use two to avoid grad issues
         # perhaps you could do with T.no_grad()? Might save some memory and copying
-        V_s_, A_s_ = self.tgt_net.forward(states_aug_)
+        V_s_, A_s_ = self.tgt_net(states_aug_)
 
         q_pred = T.add(V_s,
                        (A_s - A_s.mean(dim=1, keepdim=True)))[indices, actions]
