@@ -513,18 +513,14 @@ class Agent:
         states_ = (self.intensity(self.random_shift(states_.float() / 255.)) * 255).to(T.uint8)
 
         # Forward passes on network
-        states_next_states = T.cat((states, states_))
-        encodings = self.net.encode(states_next_states)
+        encodings = self.net.encode(states)
         distr_v, qvals_v = self.net.decode(encodings)
 
         # targets generated using target network
         next_distr_v, next_qvals_v = self.tgt_net.decode(self.tgt_net.encode(states_))
 
-        action_qvals_v = qvals_v[self.batch_size:]
-        distr_v = distr_v[:self.batch_size]
-
         # Rainbow Loss Code
-        next_actions_v = action_qvals_v.max(1)[1]
+        next_actions_v = next_qvals_v.max(1)[1]
 
         next_best_distr_v = next_distr_v[range(self.batch_size), next_actions_v.data]
         next_best_distr_v = self.net.qlearning_head.apply_softmax(next_best_distr_v)
