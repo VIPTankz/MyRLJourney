@@ -12,9 +12,12 @@ class EMA(nn.Module):
 
         self.ema_net = deepcopy(self.net)
 
-    def forward(self, x):
+    def forward(self, x, use_noise=None):
         with torch.no_grad():
-            x = self.ema_net(x)
+            if use_noise is None:
+                x = self.ema_net(x)
+            else:
+                x = self.ema_net(x, use_noise)
 
         return x
 

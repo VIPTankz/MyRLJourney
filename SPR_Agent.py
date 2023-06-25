@@ -433,7 +433,6 @@ class Agent:
     def set_eval_mode(self):
         pass
 
-
     def choose_action(self, observation):
 
         state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
@@ -475,6 +474,10 @@ class Agent:
         self.net.load_checkpoint()
 
     def learn(self):
+        for i in range(self.grad_steps):
+            self.learn_call()
+
+    def learn_call(self):
 
         if self.memory.count < self.min_sampling_size:
             return

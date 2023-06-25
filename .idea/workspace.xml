@@ -6,7 +6,15 @@
   <component name="ChangeListManager">
     <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrQAdvanced_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/DrQAdvanced_Agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EMA.py" beforeDir="false" afterPath="$PROJECT_DIR$/EMA.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SPR_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/SPR_Agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/SPRAlienEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/SPRAlienEvaluation (1).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/SPRAlienEvaluation (2).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/SPRAlienExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/SPRAlienExperiment (1).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/SPRAlienExperiment (2).npy" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
