@@ -94,7 +94,7 @@ class Agent():
         self.action_space = [i for i in range(self.n_actions)]
         self.learn_step_counter = 0
         self.env_step_counter = 0
-        self.min_sampling_size = 1600
+        self.min_sampling_size = 2000
         self.n = 10
         self.chkpt_dir = ""
         self.gamma = discount
