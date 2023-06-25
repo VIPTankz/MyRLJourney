@@ -21,6 +21,18 @@ class EMA(nn.Module):
 
         return x
 
+    def decode(self, x):
+        with torch.no_grad():
+            x = self.ema_net.decode(x)
+
+        return x
+
+    def encode(self, x):
+        with torch.no_grad():
+            x = self.ema_net.encode(x)
+
+        return x
+
     def update(self):
         state_dict = self.net.state_dict()
 

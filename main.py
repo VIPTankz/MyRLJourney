@@ -54,7 +54,7 @@ if __name__ == '__main__':
                 done = False
                 trun = False
                 observation, info = env.reset()
-                while not done and not trun:
+                while not done and not trun and steps < n_steps:
                     steps += 1
                     action = agent.choose_action(observation)
                     observation_, reward, done, trun, info = env.step(action)
@@ -67,21 +67,24 @@ if __name__ == '__main__':
                     agent.learn()
 
                     observation = deepcopy(observation_)
-                scores.append([score, steps])
-                scores_temp.append(score)
 
-                avg_score = np.mean(scores_temp[-50:])
+                if steps < n_steps:
+                    scores.append([score, steps])
+                    scores_temp.append(score)
 
-                if episodes % 1 == 0:
-                    print('{} {} avg score {:.2f} total_steps {:.0f} fps {:.2f}'
-                          .format(agent_name, game, avg_score, steps, steps / (time.time() - start)), flush=True)
+                    avg_score = np.mean(scores_temp[-50:])
+
+                    if episodes % 1 == 0:
+                        print('{} {} avg score {:.2f} total_steps {:.0f} fps {:.2f}'
+                              .format(agent_name, game, avg_score, steps, steps / (time.time() - start)), flush=True)
 
             fname = agent_name + game + "Experiment (" + str(runs) + ').npy'
             np.save(fname, np.array(scores))
             agent.set_eval_mode()
             evals = []
             steps = 0
-            while steps < 125000:
+            eval_episodes = 0
+            while eval_episodes < 100:
                 done = False
                 trun = False
                 observation, info = env.reset()
@@ -95,6 +98,7 @@ if __name__ == '__main__':
 
                 evals.append(score)
                 print("Evaluation Score: " + str(score))
+                eval_episodes += 1
 
             fname = agent_name + game + "Evaluation (" + str(runs) + ').npy'
             np.save(fname, np.array(evals))

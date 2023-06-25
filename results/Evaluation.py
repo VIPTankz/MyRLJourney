@@ -16,8 +16,8 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
 print_ind = True
-games = ["Alien", "Amidar", "BankHeist", "BattleZone", "ChopperCommand", "CrazyClimber", "Frostbite", "Gopher",
-         "Kangaroo", "Krull", "Pong", "PrivateEye", "RoadRunner"]
+games = ["Alien","Amidar", "BankHeist","BattleZone","ChopperCommand","CrazyClimber","Frostbite","Gopher","Kangaroo",
+         "Krull","Pong","PrivateEye","RoadRunner","Seaquest"]
 
 print(len(games))
 

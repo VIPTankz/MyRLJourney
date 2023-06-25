@@ -426,6 +426,8 @@ class Agent:
                               chkpt_dir=self.chkpt_dir, atoms=self.N_ATOMS, Vmax=self.Vmax, Vmin=self.Vmin, K=self.K,
                               batch_size=self.batch_size, device=device)
 
+        self.tgt_net = EMA(self.net, tau=1)
+
         # augmentation
         self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
         self.intensity = Intensity(scale=0.05)
@@ -486,6 +488,7 @@ class Agent:
 
         # update EMAs
         self.net.update_EMAs()
+        self.tgt_net.update()
 
         # reset noise on noisy layers
         self.net.reset_noise()
@@ -512,15 +515,16 @@ class Agent:
         # Forward passes on network
         states_next_states = T.cat((states, states_))
         encodings = self.net.encode(states_next_states)
-
         distr_v, qvals_v = self.net.decode(encodings)
 
-        next_qvals_v = qvals_v[self.batch_size:]
-        next_distr_v = distr_v[self.batch_size:]
+        # targets generated using target network
+        next_distr_v, next_qvals_v = self.tgt_net.decode(self.tgt_net.encode(states_))
+
+        action_qvals_v = qvals_v[self.batch_size:]
         distr_v = distr_v[:self.batch_size]
 
         # Rainbow Loss Code
-        next_actions_v = next_qvals_v.max(1)[1]
+        next_actions_v = action_qvals_v.max(1)[1]
 
         next_best_distr_v = next_distr_v[range(self.batch_size), next_actions_v.data]
         next_best_distr_v = self.net.qlearning_head.apply_softmax(next_best_distr_v)
