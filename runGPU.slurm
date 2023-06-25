@@ -4,7 +4,7 @@
 #SBATCH --mem=96000
 #SBATCH -p batch
 #SBATCH --job-name=RL_atari_benchmark
-#SBATCH --time=48:00:00
+#SBATCH --time=60:00:00
 
 module load conda/py3-latest
 source activate atari_work

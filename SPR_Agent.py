@@ -10,8 +10,7 @@ from torchvision.utils import save_image
 import math
 from PrioritisedExperienceReplaySPR import PrioritizedReplayBuffer
 import kornia.augmentation as aug
-from ema_pytorch import EMA
-
+from EMA import EMA
 
 
 class Intensity(nn.Module):
@@ -237,13 +236,14 @@ class SPRNetwork(nn.Module):
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name)
         self.K = K
         self.learn_batch_size = batch_size
+        self.tau = 1
 
         self.encoder = Encoder(device)
-        self.tgt_encoder = EMA(self.encoder, beta=0.0, update_after_step=0, update_every=1)
+        self.tgt_encoder = EMA(self.encoder, tau = self.tau)
         self.conv_output_size = 64 * 7 * 7
 
         self.mlp_layer1 = MLPLayer1(self.conv_output_size, device)
-        self.tgt_mlp_layer1 = EMA(self.mlp_layer1, beta=0.0, update_after_step=0, update_every=1)
+        self.tgt_mlp_layer1 = EMA(self.mlp_layer1, tau = self.tau)
 
         self.qlearning_head = QLearningHeadFinal(n_actions, atoms, Vmax, Vmin, device)
 

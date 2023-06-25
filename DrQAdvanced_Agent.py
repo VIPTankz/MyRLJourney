@@ -8,7 +8,7 @@ from ExperienceReplay import ExperienceReplay
 import numpy as np
 from collections import deque
 import kornia.augmentation as aug
-from ema_pytorch import EMA
+from EMA import EMA
 
 class Intensity(nn.Module):
     def __init__(self, scale):
@@ -93,20 +93,25 @@ class Agent():
         self.replace_target_cnt = replace
         self.action_space = [i for i in range(self.n_actions)]
         self.learn_step_counter = 0
+        self.env_step_counter = 0
         self.min_sampling_size = 1600
         self.n = 10
         self.chkpt_dir = ""
         self.gamma = discount
-        self.grad_steps = 1
+        self.grad_steps = 2
         self.ema = True
+        self.ema_action_selection = True
+        self.resets = True
 
         self.device = device
 
         self.memory = ExperienceReplay(input_dims, max_mem_size, self.batch_size)
 
+
+
         # Resetting Parameters
         self.reset_layers_every = 40000
-        self.conv_move_amount = 0.5
+        self.sp_alpha = 0.8
         self.reset_conv_layers = True
 
         self.net = DuelingDeepQNetwork(self.lr, self.n_actions,
@@ -115,7 +120,7 @@ class Agent():
                                           chkpt_dir=self.chkpt_dir, device=device)
 
         if self.ema:
-            self.tgt_net = EMA(self.net, beta=0.005, update_after_step=0, update_every=1)
+            self.tgt_net = EMA(self.net, tau=0.005)
         else:
             self.tgt_net = DuelingDeepQNetwork(self.lr, self.n_actions,
                                               input_dims=self.input_dims,
@@ -147,6 +152,7 @@ class Agent():
         return action
 
     def store_transition(self, state, action, reward, state_, done):
+        self.env_step_counter += 1
         self.n_step(state, action, reward, state_, done)
 
     def n_step(self, state, action, reward, state_, done):
@@ -190,7 +196,7 @@ class Agent():
 
         for name1, param1 in params1:
             if name1 in dict_params2:
-                dict_params2[name1].data.copy_(self.conv_move_amount * param1.data + (1 - self.conv_move_amount) *
+                dict_params2[name1].data.copy_(self.sp_alpha * param1.data + (1 - self.sp_alpha) *
                                                dict_params2[name1].data)
 
         self.net.load_state_dict(dict_params2)
@@ -207,7 +213,7 @@ class Agent():
 
         self.net.optimizer.zero_grad()
 
-        if self.learn_step_counter % self.reset_layers_every == 0:
+        if self.learn_step_counter % self.reset_layers_every == 0 and self.resets and self.env_step_counter < 90000:
             if self.reset_conv_layers:
                 self.shrink_and_perturb()
 
@@ -235,17 +241,14 @@ class Agent():
         states_aug_ = (self.intensity(self.random_shift(states_.float() / 255.)) * 255.).to(T.uint8)
         states_aug_policy_ = (self.intensity(self.random_shift(states_.float() / 255.)) * 255.).to(T.uint8)
 
-        net_batch = T.cat((states_aug, states_aug_policy_))
+        V_s, A_s = self.net(states_aug)
 
-        # just batches these together to speed up computation
-        Vs, As = self.net.forward(net_batch)
-
-        V_s, V_s_eval = T.tensor_split(Vs, 2, dim=0)
-        A_s, A_s_eval = T.tensor_split(As, 2, dim=0)
-
-        # even though there isn't really a target network, we still use two to avoid grad issues
-        # perhaps you could do with T.no_grad()? Might save some memory and copying
         V_s_, A_s_ = self.tgt_net(states_aug_)
+
+        if self.ema_action_selection and self.ema:
+            V_s_eval, A_s_eval = self.tgt_net(states_aug_policy_)
+        else:
+            V_s_eval, A_s_eval = self.net(states_aug_policy_)
 
         q_pred = T.add(V_s,
                        (A_s - A_s.mean(dim=1, keepdim=True)))[indices, actions]
