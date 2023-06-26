@@ -312,7 +312,7 @@ class SPRNetwork(nn.Module):
             proj = T.cat([proj_v, proj_a], dim=1)
 
             latent = self.q_head(proj)
-            latents.append(latent)
+            latents.append(T.clone(latent))
 
         latents = T.stack(latents).to(self.device)
         latents = T.swapaxes(latents, 0, 1)
@@ -474,8 +474,6 @@ class Agent:
         if self.memory.count < self.min_sampling_size:
             return
 
-        self.net.optimizer.zero_grad()
-
         # update EMAs
         self.net.update_EMAs()
         self.tgt_net.update()
@@ -545,6 +543,7 @@ class Agent:
 
         # Final Loss
         loss = rainbow_loss + self.spr_loss_coef * spr_loss
+        self.net.optimizer.zero_grad()
         loss.backward()
         T.nn.utils.clip_grad_norm_(self.net.parameters(), 10)
         self.net.optimizer.step()

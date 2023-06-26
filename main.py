@@ -5,11 +5,28 @@ import time
 from copy import deepcopy
 import sys
 import torch as T
+from AtariSetup import AtariPreprocessing, TimeLimit, FrameStack, ImageToPyTorch
+
+def make_env(game, eval):
+    env = gym.make('ALE/' + game + '-v5')
+    env.seed(runs + eval * 10000)
+    # env = AtariPreprocessing(env, frame_skip=1, terminal_on_life_loss=True)
+    # env = gym.wrappers.FrameStack(env, 4)
+
+    env = AtariPreprocessing(env.env,
+                             frame_skip=4,
+                             max_random_noops=0,
+                             terminal_on_life_loss=True)
+    env = TimeLimit(env, max_episode_steps=27000)
+    env = FrameStack(env, k=4)
+    env = ImageToPyTorch(env)
+
+    return env
 
 if __name__ == '__main__':
 
-    from SPR_Agent import Agent
-    agent_name = "SPR"
+    from DrQ_Agent import Agent
+    agent_name = "DrQ"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
@@ -32,10 +49,11 @@ if __name__ == '__main__':
 
     for game in games:
         for runs in range(5):
-            env = gym.make('ALE/' + game + '-v5')
-            env = AtariPreprocessing(env, frame_skip=1)
-            env = gym.wrappers.FrameStack(env, 4)
-            env.seed(runs)
+            # gym version 0.25.2
+            # ie pre 5 arg step
+            env = make_env(game, eval=False)
+
+
             print(env.observation_space)
             print(env.action_space)
 
@@ -53,11 +71,15 @@ if __name__ == '__main__':
                 episodes += 1
                 done = False
                 trun = False
-                observation, info = env.reset()
+                observation = env.reset()
                 while not done and not trun and steps < n_steps:
                     steps += 1
                     action = agent.choose_action(observation)
-                    observation_, reward, done, trun, info = env.step(action)
+                    observation_, reward, _, info = env.step(action)
+
+                    time_limit = 'TimeLimit.truncated' in info
+                    done = info['game_over'] or time_limit
+
                     score += reward
                     reward = np.clip(reward, -1., 1.)
 
@@ -80,6 +102,7 @@ if __name__ == '__main__':
 
             fname = agent_name + game + "Experiment (" + str(runs) + ').npy'
             np.save(fname, np.array(scores))
+            env = make_env(game, eval=True)
             agent.set_eval_mode()
             evals = []
             steps = 0
@@ -87,12 +110,16 @@ if __name__ == '__main__':
             while eval_episodes < 100:
                 done = False
                 trun = False
-                observation, info = env.reset()
+                observation = env.reset()
                 score = 0
                 while not done and not trun:
                     steps += 1
                     action = agent.choose_action(observation)
-                    observation_, reward, done, trun, info = env.step(action)
+                    observation_, reward, _, info = env.step(action)
+
+                    time_limit = 'TimeLimit.truncated' in info
+                    done = info['game_over'] or time_limit
+
                     score += reward
                     observation = observation_
 
