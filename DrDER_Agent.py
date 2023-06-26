@@ -9,7 +9,17 @@ from collections import deque
 from torchvision.utils import save_image
 import math
 from PrioritisedExperienceReplay import PrioritizedReplayBuffer
+import kornia.augmentation as aug
 
+class Intensity(nn.Module):
+    def __init__(self, scale):
+        super().__init__()
+        self.scale = scale
+
+    def forward(self, x):
+        r = T.randn((x.size(0), 1, 1, 1), device=x.device)
+        noise = 1.0 + (self.scale * r.clamp(-2.0, 2.0))
+        return x * noise
 
 class NoisyFactorizedLinear(nn.Linear):
     """
@@ -145,7 +155,7 @@ class Agent():
         self.grad_steps = 2
 
         #n-step
-        self.n = 20
+        self.n = 10
         self.nstep_states = deque([], self.n)
         self.nstep_rewards = deque([], self.n)
         self.nstep_actions = deque([], self.n)
@@ -165,6 +175,9 @@ class Agent():
         self.tgt_net = DuelingDeepQNetwork(self.lr, self.n_actions,
                                           input_dims=self.input_dims,name='DER_next',
                                           chkpt_dir=self.chkpt_dir,atoms=self.N_ATOMS,Vmax=self.Vmax,Vmin=self.Vmin, device=device)
+
+        self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
+        self.intensity = Intensity(scale=0.05)
 
     def choose_action(self, observation):
         state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
@@ -189,8 +202,7 @@ class Agent():
             fin_reward = 0
             for i in range(self.n):
                 fin_reward += self.nstep_rewards[i] * (self.gamma ** i)
-            self.memory.add(self.nstep_states[0], self.nstep_actions[0],fin_reward, \
-                                         state_, done)
+            self.memory.add(self.nstep_states[0], self.nstep_actions[0],fin_reward, state_, done)
 
         if done:
             self.nstep_states = deque([], self.n)
