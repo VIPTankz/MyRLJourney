@@ -120,8 +120,9 @@ class Agent():
     def choose_action(self, observation):
         if np.random.random() > self.epsilon.eps:
             state = T.tensor(np.array([observation]), dtype=T.float).to(self.q_eval.device)
-            _, advantage = self.q_eval.forward(state)
-            action = T.argmax(advantage).item()
+            with T.no_grad():
+                _, advantage = self.q_eval.forward(state)
+                action = T.argmax(advantage).item()
         else:
             action = np.random.choice(self.action_space)
 

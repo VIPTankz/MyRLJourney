@@ -181,8 +181,10 @@ class Agent():
 
     def choose_action(self, observation):
         state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
-        advantage = self.net.qvals(state)
-        return T.argmax(advantage).item()
+        with T.no_grad():
+            advantage = self.net.qvals(state)
+            x = T.argmax(advantage).item()
+        return x
 
     def get_grad_steps(self):
         return self.grad_steps

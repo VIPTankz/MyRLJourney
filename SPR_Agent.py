@@ -25,55 +25,43 @@ class Intensity(nn.Module):
 
 
 class NoisyLinear(nn.Module):
-    def __init__(self, in_features, out_features, std_init=0.5, bias=True):
+    def __init__(self, in_features, out_features, std_init=0.5):
         super(NoisyLinear, self).__init__()
-        self.bias = bias
         self.in_features = in_features
         self.out_features = out_features
         self.std_init = std_init
-        self.sampling = True
-        self.noise_override = None
         self.weight_mu = nn.Parameter(T.empty(out_features, in_features))
         self.weight_sigma = nn.Parameter(T.empty(out_features, in_features))
         self.register_buffer('weight_epsilon', T.empty(out_features, in_features))
-        self.bias_mu = nn.Parameter(T.empty(out_features), requires_grad=bias)
-        self.bias_sigma = nn.Parameter(T.empty(out_features), requires_grad=bias)
+        self.bias_mu = nn.Parameter(T.empty(out_features))
+        self.bias_sigma = nn.Parameter(T.empty(out_features))
         self.register_buffer('bias_epsilon', T.empty(out_features))
         self.reset_parameters()
-        self.reset_noise()
+        self.sample_noise()
 
     def reset_parameters(self):
-        mu_range = 1 / np.sqrt(self.in_features)
+        mu_range = 1.0 / math.sqrt(self.in_features)
         self.weight_mu.data.uniform_(-mu_range, mu_range)
-        self.weight_sigma.data.fill_(self.std_init / np.sqrt(self.in_features))
-        if not self.bias:
-            self.bias_mu.fill_(0)
-            self.bias_sigma.fill_(0)
-        else:
-            self.bias_sigma.data.fill_(self.std_init / np.sqrt(self.out_features))
-            self.bias_mu.data.uniform_(-mu_range, mu_range)
+        self.weight_sigma.data.fill_(self.std_init / math.sqrt(self.in_features))
+        self.bias_mu.data.uniform_(-mu_range, mu_range)
+        self.bias_sigma.data.fill_(self.std_init / math.sqrt(self.out_features))
 
     def _scale_noise(self, size):
         x = T.randn(size)
         return x.sign().mul_(x.abs().sqrt_())
 
-    def reset_noise(self):
+    def sample_noise(self):
         epsilon_in = self._scale_noise(self.in_features)
         epsilon_out = self._scale_noise(self.out_features)
         self.weight_epsilon.copy_(epsilon_out.ger(epsilon_in))
         self.bias_epsilon.copy_(epsilon_out)
 
-    def forward(self, input, use_noise=True):
-        # Self.training alone isn't a good-enough check, since we may need to
-        # activate .eval() during sampling even when we want to use noise
-        # (due to batchnorm, dropout, or similar).
-        # The extra "sampling" flag serves to override this behavior and causes
-        # noise to be used even when .eval() has been called.
+    def forward(self, inp, use_noise=True):
         if use_noise:
-            return F.linear(input, self.weight_mu + self.weight_sigma * self.weight_epsilon,
-                            self.bias_mu + self.bias_sigma * self.bias_epsilon)
+            return F.linear(inp, self.weight_mu + self.weight_sigma * self.weight_epsilon, self.bias_mu +
+                            self.bias_sigma * self.bias_epsilon)
         else:
-            return F.linear(input, self.weight_mu, self.bias_mu)
+            return F.linear(inp, self.weight_mu, self.bias_mu)
 
 
 class Encoder(nn.Module):
@@ -113,9 +101,9 @@ class MLPLayer1(nn.Module):
         self.device = device
         self.to(self.device)
 
-    def reset_noise(self):
-        self.fc1A.reset_noise()
-        self.fc1V.reset_noise()
+    def sample_noise(self):
+        self.fc1A.sample_noise()
+        self.fc1V.sample_noise()
 
     def forward(self, x, use_noise=True):
         """
@@ -149,9 +137,9 @@ class QLearningHeadFinal(nn.Module):
         self.device = device
         self.to(self.device)
 
-    def reset_noise(self):
-        self.A.reset_noise()
-        self.V.reset_noise()
+    def sample_noise(self):
+        self.A.sample_noise()
+        self.V.sample_noise()
 
     def forward(self, V, A):
         """
@@ -257,9 +245,9 @@ class SPRNetwork(nn.Module):
         self.device = device
         self.to(self.device)
 
-    def reset_noise(self):
-        self.mlp_layer1.reset_noise()
-        self.qlearning_head.reset_noise()
+    def sample_noise(self):
+        self.mlp_layer1.sample_noise()
+        self.qlearning_head.sample_noise()
 
     def update_EMAs(self):
         self.tgt_encoder.update()
@@ -439,8 +427,10 @@ class Agent:
 
         state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
         with T.no_grad():
+            self.net.sample_noise()
             advantage = self.net(state)
-        return T.argmax(advantage).item()
+            x = T.argmax(advantage).item()
+        return x
 
     def get_grad_steps(self):
         return self.grad_steps
@@ -491,7 +481,7 @@ class Agent:
         self.tgt_net.update()
 
         # reset noise on noisy layers
-        self.net.reset_noise()
+        self.net.sample_noise()
 
         batch, weights, tree_idxs = self.memory.sample(self.batch_size)
 
