@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
             scores = []
             scores_temp = []
-            n_steps = 3000
+            n_steps = 100000
             steps = 0
             episodes = 0
             start = time.time()
