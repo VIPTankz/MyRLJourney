@@ -9,6 +9,51 @@ import numpy as np
 from collections import deque
 import kornia.augmentation as aug
 
+class Conv2d_tf(nn.Conv2d):
+    """
+    Conv2d with the padding behavior from TF
+    """
+    def __init__(self, *args, **kwargs):
+        super(Conv2d_tf, self).__init__(*args, **kwargs)
+        self.padding = kwargs.get("padding", "SAME")
+
+    def _compute_padding(self, input, dim):
+        input_size = input.size(dim + 2)
+        filter_size = self.weight.size(dim + 2)
+        effective_filter_size = (filter_size - 1) * self.dilation[dim] + 1
+        out_size = (input_size + self.stride[dim] - 1) // self.stride[dim]
+        total_padding = max(0, (out_size - 1) * self.stride[dim] +
+                            effective_filter_size - input_size)
+        additional_padding = int(total_padding % 2 != 0)
+
+        return additional_padding, total_padding
+
+    def forward(self, input):
+        if self.padding == "VALID":
+            return F.conv2d(
+                input,
+                self.weight,
+                self.bias,
+                self.stride,
+                padding=0,
+                dilation=self.dilation,
+                groups=self.groups,
+            )
+        rows_odd, padding_rows = self._compute_padding(input, dim=0)
+        cols_odd, padding_cols = self._compute_padding(input, dim=1)
+        if rows_odd or cols_odd:
+            input = F.pad(input, [0, cols_odd, 0, rows_odd])
+
+        return F.conv2d(
+            input,
+            self.weight,
+            self.bias,
+            self.stride,
+            padding=(padding_rows // 2, padding_cols // 2),
+            dilation=self.dilation,
+            groups=self.groups,
+        )
+
 class Intensity(nn.Module):
     def __init__(self, scale):
         super().__init__()
@@ -26,9 +71,9 @@ class DuelingDeepQNetwork(nn.Module):
         self.checkpoint_dir = chkpt_dir
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name)
 
-        self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
-        self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
-        self.conv3 = nn.Conv2d(64, 64, 3)
+        self.conv1 = Conv2d_tf(4, 32, 8, stride=4, padding='SAME')
+        self.conv2 = Conv2d_tf(32, 64, 4, stride=2, padding='SAME')
+        self.conv3 = Conv2d_tf(64, 64, 3, padding='SAME')
 
         self.fc1V = nn.Linear(64 * 7 * 7, 512)
         self.fc1A = nn.Linear(64 * 7 * 7, 512)
@@ -168,7 +213,7 @@ class Agent():
         if self.memory.mem_cntr < self.min_sampling_size:
             return
 
-        self.q_eval.optimizer.zero_grad()
+        
 
         if self.learn_step_counter % self.replace_target_cnt == 0:
             self.replace_target_network()
@@ -206,7 +251,10 @@ class Agent():
         q_target = rewards + (self.gamma ** self.n) * q_next[indices, max_actions]
 
         loss = self.q_eval.loss(q_target, q_pred).to(self.q_eval.device)
+        loss = F.smooth_l1_loss(q_target, q_pred, reduction='none')
+        loss = loss.mean()
 
+        self.q_eval.optimizer.zero_grad()
         loss.backward()
         T.nn.utils.clip_grad_norm_(self.q_eval.parameters(), 10)
         self.q_eval.optimizer.step()

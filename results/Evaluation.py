@@ -16,8 +16,6 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
 print_ind = True
-games = ["Alien","Amidar", "BankHeist","BattleZone","ChopperCommand","CrazyClimber","Frostbite","Gopher","Kangaroo",
-         "Krull","Pong","PrivateEye","RoadRunner","Seaquest"]
 
 print(len(games))
 
@@ -26,7 +24,10 @@ hns = []
 count = 0
 for game in games:
     labels = ["DrQ"]
-    data_files = ["DrQ" + game + "Evaluation"]
+    data_files = []
+    for i in labels:
+        data_files.append(i + "\\" + i + game + "Evaluation")
+    #data_files = ["DrQ" + game + "Evaluation"]
     print("\n" + game + " Evaluation Scores")
 
     for i in range(len(labels)):
