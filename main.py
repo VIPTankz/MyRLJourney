@@ -53,7 +53,6 @@ if __name__ == '__main__':
             # ie pre 5 arg step
             env = make_env(game, eval=False)
 
-
             print(env.observation_space)
             print(env.action_space)
 
