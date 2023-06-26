@@ -175,6 +175,8 @@ class Agent():
     def get_grad_steps(self):
         return self.grad_steps
 
+    def set_eval_mode(self):
+        pass
 
     def store_transition(self, state, action, reward, state_, done):
         self.n_step(state, action, reward, state_, done)

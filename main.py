@@ -8,8 +8,8 @@ import torch as T
 
 if __name__ == '__main__':
 
-    from DrQ_Agent import Agent
-    agent_name = "DrQ"
+    from DER_Agent import Agent
+    agent_name = "DER"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
             scores = []
             scores_temp = []
-            n_steps = 100000
+            n_steps = 3000
             steps = 0
             episodes = 0
             start = time.time()
