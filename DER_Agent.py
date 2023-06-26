@@ -232,12 +232,11 @@ class Agent():
         weights = weights.to(self.net.device)
 
         ##############
-        distr_v, qvals_v = self.net.both(T.cat((states, states_)))
-        next_qvals_v = qvals_v[self.batch_size:]
-        distr_v = distr_v[:self.batch_size]
+        distr_v, qvals_v = self.net.both(states)
+        next_distr_v, next_qvals_v = self.tgt_net.both(states_)
 
         next_actions_v = next_qvals_v.max(1)[1]
-        next_distr_v = self.tgt_net(states_)
+
         next_best_distr_v = next_distr_v[range(self.batch_size), next_actions_v.data]
         next_best_distr_v = self.tgt_net.apply_softmax(next_best_distr_v)
         next_best_distr = next_best_distr_v.data.cpu()
