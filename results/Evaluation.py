@@ -23,7 +23,7 @@ hns = []
 #games = ["Seaquest","UpNDown"]
 count = 0
 for game in games:
-    labels = ["DrQ"]
+    labels = ["DrQ_Resets"]
     data_files = []
     for i in labels:
         data_files.append(i + "\\" + i + game + "Evaluation")
