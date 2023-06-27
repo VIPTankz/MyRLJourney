@@ -33,6 +33,18 @@ class EMA(nn.Module):
 
         return x
 
+    def both(self, x):
+        with torch.no_grad():
+            x = self.net.both(x)
+
+        return x
+
+    def apply_softmax(self, x):
+        with torch.no_grad():
+            x = self.net.softmax(x)
+
+        return x
+
     def update(self):
         state_dict = self.net.state_dict()
 

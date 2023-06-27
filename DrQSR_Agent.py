@@ -10,6 +10,7 @@ from torchvision.utils import save_image
 import math
 from PrioritisedExperienceReplay import PrioritizedReplayBuffer
 import kornia.augmentation as aug
+from EMA import EMA
 
 class Intensity(nn.Module):
     def __init__(self, scale):
@@ -76,7 +77,6 @@ class DuelingDeepQNetwork(nn.Module):
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
         self.device = device
-        print("Device: " + str(self.device),flush=True)
         self.to(self.device)
 
     def conv(self,x):
@@ -115,11 +115,12 @@ class DuelingDeepQNetwork(nn.Module):
         res = weights.sum(dim=2)
         return cat_out, res
 
-    def reset_final_layer(self):
+    def reset_mlp(self):
         with T.no_grad():
+            self.fc1V = NoisyFactorizedLinear(64 * 7 * 7, 512)
+            self.fc1A = NoisyFactorizedLinear(64 * 7 * 7, 512)
             self.V = NoisyFactorizedLinear(512, self.atoms)
             self.A = NoisyFactorizedLinear(512, self.n_actions * self.atoms)
-
         self.to(self.device)
 
     def qvals(self, x):
@@ -159,9 +160,14 @@ class Agent():
         self.min_sampling_size = 2000
         self.chkpt_dir = ""
         self.gamma = discount
+        self.device = device
         self.eval_mode = False
+
         self.grad_steps = 2
         self.resets = True
+        self.sp_alpha = 0.8
+        self.tau = 0.005
+
 
         #n-step
         self.n = 10
@@ -181,9 +187,7 @@ class Agent():
                                           input_dims=self.input_dims, name='DER_eval',
                                           chkpt_dir=self.chkpt_dir,atoms=self.N_ATOMS,Vmax=self.Vmax,Vmin=self.Vmin, device=device)
 
-        self.tgt_net = DuelingDeepQNetwork(self.lr, self.n_actions,
-                                          input_dims=self.input_dims,name='DER_next',
-                                          chkpt_dir=self.chkpt_dir,atoms=self.N_ATOMS,Vmax=self.Vmax,Vmin=self.Vmin, device=device)
+        self.tgt_net = EMA(self.net, self.tau)
 
         self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
         self.intensity = Intensity(scale=0.05)
@@ -220,10 +224,6 @@ class Agent():
             self.nstep_rewards = deque([], self.n)
             self.nstep_actions = deque([], self.n)
 
-    def replace_target_network(self):
-        if self.learn_step_counter % self.replace_target_cnt == 0:
-            self.tgt_net.load_state_dict(self.net.state_dict())
-
     def save_models(self):
         self.net.save_checkpoint()
         self.tgt_net.save_checkpoint()
@@ -231,6 +231,28 @@ class Agent():
     def load_models(self):
         self.net.load_checkpoint()
         self.tgt_net.load_checkpoint()
+
+    def shrink_and_perturb(self):
+        with T.no_grad():
+            random_model = DuelingDeepQNetwork(self.lr, self.n_actions,
+                                              input_dims=self.input_dims, name='DER_eval',
+                                              chkpt_dir=self.chkpt_dir, atoms=self.N_ATOMS, Vmax=self.Vmax,
+                                              Vmin=self.Vmin, device=self.device)
+
+            params1 = self.net.state_dict()
+            params2 = random_model.state_dict()
+
+            #need to only do conv layers, this way is too jank
+            """for name1, param1 in params1:
+                if name1 in dict_params2:
+                    dict_params2[name1].data.copy_(self.sp_alpha * param1.data + (1 - self.sp_alpha) *
+                                                   dict_params2[name1].data)"""
+
+            for key in params2:
+                params1[key] = self.sp_alpha * params1[key] + (1 - self.sp_alpha) * params2[key]
+
+            self.net.load_state_dict(params1)
+            self.net.to(self.device)
 
     def learn(self):
         for i in range(self.grad_steps):
@@ -243,11 +265,11 @@ class Agent():
 
         self.net.optimizer.zero_grad()
 
-        if self.learn_step_counter % self.replace_target_cnt == 0:
-            self.replace_target_network()
+        self.tgt_net.update()
 
-        if self.learn_step_counter < 90000 and self.learn_step_counter % 20000 == 0 and self.resets:
-            self.net.reset_final_layer()
+        if self.learn_step_counter < 90000 and self.learn_step_counter % 40000 == 0 and self.resets:
+            self.shrink_and_perturb()
+            self.net.reset_mlp()
 
         batch, weights, tree_idxs = self.memory.sample(self.batch_size)
 
@@ -268,11 +290,11 @@ class Agent():
 
         ##############
 
-        distr_v, qvals_v = self.net.both(T.cat((states, states_policy_)))
-        next_qvals_v = qvals_v[self.batch_size:]
-        distr_v = distr_v[:self.batch_size]
+        distr_v, qvals_v = self.net.both(states)
 
-        next_distr_v, _ = self.tgt_net.both(states_)
+        next_distr_v, next_qvals_v = self.tgt_net.both(T.cat((states_, states_policy_)))
+        next_distr_v = next_distr_v[self.batch_size:]
+        next_qvals_v = next_qvals_v[:self.batch_size]
 
         next_actions_v = next_qvals_v.max(1)[1]
 
