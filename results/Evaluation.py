@@ -15,7 +15,7 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
-games = ["Alien"]
+#games = ["Alien"]
 
 print_ind = True
 
@@ -25,7 +25,7 @@ hns = []
 #games = ["Seaquest","UpNDown"]
 count = 0
 for game in games:
-    labels = ["SPR"]
+    labels = ["DrQ"]
     data_files = []
     for i in labels:
         data_files.append(i + "\\" + i + game + "Evaluation")

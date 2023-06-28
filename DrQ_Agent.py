@@ -169,8 +169,6 @@ class Agent():
         if self.memory.mem_cntr < self.min_sampling_size:
             return
 
-        
-
         if self.learn_step_counter % self.replace_target_cnt == 0:
             self.replace_target_network()
 
@@ -207,8 +205,6 @@ class Agent():
         q_target = rewards + (self.gamma ** self.n) * q_next[indices, max_actions]
 
         loss = self.q_eval.loss(q_target, q_pred).to(self.q_eval.device)
-        loss = F.smooth_l1_loss(q_target, q_pred, reduction='none')
-        loss = loss.mean()
 
         self.q_eval.optimizer.zero_grad()
         loss.backward()

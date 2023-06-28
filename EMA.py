@@ -46,14 +46,14 @@ class EMA(nn.Module):
         return x
 
     def update(self):
-        state_dict = self.net.state_dict()
 
         if self.tau == 1:
+            state_dict = self.net.state_dict()
             self.ema_net.load_state_dict(state_dict)
         elif self.tau > 0:
-            update_sd = {k: self.tau * state_dict[k] + (1 - self.tau) * v
-                         for k, v in self.ema_net.state_dict().items()}
-            self.ema_net.load_state_dict(update_sd)
+            for param, target_param in zip(self.net.parameters(), self.ema_net.parameters()):
+                target_param.data.copy_(self.tau * param.data +
+                                        (1 - self.tau) * target_param.data)
 
 
 if __name__ == "__main__":

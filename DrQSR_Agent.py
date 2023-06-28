@@ -267,7 +267,7 @@ class Agent():
 
         self.tgt_net.update()
 
-        if self.learn_step_counter < 90000 and self.learn_step_counter % 40000 == 0 and self.resets:
+        if self.learn_step_counter < 90000 * self.grad_steps and self.learn_step_counter % 40000 == 0 and self.resets:
             self.shrink_and_perturb()
             self.net.reset_mlp()
 
