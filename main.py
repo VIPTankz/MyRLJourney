@@ -25,8 +25,8 @@ def make_env(game, eval):
 
 if __name__ == '__main__':
 
-    from DrQSR_Agent import Agent
-    agent_name = "DrQSR"
+    from DrQ_Agent import Agent
+    agent_name = "DrQ"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
