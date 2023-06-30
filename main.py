@@ -48,7 +48,7 @@ if __name__ == '__main__':
     print("Device: " + str(device))
 
     for game in games:
-        for runs in range(3):
+        for runs in range(5):
             # gym version 0.25.2
             # ie pre 5 arg step
             env = make_env(game, eval=False)
