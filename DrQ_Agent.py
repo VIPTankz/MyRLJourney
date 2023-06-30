@@ -73,7 +73,6 @@ class EpsilonGreedy:
     def update_eps(self):
         self.eps = max(self.eps - (self.eps - self.eps_final) / self.steps, self.eps_final)
 
-
 class Agent:
     def __init__(self, n_actions, input_dims, device,
                  max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99):
@@ -92,6 +91,7 @@ class Agent:
         self.gamma = discount
         self.grad_steps = 1
         self.device = device
+        self.total_churn = 0
 
         self.memory = ReplayBuffer(input_dims, max_mem_size, self.device)
 
@@ -104,10 +104,6 @@ class Agent:
                                           input_dims=self.input_dims,
                                           name='lunar_lander_dueling_ddqn_q_next',
                                           chkpt_dir=self.chkpt_dir, device=device)
-
-        self.n_states = deque([], self.n)
-        self.n_rewards = deque([], self.n)
-        self.n_actions = deque([], self.n)
 
         self.aug = nn.Sequential(nn.ReplicationPad2d(4),
                       kornia.augmentation.RandomCrop((84, 84)),
@@ -161,11 +157,11 @@ class Agent:
         states, actions, rewards, new_states, not_dones = self.memory.sample_multistep(
             self.batch_size, self.gamma, self.n)
 
-        states = T.tensor(states).to(self.net.device)
-        rewards = T.tensor(rewards).to(self.net.device)
-        dones = T.tensor(not_dones).to(self.net.device).to(T.bool)
-        actions = T.tensor(actions).to(self.net.device)
-        states_ = T.tensor(new_states).to(self.net.device)
+        states = states.to(self.net.device)
+        rewards = rewards.to(self.net.device)
+        dones = not_dones.to(self.net.device).to(T.bool)
+        actions = actions.to(self.net.device)
+        states_ = new_states.to(self.net.device)
 
         dones = ~dones  # this inverts values
         dones = dones.to(T.long)
@@ -203,5 +199,25 @@ class Agent:
         self.learn_step_counter += 1
 
         self.epsilon.update_eps()
+
+        """
+        test_states, _, _, _, _ = self.memory.sample_multistep(len(self.memory) - 1, self.gamma, self.n)
+        x = self.get_policy_churn(states).item()
+        self.total_churn += x
+        print("\nPolicy Churn Rate: " + str(x))
+        print("AVG Policy Churn Rate: " + str(self.total_churn / self.learn_step_counter))
+
+
+    def get_policy_churn(self,states):
+        _, A = self.net(states)
+        net_argmaxs = A.argmax(dim=1)
+
+        _, A = self.tgt_net(states)
+        tgt_argmaxs = A.argmax(dim=1)
+
+        return 1 - (T.sum(net_argmaxs == tgt_argmaxs) / len(states))
+        """
+
+
 
 
