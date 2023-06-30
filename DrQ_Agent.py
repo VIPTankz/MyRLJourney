@@ -1,13 +1,14 @@
 import os
 import numpy as np
+import torch
 import torch as T
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from ExperienceReplay import ExperienceReplay
+from ReplayBuffer import ReplayBuffer
 import numpy as np
 from collections import deque
-import kornia.augmentation as aug
+import kornia
 
 class Intensity(nn.Module):
     def __init__(self, scale):
@@ -63,7 +64,7 @@ class DuelingDeepQNetwork(nn.Module):
         self.load_state_dict(T.load(self.checkpoint_file))
 
 
-class EpsilonGreedy():
+class EpsilonGreedy:
     def __init__(self):
         self.eps = 1.0
         self.steps = 5000
@@ -73,7 +74,7 @@ class EpsilonGreedy():
         self.eps = max(self.eps - (self.eps - self.eps_final) / self.steps, self.eps_final)
 
 
-class Agent():
+class Agent:
     def __init__(self, n_actions, input_dims, device,
                  max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99):
 
@@ -90,15 +91,16 @@ class Agent():
         self.chkpt_dir = ""
         self.gamma = discount
         self.grad_steps = 1
+        self.device = device
 
-        self.memory = ExperienceReplay(input_dims, max_mem_size, self.batch_size)
+        self.memory = ReplayBuffer(input_dims, max_mem_size, self.device)
 
-        self.q_eval = DuelingDeepQNetwork(self.lr, self.n_actions,
+        self.net = DuelingDeepQNetwork(self.lr, self.n_actions,
                                           input_dims=self.input_dims,
                                           name='lunar_lander_dueling_ddqn_q_eval',
                                           chkpt_dir=self.chkpt_dir, device=device)
 
-        self.q_next = DuelingDeepQNetwork(self.lr, self.n_actions,
+        self.tgt_net = DuelingDeepQNetwork(self.lr, self.n_actions,
                                           input_dims=self.input_dims,
                                           name='lunar_lander_dueling_ddqn_q_next',
                                           chkpt_dir=self.chkpt_dir, device=device)
@@ -107,8 +109,9 @@ class Agent():
         self.n_rewards = deque([], self.n)
         self.n_actions = deque([], self.n)
 
-        self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
-        self.intensity = Intensity(scale=0.05)
+        self.aug = nn.Sequential(nn.ReplicationPad2d(4),
+                      kornia.augmentation.RandomCrop((84, 84)),
+                      Intensity(scale=0.1))
 
     def get_grad_steps(self):
         return self.grad_steps
@@ -119,9 +122,9 @@ class Agent():
 
     def choose_action(self, observation):
         if np.random.random() > self.epsilon.eps:
-            state = T.tensor(np.array([observation]), dtype=T.float).to(self.q_eval.device)
+            state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
             with T.no_grad():
-                _, advantage = self.q_eval.forward(state)
+                _, advantage = self.net.forward(state)
                 action = T.argmax(advantage).item()
         else:
             action = np.random.choice(self.action_space)
@@ -129,36 +132,19 @@ class Agent():
         return action
 
     def store_transition(self, state, action, reward, state_, done):
-        self.n_step(state, action, reward, state_, done)
-
-    def n_step(self, state, action, reward, state_, done):
-        self.n_states.append(state)
-        self.n_rewards.append(reward)
-        self.n_actions.append(action)
-
-        if len(self.n_states) == self.n:
-            fin_reward = 0
-            for i in range(self.n):
-                fin_reward += self.n_rewards[i] * (self.gamma ** i)
-            self.memory.store_transition(self.n_states[0], self.n_actions[0], fin_reward, \
-                                         state_, done)
-
-        if done:
-            self.n_states = deque([], self.n)
-            self.n_rewards = deque([], self.n)
-            self.n_actions = deque([], self.n)
+        self.memory.add(state, action, reward, state_, done)
 
     def replace_target_network(self):
         if self.learn_step_counter % self.replace_target_cnt == 0:
-            self.q_next.load_state_dict(self.q_eval.state_dict())
+            self.tgt_net.load_state_dict(self.net.state_dict())
 
     def save_models(self):
-        self.q_eval.save_checkpoint()
-        self.q_next.save_checkpoint()
+        self.net.save_checkpoint()
+        self.tgt_net.save_checkpoint()
 
     def load_models(self):
-        self.q_eval.load_checkpoint()
-        self.q_next.load_checkpoint()
+        self.net.load_checkpoint()
+        self.tgt_net.load_checkpoint()
 
     def learn(self):
         for i in range(self.grad_steps):
@@ -166,31 +152,35 @@ class Agent():
 
     def learn_call(self):
 
-        if self.memory.mem_cntr < self.min_sampling_size:
+        if len(self.memory) < self.min_sampling_size:
             return
 
         if self.learn_step_counter % self.replace_target_cnt == 0:
             self.replace_target_network()
 
-        states, actions, rewards, new_states, dones = self.memory.sample_memory()
+        states, actions, rewards, new_states, not_dones = self.memory.sample_multistep(
+            self.batch_size, self.gamma, self.n)
 
-        states = T.tensor(states).to(self.q_eval.device)
-        rewards = T.tensor(rewards).to(self.q_eval.device)
-        dones = T.tensor(dones).to(self.q_eval.device)
-        actions = T.tensor(actions).to(self.q_eval.device)
-        states_ = T.tensor(new_states).to(self.q_eval.device)
+        states = T.tensor(states).to(self.net.device)
+        rewards = T.tensor(rewards).to(self.net.device)
+        dones = T.tensor(not_dones).to(self.net.device).to(T.bool)
+        actions = T.tensor(actions).to(self.net.device)
+        states_ = T.tensor(new_states).to(self.net.device)
+
+        dones = ~dones  # this inverts values
+        dones = dones.to(T.long)
 
         indices = np.arange(self.batch_size)
 
-        states_aug = (self.intensity(self.random_shift(states.float()/255.)) * 255).to(T.uint8)
-        states_aug_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
-        states_aug_policy_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
+        states_aug = self.aug(states)
+        states_aug_ = self.aug(states_)
+        states_aug_policy_ = self.aug(states_)
 
-        V_s, A_s = self.q_eval.forward(states_aug)
+        V_s, A_s = self.net.forward(states_aug)
 
-        V_s_, A_s_ = self.q_next.forward(states_aug_)
+        V_s_, A_s_ = self.tgt_net.forward(states_aug_)
 
-        V_s_eval, A_s_eval = self.q_eval.forward(states_aug_policy_)
+        V_s_eval, A_s_eval = self.net.forward(states_aug_policy_)
 
         q_pred = T.add(V_s,
                        (A_s - A_s.mean(dim=1, keepdim=True)))[indices, actions]
@@ -204,12 +194,12 @@ class Agent():
         q_next[dones] = 0.0
         q_target = rewards + (self.gamma ** self.n) * q_next[indices, max_actions]
 
-        loss = self.q_eval.loss(q_target, q_pred).to(self.q_eval.device)
+        loss = self.net.loss(q_target, q_pred).to(self.net.device)
 
-        self.q_eval.optimizer.zero_grad()
+        self.net.optimizer.zero_grad()
         loss.backward()
-        T.nn.utils.clip_grad_norm_(self.q_eval.parameters(), 10)
-        self.q_eval.optimizer.step()
+        T.nn.utils.clip_grad_norm_(self.net.parameters(), 10)
+        self.net.optimizer.step()
         self.learn_step_counter += 1
 
         self.epsilon.update_eps()
