@@ -1,7 +1,7 @@
 import numpy as np
 import statistics
 np.set_printoptions(suppress=True)
-runs = 3
+runs = 5
 
 
 human_scores = np.array([7127.80,1719.53,742.00,8503.33,753.13,\
@@ -30,8 +30,8 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
-
-
+print("HERE")
+print(np.load('DrQ\\DrQAlienEvaluation (0).npy'))
 #games = ["Alien"]
 
 print_ind = True
@@ -39,7 +39,7 @@ print_ind = True
 print(len(games))
 
 hns = []
-labels = ["DrQ","DrDER","DER"]
+labels = ["DrQ"]
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
 #games = ["Seaquest","UpNDown"]
@@ -51,6 +51,7 @@ for game in games:
         data_files[i].append(labels[i] + "\\" + labels[i] + game + "Evaluation")
 
     print("\n" + game + " Evaluation Scores")
+    print(np.load(data_files[i][-1] + " (" + str(i) + ').npy'))
 
 print(data_files)
 

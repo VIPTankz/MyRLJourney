@@ -9,6 +9,7 @@ from ReplayBuffer import ReplayBuffer
 import numpy as np
 from collections import deque
 import kornia
+from torchvision.utils import save_image
 
 class Intensity(nn.Module):
     def __init__(self, scale):
@@ -91,7 +92,6 @@ class Agent:
         self.gamma = discount
         self.grad_steps = 1
         self.device = device
-        self.total_churn = 0
 
         self.memory = ReplayBuffer(input_dims, max_mem_size, self.device)
 
@@ -108,6 +108,12 @@ class Agent:
         self.aug = nn.Sequential(nn.ReplicationPad2d(4),
                       kornia.augmentation.RandomCrop((84, 84)),
                       Intensity(scale=0.1))
+
+        # policy churn parameters
+        self.total_churn = 0
+        self.churns = []
+        self.action_churn = [0 for i in range(self.n_actions)]
+        self.actions_used = [0 for i in range(self.n_actions)]
 
     def get_grad_steps(self):
         return self.grad_steps
@@ -129,6 +135,7 @@ class Agent:
 
     def store_transition(self, state, action, reward, state_, done):
         self.memory.add(state, action, reward, state_, done)
+        self.actions_used[action] += 1
 
     def replace_target_network(self):
         if self.learn_step_counter % self.replace_target_cnt == 0:
@@ -159,12 +166,9 @@ class Agent:
 
         states = states.to(self.net.device)
         rewards = rewards.to(self.net.device)
-        dones = not_dones.to(self.net.device).to(T.bool)
+        not_dones = not_dones.to(self.net.device)
         actions = actions.to(self.net.device)
         states_ = new_states.to(self.net.device)
-
-        dones = ~dones  # this inverts values
-        dones = dones.to(T.long)
 
         indices = np.arange(self.batch_size)
 
@@ -176,19 +180,17 @@ class Agent:
 
         V_s_, A_s_ = self.tgt_net.forward(states_aug_)
 
-        V_s_eval, A_s_eval = self.net.forward(states_aug_policy_)
+        V_s_eval, A_s_eval = self.tgt_net.forward(states_aug_policy_)
 
-        q_pred = T.add(V_s,
-                       (A_s - A_s.mean(dim=1, keepdim=True)))[indices, actions]
-        q_next = T.add(V_s_,
-                       (A_s_ - A_s_.mean(dim=1, keepdim=True)))
+        q_pred = T.add(V_s, (A_s - A_s.mean(dim=1, keepdim=True)))[indices, actions]
+
+        q_next = T.add(V_s_, (A_s_ - A_s_.mean(dim=1, keepdim=True)))
 
         q_eval = T.add(V_s_eval, (A_s_eval - A_s_eval.mean(dim=1, keepdim=True)))
 
         max_actions = T.argmax(q_eval, dim=1)
 
-        q_next[dones] = 0.0
-        q_target = rewards + (self.gamma ** self.n) * q_next[indices, max_actions]
+        q_target = rewards + (self.gamma ** self.n) * q_next[indices, max_actions] * not_dones
 
         loss = self.net.loss(q_target, q_pred).to(self.net.device)
 
@@ -201,23 +203,50 @@ class Agent:
         self.epsilon.update_eps()
 
         """
-        test_states, _, _, _, _ = self.memory.sample_multistep(len(self.memory) - 1, self.gamma, self.n)
-        x = self.get_policy_churn(states).item()
-        self.total_churn += x
-        print("\nPolicy Churn Rate: " + str(x))
-        print("AVG Policy Churn Rate: " + str(self.total_churn / self.learn_step_counter))
+        self.get_policy_churn(states)
 
+        if self.learn_step_counter % 50 == 0:
+            self.print_churn_info()
 
-    def get_policy_churn(self,states):
-        _, A = self.net(states)
+    def get_policy_churn(self, states):
+        test_states, _, _, _, _ = self.memory.sample_multistep(max(len(self.memory) - 1,3000), self.gamma, self.n)
+
+        V, A = self.net(test_states)
         net_argmaxs = A.argmax(dim=1)
 
-        _, A = self.tgt_net(states)
-        tgt_argmaxs = A.argmax(dim=1)
+        V_tgt, A_tgt = self.tgt_net(test_states)
+        tgt_argmaxs = A_tgt.argmax(dim=1)
 
-        return 1 - (T.sum(net_argmaxs == tgt_argmaxs) / len(states))
-        """
 
+
+        churn = (1 - (T.sum(net_argmaxs == tgt_argmaxs) / len(test_states))).item()
+        self.total_churn += churn
+        self.churns.append(churn)
+        #print("\nPolicy Churn Rate: " + str(churn))
+
+        x = T.abs((A - A_tgt))
+
+        action_churns = T.mean(x, axis=0)
+
+        action_churns = list(action_churns.detach().cpu())
+
+        for i in range(len(action_churns)):
+
+            self.action_churn[i] += action_churns[i].item()
+
+    def print_churn_info(self):
+
+        print("\nChurn Data - " + str(self.learn_step_counter) + " steps")
+        print("Mean: " + str(self.total_churn / self.learn_step_counter))
+        print("90th: " + str(np.percentile(self.churns, 90)))
+        print("95th: " + str(np.percentile(self.churns, 95)))
+        print("99th: " + str(np.percentile(self.churns, 99)))
+
+        mean_act_change = [x / self.learn_step_counter for x in self.action_churn]
+        #print("Mean Action Changes: " + str(mean_act_change))
+        tot = sum(mean_act_change)
+        print("Action Change fractions: " + str(np.around([x / tot for x in mean_act_change],5)))
+        print("Action Use fractions: " + str(np.around([x / sum(self.actions_used) for x in self.actions_used], 5)))"""
 
 
 

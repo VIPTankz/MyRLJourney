@@ -82,12 +82,11 @@ if __name__ == '__main__':
                     score += reward
                     reward = np.clip(reward, -1., 1.)
 
-                    agent.store_transition(observation, action, reward,
-                                                  observation_ , done)
+                    agent.store_transition(observation, action, reward, observation_ , done)
 
                     agent.learn()
 
-                    observation = deepcopy(observation_)
+                    observation = observation_
 
                 if steps < n_steps:
                     scores.append([score, steps])
