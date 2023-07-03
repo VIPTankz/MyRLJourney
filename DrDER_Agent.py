@@ -260,13 +260,22 @@ class Agent():
         states_ = new_states.to(self.net.device)
         weights = weights.to(self.net.device)
 
+
+
         ############## Data Augmentation
+
+        print(states[0][0].shape)
+        print(states[0][0])
+        raise Exception("stop")
 
         states = (self.intensity(self.random_shift(states.float()/255.)) * 255).to(T.uint8)
         states_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
         states_policy_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
 
         ##############
+
+
+
 
         distr_v, qvals_v = self.net.both(T.cat((states, states_policy_)))
         next_qvals_v = qvals_v[self.batch_size:]

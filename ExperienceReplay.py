@@ -23,6 +23,9 @@ class ExperienceReplay:
 
         self.mem_cntr += 1
 
+    def __len__(self):
+        return self.mem_cntr
+
     def sample_memory(self):
         offset = 0
         max_mem = min(self.mem_cntr, self.mem_size)
