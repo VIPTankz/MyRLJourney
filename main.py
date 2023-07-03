@@ -39,7 +39,8 @@ if __name__ == '__main__':
             print(env.observation_space)
             print(env.action_space)
 
-            agent = Agent(n_actions=env.action_space.n, input_dims=[4, 84, 84], total_frames=100000, device=device)
+            agent = Agent(n_actions=env.action_space.n, input_dims=[4, 84, 84], total_frames=100000, device=device,
+                          game=game, run=runs)
 
             scores = []
             scores_temp = []
@@ -96,6 +97,7 @@ if __name__ == '__main__':
 
                 evals.append(score)
                 print("Evaluation Score: " + str(score))
+                episodes += 1
 
             fname = agent_name + game + "Evaluation (" + str(runs) + ').npy'
             np.save(fname, np.array(evals))

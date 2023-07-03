@@ -26,18 +26,18 @@ class ExperienceReplay:
     def __len__(self):
         return self.mem_cntr
 
-    def sample_memory(self):
-        offset = 0
+    def sample_memory(self, bs=None):
+        if bs is None:
+            bs = self.batch_size
+
         max_mem = min(self.mem_cntr, self.mem_size)
-        batch = np.random.choice(max_mem, self.batch_size,
-                                 replace=False)
+        batch = np.random.choice(max_mem, bs, replace=False)
+
         states = self.state_memory[batch]
         new_states = self.new_state_memory[batch]
         actions = self.action_memory[batch]
         rewards = self.reward_memory[batch]
         terminals = self.terminal_memory[batch]
-
-
 
         return states, actions, rewards, new_states, terminals
 

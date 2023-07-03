@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import torch
 import torch as T
 import torch.nn as nn
 import torch.nn.functional as F
@@ -9,6 +10,8 @@ import numpy as np
 from collections import deque
 import kornia.augmentation as aug
 import kornia
+import pickle
+from ChurnData import ChurnData
 
 class Intensity(nn.Module):
     def __init__(self, scale):
@@ -76,7 +79,8 @@ class EpsilonGreedy():
 
 class Agent():
     def __init__(self, n_actions, input_dims, device,
-                 max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99):
+                 max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99,
+                 game=None, run=None):
 
         self.epsilon = EpsilonGreedy()
         self.lr = lr
@@ -91,29 +95,44 @@ class Agent():
         self.chkpt_dir = ""
         self.gamma = discount
         self.grad_steps = 1
+        self.run = run
+
+        self.collecting_churn_data = True
 
         self.memory = ExperienceReplay(input_dims, max_mem_size, self.batch_size)
 
-        self.q_eval = DuelingDeepQNetwork(self.lr, self.n_actions,
+        self.net = DuelingDeepQNetwork(self.lr, self.n_actions,
                                           input_dims=self.input_dims,
                                           name='lunar_lander_dueling_ddqn_q_eval',
                                           chkpt_dir=self.chkpt_dir, device=device)
 
-        self.q_next = DuelingDeepQNetwork(self.lr, self.n_actions,
+        self.tgt_net = DuelingDeepQNetwork(self.lr, self.n_actions,
                                           input_dims=self.input_dims,
                                           name='lunar_lander_dueling_ddqn_q_next',
                                           chkpt_dir=self.chkpt_dir, device=device)
 
-        self.n_states = deque([], self.n)
-        self.n_rewards = deque([], self.n)
-        self.n_actions = deque([], self.n)
-
-        self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
-        self.intensity = Intensity(scale=0.05)
+        self.nstep_states = deque([], self.n)
+        self.nstep_rewards = deque([], self.n)
+        self.nstep_actions = deque([], self.n)
 
         self.aug = nn.Sequential(nn.ReplicationPad2d(4),
                       kornia.augmentation.RandomCrop((84, 84)),
                       Intensity(scale=0.1))
+
+        self.env_steps = 0
+        self.reset_churn = False
+        self.second_save = False
+
+        self.start_churn = 25000
+        self.churn_sample = 10000
+        self.churn_dur = 5000
+        self.second_churn = 75000
+        self.total_churn = 0
+        self.churn_data = []
+        self.churn_actions = np.array([0 for i in range(self.n_actions)], dtype=np.float64)
+        self.total_actions = np.array([0 for i in range(self.n_actions)], dtype=np.int64)
+        self.count_since_reset = 0
+        self.game = game
 
     def get_grad_steps(self):
         return self.grad_steps
@@ -124,8 +143,8 @@ class Agent():
 
     def choose_action(self, observation):
         if np.random.random() > self.epsilon.eps:
-            state = T.tensor(np.array([observation]), dtype=T.float).to(self.q_eval.device)
-            _, advantage = self.q_eval.forward(state)
+            state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
+            _, advantage = self.net.forward(state)
             action = T.argmax(advantage).item()
         else:
             action = np.random.choice(self.action_space)
@@ -134,34 +153,36 @@ class Agent():
 
     def store_transition(self, state, action, reward, state_, done):
         self.n_step(state, action, reward, state_, done)
+        self.env_steps += 1
+        self.total_actions[action] += 1
 
     def n_step(self, state, action, reward, state_, done):
-        self.n_states.append(state)
-        self.n_rewards.append(reward)
-        self.n_actions.append(action)
+        self.nstep_states.append(state)
+        self.nstep_rewards.append(reward)
+        self.nstep_actions.append(action)
 
-        if len(self.n_states) == self.n:
+        if len(self.nstep_states) == self.n:
             fin_reward = 0
             for i in range(self.n):
-                fin_reward += self.n_rewards[i] * (self.gamma ** i)
-            self.memory.store_transition(self.n_states[0], self.n_actions[0], fin_reward, state_, done)
+                fin_reward += self.nstep_rewards[i] * (self.gamma ** i)
+            self.memory.store_transition(self.nstep_states[0], self.nstep_actions[0], fin_reward, state_, done)
 
         if done:
-            self.n_states = deque([], self.n)
-            self.n_rewards = deque([], self.n)
-            self.n_actions = deque([], self.n)
+            self.nstep_states = deque([], self.n)
+            self.nstep_rewards = deque([], self.n)
+            self.nstep_actions = deque([], self.n)
 
     def replace_target_network(self):
         if self.learn_step_counter % self.replace_target_cnt == 0:
-            self.q_next.load_state_dict(self.q_eval.state_dict())
+            self.tgt_net.load_state_dict(self.net.state_dict())
 
     def save_models(self):
-        self.q_eval.save_checkpoint()
-        self.q_next.save_checkpoint()
+        self.net.save_checkpoint()
+        self.tgt_net.save_checkpoint()
 
     def load_models(self):
-        self.q_eval.load_checkpoint()
-        self.q_next.load_checkpoint()
+        self.net.load_checkpoint()
+        self.tgt_net.load_checkpoint()
 
     def learn(self):
         for i in range(self.grad_steps):
@@ -172,18 +193,18 @@ class Agent():
         if self.memory.mem_cntr < self.min_sampling_size:
             return
 
-        self.q_eval.optimizer.zero_grad()
+        self.net.optimizer.zero_grad()
 
         if self.learn_step_counter % self.replace_target_cnt == 0:
             self.replace_target_network()
 
         states, actions, rewards, new_states, dones = self.memory.sample_memory()
 
-        states = T.tensor(states).to(self.q_eval.device)
-        rewards = T.tensor(rewards).to(self.q_eval.device)
-        dones = T.tensor(dones).to(self.q_eval.device)
-        actions = T.tensor(actions).to(self.q_eval.device)
-        states_ = T.tensor(new_states).to(self.q_eval.device)
+        states = T.tensor(states).to(self.net.device)
+        rewards = T.tensor(rewards).to(self.net.device)
+        dones = T.tensor(dones).to(self.net.device)
+        actions = T.tensor(actions).to(self.net.device)
+        states_ = T.tensor(new_states).to(self.net.device)
 
         indices = np.arange(self.batch_size)
 
@@ -194,17 +215,15 @@ class Agent():
         states_aug_ = self.aug(states_.float())
         states_aug_policy_ = self.aug(states_.float())
 
-        V_s, A_s = self.q_eval.forward(states_aug)
+        V_s, A_s = self.net.forward(states_aug)
 
-        V_s_, A_s_ = self.q_next.forward(states_aug_)
+        V_s_, A_s_ = self.tgt_net.forward(states_aug_)
 
-        V_s_eval, A_s_eval = self.q_next.forward(states_aug_policy_)
+        V_s_eval, A_s_eval = self.tgt_net.forward(states_aug_policy_)
 
-        q_pred = T.add(V_s,
-                       (A_s - A_s.mean(dim=1, keepdim=True)))[indices, actions]
+        q_pred = T.add(V_s, (A_s - A_s.mean(dim=1, keepdim=True)))[indices, actions]
 
-        q_next = T.add(V_s_,
-                       (A_s_ - A_s_.mean(dim=1, keepdim=True)))
+        q_next = T.add(V_s_, (A_s_ - A_s_.mean(dim=1, keepdim=True)))
 
         q_eval = T.add(V_s_eval, (A_s_eval - A_s_eval.mean(dim=1, keepdim=True)))
 
@@ -213,12 +232,121 @@ class Agent():
         q_next[dones] = 0.0
         q_target = rewards + (self.gamma ** self.n) * q_next[indices, max_actions]
 
-        loss = self.q_eval.loss(q_target, q_pred).to(self.q_eval.device)
+        loss = self.net.loss(q_target, q_pred).to(self.net.device)
 
         loss.backward()
-        T.nn.utils.clip_grad_norm_(self.q_eval.parameters(), 10)
-        self.q_eval.optimizer.step()
+        T.nn.utils.clip_grad_norm_(self.net.parameters(), 10)
+        self.net.optimizer.step()
         self.learn_step_counter += 1
 
         self.epsilon.update_eps()
+
+
+        if self.collecting_churn_data:
+            if not self.reset_churn and self.env_steps > self.start_churn + self.churn_dur:
+                self.reset_churn = True
+
+                # save data
+                self.save_churn_data()
+
+                self.total_churn = 0
+                self.churn_data = []
+                self.churn_actions = np.array([0 for i in range(self.n_actions)], dtype=np.float64)
+                self.count_since_reset = 0
+
+            if not self.second_save and self.env_steps > self.second_churn + self.churn_dur:
+                self.second_save = True
+                # save data
+                self.save_churn_data()
+
+                self.total_churn = 0
+                self.churn_data = []
+                self.churn_actions = np.array([0 for i in range(self.n_actions)], dtype=np.float64)
+                self.count_since_reset = 0
+
+            if self.start_churn < self.env_steps < self.start_churn + self.churn_dur or \
+                    self.second_churn < self.env_steps < self.second_churn + self.churn_dur:
+
+                self.collect_churn_data()
+                self.count_since_reset += 1
+
+
+    def save_churn_data(self):
+        avg_churn = self.total_churn / self.count_since_reset
+        per90 = np.percentile(self.churn_data, 90)
+        per99 = np.percentile(self.churn_data, 99)
+        per99_9 = np.percentile(self.churn_data, 99.9)
+        churns_per_action = self.churn_actions
+        percent_churns_per_actions = self.churn_actions / np.sum(self.churn_actions)
+        total_action_percents = self.total_actions / np.sum(self.total_actions)
+        churn_std = np.std(percent_churns_per_actions)
+        action_std = np.std(total_action_percents)
+
+        x = torch.FloatTensor(self.churn_data)
+        x = torch.topk(x, 50).values
+        top50churns = []
+        for i in x:
+            top50churns.append(i.item())
+
+        game = self.game
+        if not self.second_save:
+            start_timesteps = self.start_churn
+            end_timesteps = self.start_churn + self.churn_dur
+        else:
+            start_timesteps = self.second_churn
+            end_timesteps = self.second_churn + self.churn_dur
+
+        percent0churn = self.churn_data.count(0.) / len(self.churn_data)
+
+        churn_data = ChurnData(avg_churn, per90, per99, per99_9, churns_per_action, percent_churns_per_actions, total_action_percents,
+                               churn_std, action_std, top50churns, game, start_timesteps, end_timesteps, percent0churn)
+
+        with open(game + str(start_timesteps) + "_" + str(self.run) + '.pkl', 'wb') as outp:
+            pickle.dump(churn_data, outp, pickle.HIGHEST_PROTOCOL)
+
+    def collect_churn_data(self):
+        states, _, _, _, _ = self.memory.sample_memory(bs=self.churn_sample)
+
+        states = T.tensor(states).to(self.net.device)
+
+        _, cur_vals = self.net(states)
+        _, tgt_vals = self.tgt_net(states)
+
+        output = torch.argmax(cur_vals, dim=1)
+        tgt_output = torch.argmax(tgt_vals, dim=1)
+
+        policy_churn = ((self.churn_sample - torch.sum(output == tgt_output)) / self.churn_sample).item()
+        self.total_churn += policy_churn
+        self.churn_data.append(policy_churn)
+
+        dif = torch.abs(torch.subtract(cur_vals, tgt_vals))
+        dif = torch.sum(dif, dim=0).detach().cpu().numpy()
+
+        self.churn_actions += dif
+
+        #percent_actions = self.churn_actions / np.sum(self.churn_actions)
+
+        """
+        if np.random.random() > 0.99 and len(self.churn_data) > 100:
+            print("\n\n")
+            print("Avg churn: " + str(self.total_churn / self.count_since_reset))
+            print("90th per: " + str(np.percentile(self.churn_data, 90)))
+            print("99th per: " + str(np.percentile(self.churn_data, 99)))
+            print("99.9th per: " + str(np.percentile(self.churn_data, 99.9)))
+
+            x = torch.FloatTensor(self.churn_data)
+            x = torch.topk(x, 50).values
+            temp = []
+            for i in x:
+                temp.append(i.item())
+            print("Top Churns: " + str(temp))
+
+            print("Percentages of churn by action: " + str(percent_actions))
+            print("Portions of actions taken: " + str(self.total_actions / np.sum(self.total_actions)))
+
+            print("std churn: " + str(np.std(percent_actions)))
+            print("std actions taken: " + str(np.std(self.total_actions / np.sum(self.total_actions))))
+
+            print("Percent 0 Churn: " + str(self.churn_data.count(0.) / len(self.churn_data)))
+        """
 
