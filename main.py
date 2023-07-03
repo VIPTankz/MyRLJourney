@@ -31,7 +31,7 @@ if __name__ == '__main__':
     print("Device: " + str(device))
 
     for game in games:
-        for runs in range(5):
+        for runs in range(1):
             env = gym.make('ALE/' + game + '-v5')
             env = AtariPreprocessing(env, frame_skip=1, terminal_on_life_loss=True)
             env = gym.wrappers.FrameStack(env, 4)
