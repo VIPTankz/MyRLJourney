@@ -17,9 +17,15 @@ if __name__ == '__main__':
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
     """
 
+    """
     gameset = [["Alien","Amidar","Assault","Asterix"],["BankHeist","BattleZone","Boxing","Breakout"],
                ["ChopperCommand","CrazyClimber","DemonAttack","Freeway"],["Frostbite","Gopher","Hero","Jamesbond"],
-               ["Kangaroo","Krull","KungFuMaster","MsPacman"],["Pong","PrivateEye","Qbert"],["RoadRunner","Seaquest","UpNDown"]]
+               ["Kangaroo","Krull","KungFuMaster","MsPacman"],["Pong","PrivateEye","Qbert"],["RoadRunner","Seaquest","UpNDown"]]"""
+
+    gameset = [["Alien", "Amidar", "Assault", "Asterix", "BankHeist", "BattleZone", "Boxing"],
+               ["Breakout", "ChopperCommand", "CrazyClimber", "DemonAttack", "Freeway", "Frostbite", "Gopher"],
+               ["Hero", "Jamesbond", "Kangaroo", "Krull", "KungFuMaster", "MsPacman", "Pong"],
+               ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
     gameset_idx = int(sys.argv[1])
 
@@ -31,7 +37,7 @@ if __name__ == '__main__':
     print("Device: " + str(device))
 
     for game in games:
-        for runs in range(5):
+        for runs in range(1):
             env = gym.make('ALE/' + game + '-v5')
             env = AtariPreprocessing(env, frame_skip=1, terminal_on_life_loss=True)
             env = gym.wrappers.FrameStack(env, 4)
@@ -77,7 +83,7 @@ if __name__ == '__main__':
                     print('{} {} avg score {:.2f} total_steps {:.0f} fps {:.2f}'
                           .format(agent_name, game, avg_score, steps, steps / (time.time() - start)), flush=True)
 
-            fname = agent_name + game + "Experiment (" + str(runs) + ').npy'
+            fname = agent_name + game + "Experiment (" + str(runs + 5) + ').npy'
             np.save(fname, np.array(scores))
             agent.set_eval_mode()
             evals = []
@@ -99,5 +105,5 @@ if __name__ == '__main__':
                 print("Evaluation Score: " + str(score))
                 episodes += 1
 
-            fname = agent_name + game + "Evaluation (" + str(runs) + ').npy'
+            fname = agent_name + game + "Evaluation (" + str(runs + 5) + ').npy'
             np.save(fname, np.array(evals))

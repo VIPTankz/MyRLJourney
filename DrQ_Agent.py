@@ -98,7 +98,7 @@ class Agent():
         self.run = run
         self.algo_name = "DrQ"
 
-        self.collecting_churn_data = False
+        self.collecting_churn_data = True
 
         self.memory = ExperienceReplay(input_dims, max_mem_size, self.batch_size)
 
