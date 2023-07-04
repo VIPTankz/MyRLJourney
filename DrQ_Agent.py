@@ -299,7 +299,7 @@ class Agent():
                                total_action_percents,churn_std, action_std, top50churns, game, start_timesteps,
                                end_timesteps, percent0churn, self.algo_name, median_churn)
 
-        with open(game + str(start_timesteps) + "_" + str(self.run) + '.pkl', 'wb') as outp:
+        with open(self.algo_name + "_" + game + str(start_timesteps) + "_" + str(self.run) + '.pkl', 'wb') as outp:
             pickle.dump(churn_data, outp, pickle.HIGHEST_PROTOCOL)
 
     def collect_churn_data(self):
