@@ -8,8 +8,8 @@ import torch as T
 
 if __name__ == '__main__':
 
-    from DrQ_Agent import Agent
-    agent_name = "DrQ"
+    from DrQ_Sep_Agent import Agent
+    agent_name = "DrQ_Sep"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
@@ -83,7 +83,7 @@ if __name__ == '__main__':
                     print('{} {} avg score {:.2f} total_steps {:.0f} fps {:.2f}'
                           .format(agent_name, game, avg_score, steps, steps / (time.time() - start)), flush=True)
 
-            fname = agent_name + game + "Experiment (" + str(runs + 5) + ').npy'
+            fname = agent_name + game + "Experiment (" + str(runs) + ').npy'
             np.save(fname, np.array(scores))
             agent.set_eval_mode()
             evals = []
@@ -105,5 +105,5 @@ if __name__ == '__main__':
                 print("Evaluation Score: " + str(score))
                 episodes += 1
 
-            fname = agent_name + game + "Evaluation (" + str(runs + 5) + ').npy'
+            fname = agent_name + game + "Evaluation (" + str(runs) + ').npy'
             np.save(fname, np.array(evals))

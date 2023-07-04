@@ -4,7 +4,7 @@ import pickle
 class ChurnData:
     def __init__(self, avg_churn, per90, per99, per99_9, churns_per_action, percent_churns_per_action,
                  total_action_percents, churn_std, action_std, top50churns, game, start_timesteps, end_timesteps,
-                 percent0churn, algo_name, median_churn):
+                 percent0churn, algo_name, median_churn): #
 
         self.avg_churn = avg_churn
         self.median_churn = median_churn
@@ -25,7 +25,7 @@ class ChurnData:
 
 if __name__ == "__main__":
 
-    file = "churn_results\\BankHeist"
+    file = "churn_results\\BattleZone"
 
     files = [file + "25000_0.pkl", file + "75000_0.pkl"]
 
