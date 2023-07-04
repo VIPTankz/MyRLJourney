@@ -96,8 +96,9 @@ class Agent():
         self.gamma = discount
         self.grad_steps = 1
         self.run = run
+        self.algo_name = "DrQ"
 
-        self.collecting_churn_data = True
+        self.collecting_churn_data = False
 
         self.memory = ExperienceReplay(input_dims, max_mem_size, self.batch_size)
 
@@ -115,9 +116,8 @@ class Agent():
         self.nstep_rewards = deque([], self.n)
         self.nstep_actions = deque([], self.n)
 
-        self.aug = nn.Sequential(nn.ReplicationPad2d(4),
-                      kornia.augmentation.RandomCrop((84, 84)),
-                      Intensity(scale=0.1))
+        self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
+        self.intensity = Intensity(scale=0.1)
 
         self.env_steps = 0
         self.reset_churn = False
@@ -208,12 +208,9 @@ class Agent():
 
         indices = np.arange(self.batch_size)
 
-        """states_aug = (self.intensity(self.random_shift(states.float()/255.)) * 255).to(T.uint8)
+        states_aug = (self.intensity(self.random_shift(states.float()/255.)) * 255).to(T.uint8)
         states_aug_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
-        states_aug_policy_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)"""
-        states_aug = self.aug(states.float())
-        states_aug_ = self.aug(states_.float())
-        states_aug_policy_ = self.aug(states_.float())
+        states_aug_policy_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
 
         V_s, A_s = self.net.forward(states_aug)
 
@@ -240,7 +237,6 @@ class Agent():
         self.learn_step_counter += 1
 
         self.epsilon.update_eps()
-
 
         if self.collecting_churn_data:
             if not self.reset_churn and self.env_steps > self.start_churn + self.churn_dur:
@@ -273,6 +269,7 @@ class Agent():
 
     def save_churn_data(self):
         avg_churn = self.total_churn / self.count_since_reset
+        median_churn = np.percentile(self.churn_data, 50)
         per90 = np.percentile(self.churn_data, 90)
         per99 = np.percentile(self.churn_data, 99)
         per99_9 = np.percentile(self.churn_data, 99.9)
@@ -298,8 +295,9 @@ class Agent():
 
         percent0churn = self.churn_data.count(0.) / len(self.churn_data)
 
-        churn_data = ChurnData(avg_churn, per90, per99, per99_9, churns_per_action, percent_churns_per_actions, total_action_percents,
-                               churn_std, action_std, top50churns, game, start_timesteps, end_timesteps, percent0churn)
+        churn_data = ChurnData(avg_churn, per90, per99, per99_9, churns_per_action, percent_churns_per_actions,
+                               total_action_percents,churn_std, action_std, top50churns, game, start_timesteps,
+                               end_timesteps, percent0churn, self.algo_name, median_churn)
 
         with open(game + str(start_timesteps) + "_" + str(self.run) + '.pkl', 'wb') as outp:
             pickle.dump(churn_data, outp, pickle.HIGHEST_PROTOCOL)
@@ -324,10 +322,10 @@ class Agent():
 
         self.churn_actions += dif
 
-        #percent_actions = self.churn_actions / np.sum(self.churn_actions)
-
         """
         if np.random.random() > 0.99 and len(self.churn_data) > 100:
+            percent_actions = self.churn_actions / np.sum(self.churn_actions)
+
             print("\n\n")
             print("Avg churn: " + str(self.total_churn / self.count_since_reset))
             print("90th per: " + str(np.percentile(self.churn_data, 90)))
@@ -347,6 +345,8 @@ class Agent():
             print("std churn: " + str(np.std(percent_actions)))
             print("std actions taken: " + str(np.std(self.total_actions / np.sum(self.total_actions))))
 
+            print(self.churn_data)
             print("Percent 0 Churn: " + str(self.churn_data.count(0.) / len(self.churn_data)))
-        """
+            raise Exception("stop")"""
+
 

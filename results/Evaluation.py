@@ -31,8 +31,9 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
 print("HERE")
-print(np.load('DrQ\\DrQAlienEvaluation (0).npy'))
+#print(np.mean(np.load('churn_result_data\\DrQAlienEvaluation (0).npy')))
 #games = ["Alien"]
+#raise Exception("stop")
 
 print_ind = True
 
@@ -51,7 +52,7 @@ for game in games:
         data_files[i].append(labels[i] + "\\" + labels[i] + game + "Evaluation")
 
     print("\n" + game + " Evaluation Scores")
-    print(np.load(data_files[i][-1] + " (" + str(i) + ').npy'))
+    print(np.mean(np.load(data_files[i][-1] + " (" + str(i) + ').npy')))
 
 print(data_files)
 
