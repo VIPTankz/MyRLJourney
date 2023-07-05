@@ -98,7 +98,7 @@ class Agent():
         self.run = run
         self.algo_name = "DrQ"
 
-        self.collecting_churn_data = True
+        self.collecting_churn_data = False
 
         self.memory = ExperienceReplay(input_dims, max_mem_size, self.batch_size)
 
@@ -212,11 +212,11 @@ class Agent():
         states_aug_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
         states_aug_policy_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
 
-        V_s, A_s = self.net.forward(states_aug)
+        V_s, A_s = self.net.forward(states_aug)  # states_aug
 
-        V_s_, A_s_ = self.tgt_net.forward(states_aug_)
+        V_s_, A_s_ = self.tgt_net.forward(states_aug_)  # states_aug_
 
-        V_s_eval, A_s_eval = self.tgt_net.forward(states_aug_policy_)
+        V_s_eval, A_s_eval = self.tgt_net.forward(states_aug_policy_)  # states_aug_policy_
 
         q_pred = T.add(V_s, (A_s - A_s.mean(dim=1, keepdim=True)))[indices, actions]
 

@@ -1,7 +1,7 @@
 import numpy as np
 import statistics
 np.set_printoptions(suppress=True)
-runs = 5
+runs = 1
 
 
 human_scores = np.array([7127.80,1719.53,742.00,8503.33,753.13,\
@@ -30,6 +30,7 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
+#games = ["Alien"]
 print("HERE")
 #print(np.mean(np.load('churn_result_data\\DrQAlienEvaluation (0).npy')))
 #games = ["Alien"]
@@ -47,19 +48,23 @@ data_files = [[] for i in range(len(labels))]
 count = 0
 for game in games:
 
-
     for i in range(len(labels)):
         data_files[i].append(labels[i] + "\\" + labels[i] + game + "Evaluation")
 
-    print("\n" + game + " Evaluation Scores")
-    print(np.mean(np.load(data_files[i][-1] + " (" + str(i) + ').npy')))
+        print("\n" + game + " Evaluation Scores")
+
+        for run in range(runs):
+            print(np.mean(np.load(data_files[i][-1] + " (" + str(run + 5) + ').npy')))
 
 print(data_files)
 
 results = np.zeros((len(labels),len(games)),dtype=np.float64)
 for i in range(len(labels)):
     for j in range(len(games)):
-        results[i, j] = np.mean(np.load(data_files[i][j] + " (" + str(i) + ').npy'))
+        x = []
+        for run in range(runs):
+            x.append(np.mean(np.load(data_files[i][j] + " (" + str(run + 5) + ').npy')))
+        results[i, j] = sum(x) / len(x)
 
 print(results)
 results = np.subtract(results, random_scores)

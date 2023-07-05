@@ -8,3 +8,5 @@ cuda won't install from the environments.yaml, just remove it and install on iri
 using cmd
 
 tjc2g19@iridis5.soton.ac.uk
+
+pip install -e git+https://github.com/astooke/rlpyt.git@b32d589d12d31ba3c8a9cfb7a3c85c6e350b2904#egg=rlpyt

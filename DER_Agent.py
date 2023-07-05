@@ -9,6 +9,9 @@ from collections import deque
 from torchvision.utils import save_image
 import math
 from PrioritisedExperienceReplay import PrioritizedReplayBuffer
+import pickle
+from ChurnData import ChurnData
+import torch
 
 
 class NoisyFactorizedLinear(nn.Linear):
@@ -129,7 +132,8 @@ class EpsilonGreedy():
 
 class Agent():
     def __init__(self, n_actions,input_dims, device,
-                 max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99):
+                 max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99,
+                 game=None, run=None):
 
         #self.epsilon = EpsilonGreedy()
         self.lr = lr
@@ -144,6 +148,8 @@ class Agent():
         self.gamma = discount
         self.eval_mode = False
         self.grad_steps = 1
+        self.run = run
+        self.algo_name = "DER"
 
         #n-step
         self.n = 20
@@ -167,6 +173,23 @@ class Agent():
                                           input_dims=self.input_dims,name='DER_next',
                                           chkpt_dir=self.chkpt_dir,atoms=self.N_ATOMS,Vmax=self.Vmax,Vmin=self.Vmin, device=device)
 
+        self.collecting_churn_data = True
+
+        self.env_steps = 0
+        self.reset_churn = False
+        self.second_save = False
+
+        self.start_churn = 25000
+        self.churn_sample = 10000
+        self.churn_dur = 5000
+        self.second_churn = 75000
+        self.total_churn = 0
+        self.churn_data = []
+        self.churn_actions = np.array([0 for i in range(self.n_actions)], dtype=np.float64)
+        self.total_actions = np.array([0 for i in range(self.n_actions)], dtype=np.int64)
+        self.count_since_reset = 0
+        self.game = game
+
     def choose_action(self, observation):
         state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
         with T.no_grad():
@@ -182,6 +205,8 @@ class Agent():
 
     def store_transition(self, state, action, reward, state_, done):
         self.n_step(state, action, reward, state_, done)
+        self.env_steps += 1
+        self.total_actions[action] += 1
 
     def n_step(self, state, action, reward, state_, done):
         self.nstep_states.append(state)
@@ -192,8 +217,7 @@ class Agent():
             fin_reward = 0
             for i in range(self.n):
                 fin_reward += self.nstep_rewards[i] * (self.gamma ** i)
-            self.memory.add(self.nstep_states[0], self.nstep_actions[0],fin_reward, \
-                                         state_, done)
+            self.memory.add(self.nstep_states[0], self.nstep_actions[0],fin_reward, state_, done)
 
         if done:
             self.nstep_states = deque([], self.n)
@@ -262,6 +286,116 @@ class Agent():
         self.learn_step_counter += 1
 
         self.memory.update_priorities(tree_idxs, loss_v.cpu().detach().numpy())
+
+        if self.collecting_churn_data:
+            if not self.reset_churn and self.env_steps > self.start_churn + self.churn_dur:
+                self.reset_churn = True
+
+                # save data
+                self.save_churn_data()
+
+                self.total_churn = 0
+                self.churn_data = []
+                self.churn_actions = np.array([0 for i in range(self.n_actions)], dtype=np.float64)
+                self.count_since_reset = 0
+
+            if not self.second_save and self.env_steps > self.second_churn + self.churn_dur:
+                self.second_save = True
+                # save data
+                self.save_churn_data()
+
+                self.total_churn = 0
+                self.churn_data = []
+                self.churn_actions = np.array([0 for i in range(self.n_actions)], dtype=np.float64)
+                self.count_since_reset = 0
+
+            if self.start_churn < self.env_steps < self.start_churn + self.churn_dur or \
+                    self.second_churn < self.env_steps < self.second_churn + self.churn_dur:
+
+                self.collect_churn_data()
+                self.count_since_reset += 1
+
+    def save_churn_data(self):
+        avg_churn = self.total_churn / self.count_since_reset
+        median_churn = np.percentile(self.churn_data, 50)
+        per90 = np.percentile(self.churn_data, 90)
+        per99 = np.percentile(self.churn_data, 99)
+        per99_9 = np.percentile(self.churn_data, 99.9)
+        churns_per_action = self.churn_actions
+        percent_churns_per_actions = self.churn_actions / np.sum(self.churn_actions)
+        total_action_percents = self.total_actions / np.sum(self.total_actions)
+        churn_std = np.std(percent_churns_per_actions)
+        action_std = np.std(total_action_percents)
+
+        x = torch.FloatTensor(self.churn_data)
+        x = torch.topk(x, 50).values
+        top50churns = []
+        for i in x:
+            top50churns.append(i.item())
+
+        game = self.game
+        if not self.second_save:
+            start_timesteps = self.start_churn
+            end_timesteps = self.start_churn + self.churn_dur
+        else:
+            start_timesteps = self.second_churn
+            end_timesteps = self.second_churn + self.churn_dur
+
+        percent0churn = self.churn_data.count(0.) / len(self.churn_data)
+
+        churn_data = ChurnData(avg_churn, per90, per99, per99_9, churns_per_action, percent_churns_per_actions,
+                               total_action_percents,churn_std, action_std, top50churns, game, start_timesteps,
+                               end_timesteps, percent0churn, self.algo_name, median_churn)
+
+        with open(self.algo_name + "_" + game + str(start_timesteps) + "_" + str(self.run) + '.pkl', 'wb') as outp:
+            pickle.dump(churn_data, outp, pickle.HIGHEST_PROTOCOL)
+
+    def collect_churn_data(self):
+        batch, _, _ = self.memory.sample(self.churn_sample)
+        states, _, _, _, _ = batch
+
+        states = states.to(self.net.device)
+
+        cur_vals = self.net.qvals(states)
+        tgt_vals = self.tgt_net.qvals(states)
+
+        output = torch.argmax(cur_vals, dim=1)
+        tgt_output = torch.argmax(tgt_vals, dim=1)
+
+        policy_churn = ((self.churn_sample - torch.sum(output == tgt_output)) / self.churn_sample).item()
+        self.total_churn += policy_churn
+        self.churn_data.append(policy_churn)
+
+        dif = torch.abs(torch.subtract(cur_vals, tgt_vals))
+        dif = torch.sum(dif, dim=0).detach().cpu().numpy()
+
+        self.churn_actions += dif
+
+
+        if np.random.random() > 0.99 and len(self.churn_data) > 100:
+            percent_actions = self.churn_actions / np.sum(self.churn_actions)
+
+            print("\n\n")
+            print("Avg churn: " + str(self.total_churn / self.count_since_reset))
+            print("90th per: " + str(np.percentile(self.churn_data, 90)))
+            print("99th per: " + str(np.percentile(self.churn_data, 99)))
+            print("99.9th per: " + str(np.percentile(self.churn_data, 99.9)))
+
+            x = torch.FloatTensor(self.churn_data)
+            x = torch.topk(x, 50).values
+            temp = []
+            for i in x:
+                temp.append(i.item())
+            print("Top Churns: " + str(temp))
+
+            print("Percentages of churn by action: " + str(percent_actions))
+            print("Portions of actions taken: " + str(self.total_actions / np.sum(self.total_actions)))
+
+            print("std churn: " + str(np.std(percent_actions)))
+            print("std actions taken: " + str(np.std(self.total_actions / np.sum(self.total_actions))))
+
+            print(self.churn_data)
+            print("Percent 0 Churn: " + str(self.churn_data.count(0.) / len(self.churn_data)))
 
 
 def distr_projection(next_distr, rewards, dones, Vmin, Vmax, n_atoms, gamma):
