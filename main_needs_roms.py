@@ -5,6 +5,8 @@ import time
 from copy import deepcopy
 import sys
 import torch as T
+from rlpy_atari import AtariEnv
+import re
 
 if __name__ == '__main__':
 
@@ -36,14 +38,15 @@ if __name__ == '__main__':
     device = T.device('cuda:' + gpu if T.cuda.is_available() else 'cpu')
     print("Device: " + str(device))
 
+    for i in range(len(gameset)):
+        for j in range(len(gameset[i])):
+            gameset[i][j] = re.sub(r"(\w)([A-Z])", r"\1 \2", gameset[i][j]).replace(" ", "_")
+
     for game in games:
         for runs in range(1):
-            env = gym.make('ALE/' + game + '-v5')
-            env = AtariPreprocessing(env, frame_skip=1, terminal_on_life_loss=True)
-            env = gym.wrappers.FrameStack(env, 4)
-            env.seed(runs)
+            env = AtariEnv(game=game)
             print(env.observation_space)
-            print(env.action_space)
+            print(env.action_space.n)
 
             agent = Agent(n_actions=env.action_space.n, input_dims=[4, 84, 84], total_frames=100000, device=device,
                           game=game, run=runs)
