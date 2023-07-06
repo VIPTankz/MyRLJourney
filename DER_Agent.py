@@ -179,9 +179,9 @@ class Agent():
         self.reset_churn = False
         self.second_save = False
 
-        self.start_churn = 25000
+        self.start_churn = self.min_sampling_size
         self.churn_sample = 10000
-        self.churn_dur = 5000
+        self.churn_dur = 23400
         self.second_churn = 75000
         self.total_churn = 0
         self.churn_data = []
@@ -351,7 +351,7 @@ class Agent():
             pickle.dump(churn_data, outp, pickle.HIGHEST_PROTOCOL)
 
     def collect_churn_data(self):
-        batch, _, _ = self.memory.sample(self.churn_sample)
+        batch, _, _ = self.memory.sample(min(self.churn_sample, len(self.memory.count)))
         states, _, _, _, _ = batch
 
         states = states.to(self.net.device)
@@ -370,7 +370,6 @@ class Agent():
         dif = torch.sum(dif, dim=0).detach().cpu().numpy()
 
         self.churn_actions += dif
-
 
         if np.random.random() > 0.99 and len(self.churn_data) > 100:
             percent_actions = self.churn_actions / np.sum(self.churn_actions)
