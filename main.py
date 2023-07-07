@@ -9,7 +9,7 @@ import torch as T
 if __name__ == '__main__':
 
     from DER_Agent import Agent
-    agent_name = "DER"
+    agent_name = "DER_noiseless_churn"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\

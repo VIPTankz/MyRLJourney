@@ -184,7 +184,7 @@ class Agent():
         self.eval_mode = False
         self.grad_steps = 1
         self.run = run
-        self.algo_name = "DER"
+        self.algo_name = "DER_noiseless_churn"
 
         #n-step
         self.n = 20
@@ -406,7 +406,7 @@ class Agent():
 
         self.churn_actions += dif
 
-        if np.random.random() > 0.99 and len(self.churn_data) > 100:
+        """if np.random.random() > 0.99 and len(self.churn_data) > 100:
             percent_actions = self.churn_actions / np.sum(self.churn_actions)
 
             print("\n\n")
@@ -429,7 +429,7 @@ class Agent():
             print("std actions taken: " + str(np.std(self.total_actions / np.sum(self.total_actions))))
 
             #print(self.churn_data)
-            print("Percent 0 Churn: " + str(self.churn_data.count(0.) / len(self.churn_data)))
+            print("Percent 0 Churn: " + str(self.churn_data.count(0.) / len(self.churn_data)))"""
 
 
 def distr_projection(next_distr, rewards, dones, Vmin, Vmax, n_atoms, gamma):
