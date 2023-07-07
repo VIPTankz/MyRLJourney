@@ -30,6 +30,10 @@ if __name__ == "__main__":
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
+    games = ["Alien","Amidar","Assault","Asterix","BankHeist","Breakout","ChopperCommand","CrazyClimber",\
+             "DemonAttack","Freeway","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
+             "PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
+
     churn_25 = 0
     churn_75 = 0
     churn_std25 = 0
@@ -39,7 +43,7 @@ if __name__ == "__main__":
 
 
     for game in games:
-        file_ = ["churn_results\\DrQ\\DrQ_" + game]
+        file_ = ["churn_results\\DER\\DER_" + game]
 
         files = []
         for i in file_:

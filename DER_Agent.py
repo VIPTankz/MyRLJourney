@@ -14,12 +14,7 @@ from ChurnData import ChurnData
 import torch
 
 
-class NoisyFactorizedLinear(nn.Linear):
-    """
-    NoisyNet layer with factorized gaussian noise
-
-    N.B. nn.Linear already initializes weight and bias to
-    """
+"""class NoisyFactorizedLinear(nn.Linear):
     def __init__(self, in_features, out_features, sigma_zero=0.5, bias=True):
         super(NoisyFactorizedLinear, self).__init__(in_features, out_features, bias=bias)
         sigma_init = sigma_zero / math.sqrt(in_features)
@@ -41,7 +36,47 @@ class NoisyFactorizedLinear(nn.Linear):
         if bias is not None:
             bias = bias + self.sigma_bias * eps_out.t()
         noise_v = T.mul(eps_in, eps_out)
-        return F.linear(input, self.weight + self.sigma_weight * noise_v, bias)
+        return F.linear(input, self.weight + self.sigma_weight * noise_v, bias)"""
+
+
+class NoisyFactorizedLinear(nn.Module):
+    def __init__(self, in_features, out_features, std_init=0.5):
+        super(NoisyFactorizedLinear, self).__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.std_init = std_init
+        self.weight_mu = nn.Parameter(T.empty(out_features, in_features))
+        self.weight_sigma = nn.Parameter(T.empty(out_features, in_features))
+        self.register_buffer('weight_epsilon', T.empty(out_features, in_features))
+        self.bias_mu = nn.Parameter(T.empty(out_features))
+        self.bias_sigma = nn.Parameter(T.empty(out_features))
+        self.register_buffer('bias_epsilon', T.empty(out_features))
+        self.reset_parameters()
+        self.sample_noise()
+
+    def reset_parameters(self):
+        mu_range = 1.0 / math.sqrt(self.in_features)
+        self.weight_mu.data.uniform_(-mu_range, mu_range)
+        self.weight_sigma.data.fill_(self.std_init / math.sqrt(self.in_features))
+        self.bias_mu.data.uniform_(-mu_range, mu_range)
+        self.bias_sigma.data.fill_(self.std_init / math.sqrt(self.out_features))
+
+    def _scale_noise(self, size):
+        x = T.randn(size)
+        return x.sign().mul_(x.abs().sqrt_())
+
+    def sample_noise(self):
+        epsilon_in = self._scale_noise(self.in_features)
+        epsilon_out = self._scale_noise(self.out_features)
+        self.weight_epsilon.copy_(epsilon_out.ger(epsilon_in))
+        self.bias_epsilon.copy_(epsilon_out)
+
+    def forward(self, inp, use_noise=True):
+        if use_noise:
+            return F.linear(inp, self.weight_mu + self.weight_sigma * self.weight_epsilon, self.bias_mu +
+                            self.bias_sigma * self.bias_epsilon)
+        else:
+            return F.linear(inp, self.weight_mu, self.bias_mu)
 
 class DuelingDeepQNetwork(nn.Module):
     def __init__(self, lr, n_actions, name, input_dims, chkpt_dir,atoms,Vmax,Vmin, device):
@@ -71,7 +106,7 @@ class DuelingDeepQNetwork(nn.Module):
         print("Device: " + str(self.device),flush=True)
         self.to(self.device)
 
-    def conv(self,x):
+    def conv(self, x):
 
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
@@ -79,36 +114,36 @@ class DuelingDeepQNetwork(nn.Module):
 
         return x
 
-    def fc_val(self,x):
+    def fc_val(self, x, use_noise=True):
         x = F.relu(self.fc1V(x))
         x = self.V(x)
 
         return x
 
-    def fc_adv(self,x):
-        x = F.relu(self.fc1A(x))
-        x = self.A(x)
+    def fc_adv(self, x, use_noise=True):
+        x = F.relu(self.fc1A(x, use_noise))
+        x = self.A(x, use_noise)
 
         return x
 
-    def forward(self, x):
+    def forward(self, x, use_noise=True):
         batch_size = x.size()[0]
         fx = x.float() / 256
         conv_out = self.conv(fx).view(batch_size, -1)
-        val_out = self.fc_val(conv_out).view(batch_size, 1, self.atoms)
-        adv_out = self.fc_adv(conv_out).view(batch_size, -1, self.atoms)
+        val_out = self.fc_val(conv_out, use_noise).view(batch_size, 1, self.atoms)
+        adv_out = self.fc_adv(conv_out, use_noise).view(batch_size, -1, self.atoms)
         adv_mean = adv_out.mean(dim=1, keepdim=True)
         return val_out + (adv_out - adv_mean)
 
-    def both(self, x):
-        cat_out = self(x)
+    def both(self, x, use_noise=True):
+        cat_out = self(x, use_noise)
         probs = self.apply_softmax(cat_out)
         weights = probs * self.supports
         res = weights.sum(dim=2)
         return cat_out, res
 
-    def qvals(self, x):
-        return self.both(x)[1]
+    def qvals(self, x, use_noise=True):
+        return self.both(x, use_noise)[1]
 
     def apply_softmax(self, t):
         return self.softmax(t.view(-1, self.atoms)).view(t.size())
@@ -180,7 +215,7 @@ class Agent():
         self.second_save = False
 
         self.start_churn = self.min_sampling_size
-        self.churn_sample = 10000
+        self.churn_sample = 100
         self.churn_dur = 23400
         self.second_churn = 75000
         self.total_churn = 0
@@ -351,13 +386,13 @@ class Agent():
             pickle.dump(churn_data, outp, pickle.HIGHEST_PROTOCOL)
 
     def collect_churn_data(self):
-        batch, _, _ = self.memory.sample(min(self.churn_sample, len(self.memory.count)))
+        batch, _, _ = self.memory.sample(min(self.churn_sample, self.memory.count))
         states, _, _, _, _ = batch
 
         states = states.to(self.net.device)
 
-        cur_vals = self.net.qvals(states)
-        tgt_vals = self.tgt_net.qvals(states)
+        cur_vals = self.net.qvals(states, use_noise=False)
+        tgt_vals = self.tgt_net.qvals(states, use_noise=False)
 
         output = torch.argmax(cur_vals, dim=1)
         tgt_output = torch.argmax(tgt_vals, dim=1)
@@ -393,7 +428,7 @@ class Agent():
             print("std churn: " + str(np.std(percent_actions)))
             print("std actions taken: " + str(np.std(self.total_actions / np.sum(self.total_actions))))
 
-            print(self.churn_data)
+            #print(self.churn_data)
             print("Percent 0 Churn: " + str(self.churn_data.count(0.) / len(self.churn_data)))
 
 
