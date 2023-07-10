@@ -1,7 +1,7 @@
 import numpy as np
 import statistics
 np.set_printoptions(suppress=True)
-runs = 1
+runs = 3
 
 
 human_scores = np.array([7127.80,1719.53,742.00,8503.33,753.13,\
@@ -41,7 +41,7 @@ print_ind = True
 print(len(games))
 
 hns = []
-labels = ["DrQ"]
+labels = ["DrDER"]
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
 #games = ["Seaquest","UpNDown"]
@@ -54,7 +54,7 @@ for game in games:
         print("\n" + game + " Evaluation Scores")
 
         for run in range(runs):
-            print(np.mean(np.load(data_files[i][-1] + " (" + str(run + 5) + ').npy')))
+            print(np.mean(np.load(data_files[i][-1] + " (" + str(run) + ').npy')))
 
 print(data_files)
 
@@ -63,7 +63,7 @@ for i in range(len(labels)):
     for j in range(len(games)):
         x = []
         for run in range(runs):
-            x.append(np.mean(np.load(data_files[i][j] + " (" + str(run + 5) + ').npy')))
+            x.append(np.mean(np.load(data_files[i][j] + " (" + str(run) + ').npy')))
         results[i, j] = sum(x) / len(x)
 
 print(results)

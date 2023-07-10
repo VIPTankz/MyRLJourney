@@ -87,6 +87,7 @@ class DuelingDeepQNetwork(nn.Module):
         self.Vmax = Vmax
         self.Vmin = Vmin
         self.DELTA_Z = (self.Vmax - self.Vmin) / (self.atoms - 1)
+        self.n_actions = n_actions
 
         self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
         self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
@@ -105,6 +106,12 @@ class DuelingDeepQNetwork(nn.Module):
         self.device = device
         print("Device: " + str(self.device),flush=True)
         self.to(self.device)
+
+    def reset_mlp(self):
+        self.fc1V = NoisyFactorizedLinear(64 * 7 * 7, 512)
+        self.fc1A = NoisyFactorizedLinear(64 * 7 * 7, 512)
+        self.V = NoisyFactorizedLinear(512, self.atoms)
+        self.A = NoisyFactorizedLinear(512, self.n_actions * self.atoms)
 
     def conv(self, x):
 
@@ -186,6 +193,8 @@ class Agent():
         self.run = run
         self.algo_name = "DER_noiseless_churn"
 
+        self.resets = True
+
         #n-step
         self.n = 20
         self.nstep_states = deque([], self.n)
@@ -252,7 +261,7 @@ class Agent():
             fin_reward = 0
             for i in range(self.n):
                 fin_reward += self.nstep_rewards[i] * (self.gamma ** i)
-            self.memory.add(self.nstep_states[0], self.nstep_actions[0],fin_reward, state_, done)
+            self.memory.add(self.nstep_states[0], self.nstep_actions[0], fin_reward, state_, done)
 
         if done:
             self.nstep_states = deque([], self.n)
@@ -275,6 +284,9 @@ class Agent():
 
         if self.memory.count < self.min_sampling_size:
             return
+
+        if self.env_steps == 40000 or self.env_steps == 75000 and self.resets:
+            self.net.reset_mlp()
 
         self.net.optimizer.zero_grad()
 

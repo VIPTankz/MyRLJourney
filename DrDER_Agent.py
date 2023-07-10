@@ -8,8 +8,12 @@ import numpy as np
 from collections import deque
 from torchvision.utils import save_image
 import math
+
+from ChurnData import ChurnData
 from PrioritisedExperienceReplay import PrioritizedReplayBuffer
 import kornia.augmentation as aug
+import pickle
+import torch
 
 class Intensity(nn.Module):
     def __init__(self, scale):
@@ -36,7 +40,7 @@ class NoisyFactorizedLinear(nn.Linear):
         if bias:
             self.sigma_bias = nn.Parameter(T.full((out_features,), sigma_init))
 
-    def forward(self, input):
+    def forward(self, input, use_noise=True):
         self.epsilon_input.normal_()
         self.epsilon_output.normal_()
 
@@ -48,7 +52,11 @@ class NoisyFactorizedLinear(nn.Linear):
         if bias is not None:
             bias = bias + self.sigma_bias * eps_out.t()
         noise_v = T.mul(eps_in, eps_out)
-        return F.linear(input, self.weight + self.sigma_weight * noise_v, bias)
+
+        if use_noise:
+            return F.linear(input, self.weight + self.sigma_weight * noise_v, bias)
+        else:
+            return F.linear(input, self.weight)
 
 class DuelingDeepQNetwork(nn.Module):
     def __init__(self, lr, n_actions, name, input_dims, chkpt_dir,atoms,Vmax,Vmin, device):
@@ -59,7 +67,6 @@ class DuelingDeepQNetwork(nn.Module):
         self.Vmax = Vmax
         self.Vmin = Vmin
         self.DELTA_Z = (self.Vmax - self.Vmin) / (self.atoms - 1)
-        self.n_actions = n_actions
 
         self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
         self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
@@ -87,43 +94,36 @@ class DuelingDeepQNetwork(nn.Module):
 
         return x
 
-    def fc_val(self,x):
-        x = F.relu(self.fc1V(x))
-        x = self.V(x)
+    def fc_val(self, x, use_noise=True):
+        x = F.relu(self.fc1V(x, use_noise))
+        x = self.V(x, use_noise)
 
         return x
 
-    def fc_adv(self,x):
-        x = F.relu(self.fc1A(x))
-        x = self.A(x)
+    def fc_adv(self, x, use_noise=True):
+        x = F.relu(self.fc1A(x, use_noise))
+        x = self.A(x, use_noise)
 
         return x
 
-    def forward(self, x):
+    def forward(self, x, use_noise=True):
         batch_size = x.size()[0]
         fx = x.float() / 256
         conv_out = self.conv(fx).view(batch_size, -1)
-        val_out = self.fc_val(conv_out).view(batch_size, 1, self.atoms)
-        adv_out = self.fc_adv(conv_out).view(batch_size, -1, self.atoms)
+        val_out = self.fc_val(conv_out, use_noise).view(batch_size, 1, self.atoms)
+        adv_out = self.fc_adv(conv_out, use_noise).view(batch_size, -1, self.atoms)
         adv_mean = adv_out.mean(dim=1, keepdim=True)
         return val_out + (adv_out - adv_mean)
 
-    def both(self, x):
-        cat_out = self(x)
+    def both(self, x, use_noise=True):
+        cat_out = self(x, use_noise)
         probs = self.apply_softmax(cat_out)
         weights = probs * self.supports
         res = weights.sum(dim=2)
         return cat_out, res
 
-    def reset_final_layer(self):
-        with T.no_grad():
-            self.V = NoisyFactorizedLinear(512, self.atoms)
-            self.A = NoisyFactorizedLinear(512, self.n_actions * self.atoms)
-
-        self.to(self.device)
-
-    def qvals(self, x):
-        return self.both(x)[1]
+    def qvals(self, x, use_noise=True):
+        return self.both(x, use_noise)[1]
 
     def apply_softmax(self, t):
         return self.softmax(t.view(-1, self.atoms)).view(t.size())
@@ -147,7 +147,8 @@ class EpsilonGreedy():
 
 class Agent():
     def __init__(self, n_actions,input_dims, device,
-                 max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99):
+                 max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99,
+                 game=None, run=None):
 
         self.lr = lr
         self.n_actions = n_actions
@@ -161,7 +162,9 @@ class Agent():
         self.gamma = discount
         self.eval_mode = False
         self.grad_steps = 2
-        self.resets = True
+
+        self.run = run
+        self.algo_name = "DrDER_churn"
 
         #n-step
         self.n = 10
@@ -188,6 +191,23 @@ class Agent():
         self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
         self.intensity = Intensity(scale=0.05)
 
+        self.collecting_churn_data = True
+
+        self.env_steps = 0
+        self.reset_churn = False
+        self.second_save = False
+
+        self.start_churn = self.min_sampling_size
+        self.churn_sample = 10000
+        self.churn_dur = 23000
+        self.second_churn = 75000
+        self.total_churn = 0
+        self.churn_data = []
+        self.churn_actions = np.array([0 for i in range(self.n_actions)], dtype=np.float64)
+        self.total_actions = np.array([0 for i in range(self.n_actions)], dtype=np.int64)
+        self.count_since_reset = 0
+        self.game = game
+
     def choose_action(self, observation):
         state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
         with T.no_grad():
@@ -203,6 +223,8 @@ class Agent():
 
     def store_transition(self, state, action, reward, state_, done):
         self.n_step(state, action, reward, state_, done)
+        self.env_steps += 1
+        self.total_actions[action] += 1
 
     def n_step(self, state, action, reward, state_, done):
         self.nstep_states.append(state)
@@ -246,9 +268,6 @@ class Agent():
         if self.learn_step_counter % self.replace_target_cnt == 0:
             self.replace_target_network()
 
-        if self.learn_step_counter < 90000 and self.learn_step_counter % 20000 == 0 and self.resets:
-            self.net.reset_final_layer()
-
         batch, weights, tree_idxs = self.memory.sample(self.batch_size)
 
         states, actions, rewards, new_states, dones = batch
@@ -260,22 +279,13 @@ class Agent():
         states_ = new_states.to(self.net.device)
         weights = weights.to(self.net.device)
 
-
-
         ############## Data Augmentation
-
-        print(states[0][0].shape)
-        print(states[0][0])
-        raise Exception("stop")
 
         states = (self.intensity(self.random_shift(states.float()/255.)) * 255).to(T.uint8)
         states_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
         states_policy_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
 
         ##############
-
-
-
 
         distr_v, qvals_v = self.net.both(T.cat((states, states_policy_)))
         next_qvals_v = qvals_v[self.batch_size:]
@@ -284,7 +294,7 @@ class Agent():
         next_distr_v, _ = self.tgt_net.both(states_)
 
         next_actions_v = next_qvals_v.max(1)[1]
-
+        next_distr_v = self.tgt_net(states_)
         next_best_distr_v = next_distr_v[range(self.batch_size), next_actions_v.data]
         next_best_distr_v = self.tgt_net.apply_softmax(next_best_distr_v)
         next_best_distr = next_best_distr_v.data.cpu()
@@ -308,6 +318,118 @@ class Agent():
         self.learn_step_counter += 1
 
         self.memory.update_priorities(tree_idxs, loss_v.cpu().detach().numpy())
+
+        if self.collecting_churn_data:
+            if not self.reset_churn and self.env_steps > self.start_churn + self.churn_dur:
+                self.reset_churn = True
+
+                # save data
+                self.save_churn_data()
+
+                self.total_churn = 0
+                self.churn_data = []
+                self.churn_actions = np.array([0 for i in range(self.n_actions)], dtype=np.float64)
+                self.count_since_reset = 0
+
+            if not self.second_save and self.env_steps > self.second_churn + self.churn_dur:
+                self.second_save = True
+                # save data
+                self.save_churn_data()
+
+                self.total_churn = 0
+                self.churn_data = []
+                self.churn_actions = np.array([0 for i in range(self.n_actions)], dtype=np.float64)
+                self.count_since_reset = 0
+
+            if self.start_churn < self.env_steps < self.start_churn + self.churn_dur or \
+                    self.second_churn < self.env_steps < self.second_churn + self.churn_dur:
+
+                self.collect_churn_data()
+                self.count_since_reset += 1
+
+    def save_churn_data(self):
+        avg_churn = self.total_churn / self.count_since_reset
+        median_churn = np.percentile(self.churn_data, 50)
+        per90 = np.percentile(self.churn_data, 90)
+        per99 = np.percentile(self.churn_data, 99)
+        per99_9 = np.percentile(self.churn_data, 99.9)
+        churns_per_action = self.churn_actions
+        percent_churns_per_actions = self.churn_actions / np.sum(self.churn_actions)
+        total_action_percents = self.total_actions / np.sum(self.total_actions)
+        churn_std = np.std(percent_churns_per_actions)
+        action_std = np.std(total_action_percents)
+
+        x = torch.FloatTensor(self.churn_data)
+        x = torch.topk(x, 50).values
+        top50churns = []
+        for i in x:
+            top50churns.append(i.item())
+
+        game = self.game
+        if not self.second_save:
+            start_timesteps = self.start_churn
+            end_timesteps = self.start_churn + self.churn_dur
+        else:
+            start_timesteps = self.second_churn
+            end_timesteps = self.second_churn + self.churn_dur
+
+        percent0churn = self.churn_data.count(0.) / len(self.churn_data)
+
+        churn_data = ChurnData(avg_churn, per90, per99, per99_9, churns_per_action, percent_churns_per_actions,
+                               total_action_percents,churn_std, action_std, top50churns, game, start_timesteps,
+                               end_timesteps, percent0churn, self.algo_name, median_churn)
+
+        with open(self.algo_name + "_" + game + str(start_timesteps) + "_" + str(self.run) + '.pkl', 'wb') as outp:
+            pickle.dump(churn_data, outp, pickle.HIGHEST_PROTOCOL)
+
+    def collect_churn_data(self):
+        sample_size = min(self.churn_sample, self.memory.count)
+        batch, _, _ = self.memory.sample(sample_size)
+        states, _, _, _, _ = batch
+
+        states = states.to(self.net.device)
+
+        cur_vals = self.net.qvals(states, use_noise=False)
+        tgt_vals = self.tgt_net.qvals(states, use_noise=False)
+
+        output = torch.argmax(cur_vals, dim=1)
+        tgt_output = torch.argmax(tgt_vals, dim=1)
+
+        policy_churn = ((sample_size - torch.sum(output == tgt_output)) / sample_size).item()
+        self.total_churn += policy_churn
+        self.churn_data.append(policy_churn)
+
+        dif = torch.abs(torch.subtract(cur_vals, tgt_vals))
+        dif = torch.sum(dif, dim=0).detach().cpu().numpy()
+
+        self.churn_actions += dif
+
+        """if np.random.random() > 0.9 and len(self.churn_data) > 100:
+            percent_actions = self.churn_actions / np.sum(self.churn_actions)
+
+            print("\n\n")
+            print("Avg churn: " + str(self.total_churn / self.count_since_reset))
+            print("90th per: " + str(np.percentile(self.churn_data, 90)))
+            print("99th per: " + str(np.percentile(self.churn_data, 99)))
+            print("99.9th per: " + str(np.percentile(self.churn_data, 99.9)))
+
+            x = torch.FloatTensor(self.churn_data)
+            x = torch.topk(x, 50).values
+            temp = []
+            for i in x:
+                temp.append(i.item())
+            print("Top Churns: " + str(temp))
+
+            print("Percentages of churn by action: " + str(percent_actions))
+            print("Portions of actions taken: " + str(self.total_actions / np.sum(self.total_actions)))
+
+            print("std churn: " + str(np.std(percent_actions)))
+            print("std actions taken: " + str(np.std(self.total_actions / np.sum(self.total_actions))))
+
+            #print(self.churn_data)
+            print("Percent 0 Churn: " + str(self.churn_data.count(0.) / len(self.churn_data)))
+
+            raise Exception("stop")"""
 
 
 def distr_projection(next_distr, rewards, dones, Vmin, Vmax, n_atoms, gamma):
@@ -346,5 +468,4 @@ def distr_projection(next_distr, rewards, dones, Vmin, Vmax, n_atoms, gamma):
             proj_distr[ne_dones, l[ne_mask]] = (u - b_j)[ne_mask]
             proj_distr[ne_dones, u[ne_mask]] = (b_j - l)[ne_mask]
     return proj_distr
-
 

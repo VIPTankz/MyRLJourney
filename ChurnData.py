@@ -43,11 +43,11 @@ if __name__ == "__main__":
 
 
     for game in games:
-        file_ = ["churn_results\\DER\\DER_" + game]
+        file_ = ["churn_results\\DER_noiseless\\DER_noiseless_churn_" + game]
 
         files = []
         for i in file_:
-            files.append(i + "25000_0.pkl")
+            files.append(i + "1600_0.pkl")
             files.append(i + "75000_0.pkl")
 
         for filename in files:
@@ -75,7 +75,7 @@ if __name__ == "__main__":
                 print("Action std: " + str(round(churn_data.action_std, 5)))
                 print("\n\n")
 
-                if churn_data.start_timesteps == 25000:
+                if churn_data.start_timesteps == 1600:
                     churn_25 += churn_data.avg_churn
                     churn_std25 += churn_data.churn_std
                     action_std25 += churn_data.action_std
@@ -85,10 +85,10 @@ if __name__ == "__main__":
                     action_std75 += churn_data.action_std
 
     print("================")
-    print("AVG churn 25k: " + str(churn_25 / len(games)))
-    print("AVG churn 75k: " + str(churn_75 / len(games)))
-    print("AVG churn std 25k: " + str(churn_std25 / len(games)))
-    print("AVG churn std 75k: " + str(churn_std75 / len(games)))
-    print("AVG action std 25k: " + str(action_std25 / len(games)))
-    print("AVG action std 75k: " + str(action_std75 / len(games)))
+    print("AVG churn early: " + str(churn_25 / len(games)))
+    print("AVG churn late: " + str(churn_75 / len(games)))
+    print("AVG churn std early: " + str(churn_std25 / len(games)))
+    print("AVG churn std late: " + str(churn_std75 / len(games)))
+    print("AVG action std early: " + str(action_std25 / len(games)))
+    print("AVG action std late: " + str(action_std75 / len(games)))
 
