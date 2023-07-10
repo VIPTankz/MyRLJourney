@@ -73,8 +73,8 @@ class DuelingDeepQNetwork(nn.Module):
         self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, 3)
 
-        self.fc1V = NoisyFactorizedLinear(64 * 7 * 7, 512)
-        self.fc1A = NoisyFactorizedLinear(64 * 7 * 7, 512)
+        self.fc1V = NoisyFactorizedLinear(64 * 7 * 7, 128)
+        self.fc1A = NoisyFactorizedLinear(64 * 7 * 7, 128)
         self.V = NoisyFactorizedLinear(512, atoms)
         self.A = NoisyFactorizedLinear(512, n_actions * atoms)
 
@@ -172,7 +172,7 @@ class Agent():
         self.grad_steps = 2
 
         self.run = run
-        self.algo_name = "DrDER_resets_churn"
+        self.algo_name = "DrDER_small_churn"
 
         #n-step
         self.n = 10
@@ -185,7 +185,7 @@ class Agent():
         self.Vmin = -10
         self.N_ATOMS = 51
 
-        self.resets = True
+        self.resets = False
         self.reset_times = [40000, 75000]
 
         self.memory = PrioritizedReplayBuffer(input_dims, n_actions, max_mem_size, eps=1e-5, alpha=0.5, beta=0.4,
