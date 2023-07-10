@@ -172,7 +172,7 @@ class Agent():
         self.grad_steps = 2
 
         self.run = run
-        self.algo_name = "DrDER_churn"
+        self.algo_name = "DrDER_churn_resets"
 
         #n-step
         self.n = 10
