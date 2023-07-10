@@ -172,7 +172,7 @@ class Agent():
         self.grad_steps = 2
 
         self.run = run
-        self.algo_name = "DrDER_churn"
+        self.algo_name = "DrDER_resets_churn"
 
         #n-step
         self.n = 10
@@ -185,7 +185,7 @@ class Agent():
         self.Vmin = -10
         self.N_ATOMS = 51
 
-        self.resets = False
+        self.resets = True
         self.reset_times = [40000, 75000]
 
         self.memory = PrioritizedReplayBuffer(input_dims, n_actions, max_mem_size, eps=1e-5, alpha=0.5, beta=0.4,
