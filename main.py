@@ -34,9 +34,14 @@ if __name__ == '__main__':
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
     """
 
-    gameset = [["Alien","Amidar","Assault","Asterix"],["BankHeist","BattleZone","Boxing","Breakout"],
+    """gameset = [["Alien","Amidar","Assault","Asterix"],["BankHeist","BattleZone","Boxing","Breakout"],
                ["ChopperCommand","CrazyClimber","DemonAttack","Freeway"],["Frostbite","Gopher","Hero","Jamesbond"],
-               ["Kangaroo","Krull","KungFuMaster","MsPacman"],["Pong","PrivateEye","Qbert"],["RoadRunner","Seaquest","UpNDown"]]
+               ["Kangaroo","Krull","KungFuMaster","MsPacman"],["Pong","PrivateEye","Qbert"],["RoadRunner","Seaquest","UpNDown"]]"""
+
+    gameset = [["Alien", "Amidar", "Assault", "Asterix", "BankHeist", "BattleZone", "Boxing"],
+               ["Breakout", "ChopperCommand", "CrazyClimber", "DemonAttack", "Freeway", "Frostbite", "Gopher"],
+               ["Hero", "Jamesbond", "Kangaroo", "Krull", "KungFuMaster", "MsPacman", "Pong"],
+               ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
     gameset_idx = int(sys.argv[1])
 
@@ -48,7 +53,7 @@ if __name__ == '__main__':
     print("Device: " + str(device))
 
     for game in games:
-        for runs in range(3):
+        for runs in range(1):
             # gym version 0.25.2
             # ie pre 5 arg step
             env = make_env(game, eval=False)
