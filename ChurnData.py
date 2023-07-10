@@ -1,10 +1,11 @@
 import pickle
-
-
+import numpy as np
+import sys
+np.set_printoptions(suppress=True,linewidth=sys.maxsize,threshold=sys.maxsize)
 class ChurnData:
     def __init__(self, avg_churn, per90, per99, per99_9, churns_per_action, percent_churns_per_action,
                  total_action_percents, churn_std, action_std, top50churns, game, start_timesteps, end_timesteps,
-                 percent0churn, algo_name, median_churn): #
+                 percent0churn, algo_name, median_churn, action_swaps): #
 
         self.avg_churn = avg_churn
         self.median_churn = median_churn
@@ -22,6 +23,7 @@ class ChurnData:
         self.end_timesteps = end_timesteps
         self.percent0churn = percent0churn
         self.algo_name = algo_name
+        self.action_swaps = action_swaps
 
 if __name__ == "__main__":
 
@@ -50,6 +52,8 @@ if __name__ == "__main__":
             files.append(i + "1600_0.pkl")
             files.append(i + "75000_0.pkl")
 
+        files = ["DrDER_resets_churn_Alien2000_0.pkl"]
+
         for filename in files:
             print("---------------------------------------")
             with open(filename, 'rb') as inp:
@@ -73,6 +77,8 @@ if __name__ == "__main__":
                 print("Total Action Percent    : " + str(['%.5f' % elem for elem in churn_data.total_action_percents]))
                 print("Churn std: " + str(round(churn_data.churn_std, 5)))
                 print("Action std: " + str(round(churn_data.action_std, 5)))
+
+                print("Action Swap Matrix: \n" + str(churn_data.action_swaps))
                 print("\n\n")
 
                 if churn_data.start_timesteps == 1600:
