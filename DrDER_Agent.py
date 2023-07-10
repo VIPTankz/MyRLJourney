@@ -67,6 +67,7 @@ class DuelingDeepQNetwork(nn.Module):
         self.Vmax = Vmax
         self.Vmin = Vmin
         self.DELTA_Z = (self.Vmax - self.Vmin) / (self.atoms - 1)
+        self.n_actions = n_actions
 
         self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
         self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
@@ -84,6 +85,13 @@ class DuelingDeepQNetwork(nn.Module):
         self.loss = nn.MSELoss()
         self.device = device
         print("Device: " + str(self.device),flush=True)
+        self.to(self.device)
+
+    def reset_mlp(self):
+        self.fc1V = NoisyFactorizedLinear(64 * 7 * 7, 512)
+        self.fc1A = NoisyFactorizedLinear(64 * 7 * 7, 512)
+        self.V = NoisyFactorizedLinear(512, self.atoms)
+        self.A = NoisyFactorizedLinear(512, self.n_actions * self.atoms)
         self.to(self.device)
 
     def conv(self,x):
@@ -177,6 +185,9 @@ class Agent():
         self.Vmin = -10
         self.N_ATOMS = 51
 
+        self.resets = True
+        self.reset_times = [40000, 75000]
+
         self.memory = PrioritizedReplayBuffer(input_dims, n_actions, max_mem_size, eps=1e-5, alpha=0.5, beta=0.4,
                                                   total_frames=total_frames)
 
@@ -267,6 +278,10 @@ class Agent():
 
         if self.learn_step_counter % self.replace_target_cnt == 0:
             self.replace_target_network()
+
+        if self.resets:
+            if self.env_steps in self.reset_times:
+                self.net.reset_mlp()
 
         batch, weights, tree_idxs = self.memory.sample(self.batch_size)
 
