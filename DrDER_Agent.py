@@ -185,7 +185,7 @@ class Agent():
         self.Vmin = -10
         self.N_ATOMS = 51
 
-        self.resets = True
+        self.resets = False
         self.reset_times = [40000, 75000]
 
         self.memory = PrioritizedReplayBuffer(input_dims, n_actions, max_mem_size, eps=1e-5, alpha=0.5, beta=0.4,
@@ -218,6 +218,8 @@ class Agent():
         self.total_actions = np.array([0 for i in range(self.n_actions)], dtype=np.int64)
         self.count_since_reset = 0
         self.game = game
+
+        self.action_swaps = np.zeros((self.n_actions, self.n_actions), dtype=np.int64)
 
     def choose_action(self, observation):
         state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
@@ -410,6 +412,8 @@ class Agent():
         output = torch.argmax(cur_vals, dim=1)
         tgt_output = torch.argmax(tgt_vals, dim=1)
 
+
+
         policy_churn = ((sample_size - torch.sum(output == tgt_output)) / sample_size).item()
         self.total_churn += policy_churn
         self.churn_data.append(policy_churn)
@@ -418,6 +422,13 @@ class Agent():
         dif = torch.sum(dif, dim=0).detach().cpu().numpy()
 
         self.churn_actions += dif
+
+        changes = output != tgt_output
+        output = output[changes]
+        tgt_output = tgt_output[changes]
+
+        for i in range(len(output)):
+            self.action_swaps[output[i], tgt_output[i]] += 1
 
         """if np.random.random() > 0.9 and len(self.churn_data) > 100:
             percent_actions = self.churn_actions / np.sum(self.churn_actions)
@@ -443,6 +454,8 @@ class Agent():
 
             #print(self.churn_data)
             print("Percent 0 Churn: " + str(self.churn_data.count(0.) / len(self.churn_data)))
+
+            print("Action Swap Matrix: \n" + str(self.action_swaps))
 
             raise Exception("stop")"""
 
