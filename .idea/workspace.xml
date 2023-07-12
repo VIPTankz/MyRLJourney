@@ -5,35 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/churn_results/DrDER/DrDER_no_reset_churn_Alien2000_0.pkl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/churn_results/DrDER/DrDER_no_reset_churn_Breakout2000_0.pkl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/churn_results/DrDER/DrDER_no_reset_churn_Hero2000_0.pkl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/churn_results/DrDER/DrDER_no_reset_churn_PrivateEye2000_0.pkl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/churn_results/DrDER_resets/DrDER_resets_churn_Alien2000_0.pkl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/churn_results/DrDER_resets/DrDER_resets_churn_Alien75000_0.pkl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/churn_results/DrDER_resets/DrDER_resets_churn_Breakout2000_0.pkl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/churn_results/DrDER_resets/DrDER_resets_churn_Breakout75000_0.pkl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/churn_results/DrDER_resets/DrDER_resets_churn_Hero2000_0.pkl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/churn_results/DrDER_resets/DrDER_resets_churn_Hero75000_0.pkl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/churn_results/DrDER_resets/DrDER_resets_churn_PrivateEye2000_0.pkl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/churn_results/DrDER_resets/DrDER_resets_churn_PrivateEye75000_0.pkl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/farm_single.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/churn_result_data/DrDER_resets/DrDER_resetsAlienEvaluation (0).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/churn_result_data/DrDER_resets/DrDER_resetsAlienExperiment (0).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/churn_result_data/DrDER_resets/DrDER_resetsBreakoutEvaluation (0).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/churn_result_data/DrDER_resets/DrDER_resetsBreakoutExperiment (0).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/churn_result_data/DrDER_resets/DrDER_resetsHeroEvaluation (0).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/churn_result_data/DrDER_resets/DrDER_resetsHeroExperiment (0).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/churn_result_data/DrDER_resets/DrDER_resetsPrivateEyeEvaluation (0).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/churn_result_data/DrDER_resets/DrDER_resetsPrivateEyeExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runGPUsingle" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AtariSetup.py" beforeDir="false" afterPath="$PROJECT_DIR$/AtariSetup.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ChurnData.py" beforeDir="false" afterPath="$PROJECT_DIR$/ChurnData.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrDER_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/DrDER_Agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrQ_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/DrQ_Agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ExperienceReplay.py" beforeDir="false" afterPath="$PROJECT_DIR$/ExperienceReplay.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/Evaluation.py" beforeDir="false" afterPath="$PROJECT_DIR$/results/Evaluation.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/runGPUchurn.slurm" beforeDir="false" afterPath="$PROJECT_DIR$/runGPUchurn.slurm" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

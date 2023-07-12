@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --nodes=1
-#SBATCH --ntasks=4
+#SBATCH --ntasks=5
 #SBATCH --mem=96000
 #SBATCH -p batch
 #SBATCH --job-name=RL_atari_benchmark
@@ -12,4 +12,4 @@ source activate atari_work
 cd /home/$USER/MyRLJourney
 pip install -e .
 
-staskfarm farm_atari_churn.txt
+staskfarm farm_single.txt
