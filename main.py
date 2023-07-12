@@ -26,7 +26,7 @@ def make_env(game, eval):
 if __name__ == '__main__':
 
     from DrQ_Agent import Agent
-    agent_name = "EffDQN"
+    agent_name = "DrQ"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
@@ -59,11 +59,13 @@ if __name__ == '__main__':
     except:
         run_spec = False
 
+    games = ["CrazyClimber"]
     for game in games:
         for runs in range(1):
 
             if run_spec:
                 runs = run
+
             # gym version 0.25.2
             # ie pre 5 arg step
             env = make_env(game, eval=False)

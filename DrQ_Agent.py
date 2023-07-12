@@ -188,9 +188,9 @@ class Agent():
 
         indices = np.arange(self.batch_size)
 
-        #states_aug = (self.intensity(self.random_shift(states.float()/255.)) * 255).to(T.uint8)
-        #states_aug_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
-        #states_aug_policy_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
+        #states_aug = (self.intensity(self.random_shift(states.float()))).to(T.uint8)
+        #states_aug_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
+        #states_aug_policy_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
 
         V_s, A_s = self.net.forward(states)  # states_aug
 

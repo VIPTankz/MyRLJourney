@@ -5,9 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/runGPUsingle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/EffDQN/EffDQNBreakoutEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/EffDQN/EffDQNBreakoutExperiment (0).npy" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/runGPUchurn.slurm" beforeDir="false" afterPath="$PROJECT_DIR$/runGPUchurn.slurm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQ_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/DrQ_Agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/farm_single.txt" beforeDir="false" afterPath="$PROJECT_DIR$/farm_single.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/Evaluation.py" beforeDir="false" afterPath="$PROJECT_DIR$/results/Evaluation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/runGPUsingle" beforeDir="false" afterPath="$PROJECT_DIR$/runGPUsingle.slurm" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
