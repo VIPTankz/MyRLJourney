@@ -100,8 +100,8 @@ class AtariPreprocessing(object):
             return
         # Other no-ops implementations actually always do at least 1 no-op. We
         # follow them.
-        no_ops = self.environment.np_random.randint(1,
-                                                    self.max_random_noops + 1)
+        no_ops = self.environment.np_random.integers(1, self.max_random_noops + 1)
+
         for _ in range(no_ops):
             _, _, game_over, _ = self.environment.step(0)
             if game_over:

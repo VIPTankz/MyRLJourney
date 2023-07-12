@@ -1,6 +1,9 @@
 import pickle
 import numpy as np
 import sys
+import seaborn as sn
+import pandas as pd
+import matplotlib.pyplot as plt
 np.set_printoptions(suppress=True,linewidth=sys.maxsize,threshold=sys.maxsize)
 class ChurnData:
     def __init__(self, avg_churn, per90, per99, per99_9, churns_per_action, percent_churns_per_action,
@@ -49,10 +52,10 @@ if __name__ == "__main__":
 
         files = []
         for i in file_:
-            files.append(i + "1600_0.pkl")
+            files.append(i + "2000_0.pkl")
             files.append(i + "75000_0.pkl")
 
-        files = ["DrDER_resets_churn_Alien2000_0.pkl"]
+        files = ["churn_results\\DrDER_resets\\DrDER_resets_churn_Hero75000_0.pkl"]
 
         for filename in files:
             print("---------------------------------------")
@@ -72,13 +75,25 @@ if __name__ == "__main__":
                 print("Percent with 0 Churn: " + str(churn_data.percent0churn))
                 print("Top 50 Churns: " + str(['%.3f' % elem for elem in churn_data.top50churns]))
                 print("\n")
-                print("Total Churn per Action  : " + str(['%.5f' % elem for elem in churn_data.churns_per_action]))
+
+                from_actions = np.sum(churn_data.action_swaps, axis=0)
+                from_actions = from_actions / sum(from_actions)
+                to_actions = np.sum(churn_data.action_swaps, axis=1)
+                to_actions = to_actions / sum(to_actions)
+
+                #print("Total Churn per Action  : " + str(['%.5f' % elem for elem in churn_data.churns_per_action]))
                 print("Percent Churn per Action: " + str(['%.5f' % elem for elem in churn_data.percent_churns_per_action]))
                 print("Total Action Percent    : " + str(['%.5f' % elem for elem in churn_data.total_action_percents]))
+                print("Swap Percentages From   : " + str(['%.5f' % elem for elem in from_actions]))
+                print("Swap Percentages To     : " + str(['%.5f' % elem for elem in to_actions]))
                 print("Churn std: " + str(round(churn_data.churn_std, 5)))
                 print("Action std: " + str(round(churn_data.action_std, 5)))
 
                 print("Action Swap Matrix: \n" + str(churn_data.action_swaps))
+
+
+
+
                 print("\n\n")
 
                 if churn_data.start_timesteps == 1600:
@@ -97,4 +112,16 @@ if __name__ == "__main__":
     print("AVG churn std late: " + str(churn_std75 / len(games)))
     print("AVG action std early: " + str(action_std25 / len(games)))
     print("AVG action std late: " + str(action_std75 / len(games)))
+
+    df_cm = pd.DataFrame(churn_data.action_swaps, index=[i for i in range(len(churn_data.action_swaps))],
+                         columns=[i for i in range(len(churn_data.action_swaps[0]))])
+
+    sn.set(font_scale=1.4)  # for label size
+    sn.heatmap(df_cm, annot=True, annot_kws={"size": 12}, fmt='g')  # font size
+    #plt.subplots(figsize=(10, 10))
+    plt.xlabel("Swapped To")
+    plt.ylabel("Swapped From")
+    plt.title("Action Swaps on Atari PrivateEye")
+
+    plt.show()
 

@@ -73,8 +73,8 @@ class DuelingDeepQNetwork(nn.Module):
         self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, 3)
 
-        self.fc1V = NoisyFactorizedLinear(64 * 7 * 7, 128)
-        self.fc1A = NoisyFactorizedLinear(64 * 7 * 7, 128)
+        self.fc1V = NoisyFactorizedLinear(64 * 7 * 7, 512)
+        self.fc1A = NoisyFactorizedLinear(64 * 7 * 7, 512)
         self.V = NoisyFactorizedLinear(512, atoms)
         self.A = NoisyFactorizedLinear(512, n_actions * atoms)
 
@@ -411,8 +411,6 @@ class Agent():
 
         output = torch.argmax(cur_vals, dim=1)
         tgt_output = torch.argmax(tgt_vals, dim=1)
-
-
 
         policy_churn = ((sample_size - torch.sum(output == tgt_output)) / sample_size).item()
         self.total_churn += policy_churn

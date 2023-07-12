@@ -32,9 +32,9 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
 
 #games = ["Alien"]
 print("HERE")
-#print(np.mean(np.load('churn_result_data\\DrQAlienEvaluation (0).npy')))
+print(np.mean(np.load('churn_result_data\\DrDER_resets\\DrDER_resetsPrivateEyeEvaluation (0).npy')))
 #games = ["Alien"]
-#raise Exception("stop")
+raise Exception("stop")
 
 print_ind = True
 

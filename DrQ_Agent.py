@@ -5,7 +5,7 @@ import torch as T
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from ExperienceReplay import ExperienceReplay
+from ExperienceReplay import NStepExperienceReplay
 import numpy as np
 from collections import deque
 import kornia.augmentation as aug
@@ -100,7 +100,7 @@ class Agent():
 
         self.collecting_churn_data = False
 
-        self.memory = ExperienceReplay(input_dims, max_mem_size, self.batch_size)
+        self.memory = NStepExperienceReplay(input_dims, max_mem_size, self.batch_size, self.n, self.gamma)
 
         self.net = DuelingDeepQNetwork(self.lr, self.n_actions,
                                           input_dims=self.input_dims,
@@ -111,10 +111,6 @@ class Agent():
                                           input_dims=self.input_dims,
                                           name='lunar_lander_dueling_ddqn_q_next',
                                           chkpt_dir=self.chkpt_dir, device=device)
-
-        self.nstep_states = deque([], self.n)
-        self.nstep_rewards = deque([], self.n)
-        self.nstep_actions = deque([], self.n)
 
         self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
         self.intensity = Intensity(scale=0.1)
@@ -152,25 +148,9 @@ class Agent():
         return action
 
     def store_transition(self, state, action, reward, state_, done):
-        self.n_step(state, action, reward, state_, done)
+        self.memory.store_transition(state, action, reward, state_, done)
         self.env_steps += 1
         self.total_actions[action] += 1
-
-    def n_step(self, state, action, reward, state_, done):
-        self.nstep_states.append(state)
-        self.nstep_rewards.append(reward)
-        self.nstep_actions.append(action)
-
-        if len(self.nstep_states) == self.n:
-            fin_reward = 0
-            for i in range(self.n):
-                fin_reward += self.nstep_rewards[i] * (self.gamma ** i)
-            self.memory.store_transition(self.nstep_states[0], self.nstep_actions[0], fin_reward, state_, done)
-
-        if done:
-            self.nstep_states = deque([], self.n)
-            self.nstep_rewards = deque([], self.n)
-            self.nstep_actions = deque([], self.n)
 
     def replace_target_network(self):
         if self.learn_step_counter % self.replace_target_cnt == 0:
@@ -208,15 +188,17 @@ class Agent():
 
         indices = np.arange(self.batch_size)
 
-        states_aug = (self.intensity(self.random_shift(states.float()/255.)) * 255).to(T.uint8)
-        states_aug_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
-        states_aug_policy_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
+        #states_aug = (self.intensity(self.random_shift(states.float()/255.)) * 255).to(T.uint8)
+        #states_aug_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
+        #states_aug_policy_ = (self.intensity(self.random_shift(states_.float()/255.)) * 255).to(T.uint8)
 
-        V_s, A_s = self.net.forward(states_aug)  # states_aug
+        V_s, A_s = self.net.forward(states)  # states_aug
 
-        V_s_, A_s_ = self.tgt_net.forward(states_aug_)  # states_aug_
+        V_s_, A_s_ = self.tgt_net.forward(states_)  # states_aug_
 
-        V_s_eval, A_s_eval = self.tgt_net.forward(states_aug_policy_)  # states_aug_policy_
+        #V_s_eval, A_s_eval = self.tgt_net.forward(states_aug_policy_)  # states_aug_policy_
+        V_s_eval = V_s_
+        A_s_eval = A_s_
 
         q_pred = T.add(V_s, (A_s - A_s.mean(dim=1, keepdim=True)))[indices, actions]
 
