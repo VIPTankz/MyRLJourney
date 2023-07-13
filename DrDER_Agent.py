@@ -428,7 +428,7 @@ class Agent():
         for i in range(len(output)):
             self.action_swaps[output[i], tgt_output[i]] += 1
 
-        """if np.random.random() > 0.9 and len(self.churn_data) > 100:
+        if np.random.random() > 0.9 and len(self.churn_data) > 100:
             percent_actions = self.churn_actions / np.sum(self.churn_actions)
 
             print("\n\n")
@@ -455,7 +455,7 @@ class Agent():
 
             print("Action Swap Matrix: \n" + str(self.action_swaps))
 
-            raise Exception("stop")"""
+            raise Exception("stop")
 
 
 def distr_projection(next_distr, rewards, dones, Vmin, Vmax, n_atoms, gamma):

@@ -119,9 +119,9 @@ class Agent():
         self.reset_churn = False
         self.second_save = False
 
-        self.start_churn = 25000
+        self.start_churn = self.min_sampling_size
         self.churn_sample = 10000
-        self.churn_dur = 5000
+        self.churn_dur = 23000
         self.second_churn = 75000
         self.total_churn = 0
         self.churn_data = []
@@ -129,6 +129,8 @@ class Agent():
         self.total_actions = np.array([0 for i in range(self.n_actions)], dtype=np.int64)
         self.count_since_reset = 0
         self.game = game
+
+        self.action_swaps = np.zeros((self.n_actions, self.n_actions), dtype=np.int64)
 
     def get_grad_steps(self):
         return self.grad_steps
@@ -188,15 +190,15 @@ class Agent():
 
         indices = np.arange(self.batch_size)
 
-        #states_aug = (self.intensity(self.random_shift(states.float()))).to(T.uint8)
-        #states_aug_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
-        #states_aug_policy_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
+        states_aug = (self.intensity(self.random_shift(states.float()))).to(T.uint8)
+        states_aug_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
+        states_aug_policy_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
 
-        V_s, A_s = self.net.forward(states)  # states_aug
+        V_s, A_s = self.net.forward(states_aug)  # states_aug
 
-        V_s_, A_s_ = self.tgt_net.forward(states_)  # states_aug_
+        V_s_, A_s_ = self.tgt_net.forward(states_aug_)  # states_aug_
 
-        V_s_eval, A_s_eval = self.tgt_net.forward(states_)  # states_aug_policy_
+        V_s_eval, A_s_eval = self.tgt_net.forward(states_aug_policy_)  # states_aug_policy_
 
         q_pred = T.add(V_s, (A_s - A_s.mean(dim=1, keepdim=True)))[indices, actions]
 
@@ -229,6 +231,7 @@ class Agent():
                 self.churn_data = []
                 self.churn_actions = np.array([0 for i in range(self.n_actions)], dtype=np.float64)
                 self.count_since_reset = 0
+                self.action_swaps = np.zeros((self.n_actions, self.n_actions), dtype=np.int64)
 
             if not self.second_save and self.env_steps > self.second_churn + self.churn_dur:
                 self.second_save = True
@@ -277,13 +280,14 @@ class Agent():
 
         churn_data = ChurnData(avg_churn, per90, per99, per99_9, churns_per_action, percent_churns_per_actions,
                                total_action_percents,churn_std, action_std, top50churns, game, start_timesteps,
-                               end_timesteps, percent0churn, self.algo_name, median_churn)
+                               end_timesteps, percent0churn, self.algo_name, median_churn, self.action_swaps)
 
         with open(self.algo_name + "_" + game + str(start_timesteps) + "_" + str(self.run) + '.pkl', 'wb') as outp:
             pickle.dump(churn_data, outp, pickle.HIGHEST_PROTOCOL)
 
     def collect_churn_data(self):
-        states, _, _, _, _ = self.memory.sample_memory(bs=self.churn_sample)
+        sample_size = min(self.churn_sample, self.memory.mem_cntr - self.n)
+        states, _, _, _, _ = self.memory.sample_memory(bs=sample_size)
 
         states = T.tensor(states).to(self.net.device)
 
@@ -293,7 +297,7 @@ class Agent():
         output = torch.argmax(cur_vals, dim=1)
         tgt_output = torch.argmax(tgt_vals, dim=1)
 
-        policy_churn = ((self.churn_sample - torch.sum(output == tgt_output)) / self.churn_sample).item()
+        policy_churn = ((sample_size - torch.sum(output == tgt_output)) / sample_size).item()
         self.total_churn += policy_churn
         self.churn_data.append(policy_churn)
 
@@ -302,8 +306,14 @@ class Agent():
 
         self.churn_actions += dif
 
-        """
-        if np.random.random() > 0.99 and len(self.churn_data) > 100:
+        changes = output != tgt_output
+        output = output[changes]
+        tgt_output = tgt_output[changes]
+
+        for i in range(len(output)):
+            self.action_swaps[output[i], tgt_output[i]] += 1
+
+        if np.random.random() > 0.9 and len(self.churn_data) > 100:
             percent_actions = self.churn_actions / np.sum(self.churn_actions)
 
             print("\n\n")
@@ -325,8 +335,9 @@ class Agent():
             print("std churn: " + str(np.std(percent_actions)))
             print("std actions taken: " + str(np.std(self.total_actions / np.sum(self.total_actions))))
 
-            print(self.churn_data)
+            #print(self.churn_data)
             print("Percent 0 Churn: " + str(self.churn_data.count(0.) / len(self.churn_data)))
-            raise Exception("stop")"""
+
+            print("Action Swap Matrix: \n" + str(self.action_swaps))
 
 
