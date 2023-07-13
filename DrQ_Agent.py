@@ -96,7 +96,7 @@ class Agent():
         self.gamma = discount
         self.grad_steps = 1
         self.run = run
-        self.algo_name = "DrQ"
+        self.algo_name = "EffDQN"
 
         self.collecting_churn_data = False
 
@@ -188,15 +188,15 @@ class Agent():
 
         indices = np.arange(self.batch_size)
 
-        states_aug = (self.intensity(self.random_shift(states.float()))).to(T.uint8)
-        states_aug_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
-        states_aug_policy_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
+        #states_aug = (self.intensity(self.random_shift(states.float()))).to(T.uint8)
+        #states_aug_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
+        #states_aug_policy_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
 
-        V_s, A_s = self.net.forward(states_aug)  # states_aug
+        V_s, A_s = self.net.forward(states)  # states_aug
 
-        V_s_, A_s_ = self.tgt_net.forward(states_aug_)  # states_aug_
+        V_s_, A_s_ = self.tgt_net.forward(states_)  # states_aug_
 
-        V_s_eval, A_s_eval = self.tgt_net.forward(states_aug_policy_)  # states_aug_policy_
+        V_s_eval, A_s_eval = self.tgt_net.forward(states_)  # states_aug_policy_
 
         q_pred = T.add(V_s, (A_s - A_s.mean(dim=1, keepdim=True)))[indices, actions]
 

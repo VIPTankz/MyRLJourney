@@ -55,7 +55,8 @@ if __name__ == "__main__":
             files.append(i + "2000_0.pkl")
             files.append(i + "75000_0.pkl")
 
-        files = ["churn_results\\DrDER_resets\\DrDER_resets_churn_Hero75000_0.pkl"]
+        files = ["churn_results\\DrDER\\DrDER_no_reset_churn_Breakout2000_0.pkl",
+                 "churn_results\\DrDER\\DrDER_no_reset_churn_Breakout75000_0.pkl"]
 
         for filename in files:
             print("---------------------------------------")
