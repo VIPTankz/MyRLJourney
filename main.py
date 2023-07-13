@@ -59,9 +59,8 @@ if __name__ == '__main__':
     except:
         run_spec = False
 
-    games = ["CrazyClimber"]
     for game in games:
-        for runs in range(1):
+        for runs in range(5):
 
             if run_spec:
                 runs = run
