@@ -1,7 +1,7 @@
 import numpy as np
 import statistics
 np.set_printoptions(suppress=True)
-runs = 3
+runs = 20
 
 
 human_scores = np.array([7127.80,1719.53,742.00,8503.33,753.13,\
@@ -31,20 +31,16 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
 #games = ["Alien"]
-print("HERE")
-print(np.mean(np.load('EffDQN\\EffDQNBreakoutEvaluation (0).npy')))
-#games = ["Alien"]
-raise Exception("stop")
 
 print_ind = True
 
 print(len(games))
 
 hns = []
-labels = ["DrDER"]
+labels = ["EffDQN", "DrQ"]
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
-#games = ["Seaquest","UpNDown"]
+games = ["CrazyClimber"]
 count = 0
 for game in games:
 
@@ -56,7 +52,7 @@ for game in games:
         for run in range(runs):
             print(np.mean(np.load(data_files[i][-1] + " (" + str(run) + ').npy')))
 
-print(data_files)
+#print(data_files)
 
 results = np.zeros((len(labels),len(games)),dtype=np.float64)
 for i in range(len(labels)):
@@ -66,11 +62,12 @@ for i in range(len(labels)):
             x.append(np.mean(np.load(data_files[i][j] + " (" + str(run) + ').npy')))
         results[i, j] = sum(x) / len(x)
 
+print("\nAverages: ")
 print(results)
 results = np.subtract(results, random_scores)
 results = np.divide(results, human_scores)
-print(results)
-print("Human-Normalised Medians:")
+#print(results)
+print("\nHuman-Normalised Medians:")
 print(np.median(results,axis=1))
 
 
