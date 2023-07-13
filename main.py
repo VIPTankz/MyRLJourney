@@ -34,14 +34,14 @@ if __name__ == '__main__':
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
     """
 
-    """gameset = [["Alien","Amidar","Assault","Asterix"],["BankHeist","BattleZone","Boxing","Breakout"],
+    gameset = [["Alien","Amidar","Assault","Asterix"],["BankHeist","BattleZone","Boxing","Breakout"],
                ["ChopperCommand","CrazyClimber","DemonAttack","Freeway"],["Frostbite","Gopher","Hero","Jamesbond"],
-               ["Kangaroo","Krull","KungFuMaster","MsPacman"],["Pong","PrivateEye","Qbert"],["RoadRunner","Seaquest","UpNDown"]]"""
+               ["Kangaroo","Krull","KungFuMaster","MsPacman"],["Pong","PrivateEye","Qbert"],["RoadRunner","Seaquest","UpNDown"]]
 
-    gameset = [["Alien", "Amidar", "Assault", "Asterix", "BankHeist", "BattleZone", "Boxing"],
+    """gameset = [["Alien", "Amidar", "Assault", "Asterix", "BankHeist", "BattleZone", "Boxing"],
                ["Breakout", "ChopperCommand", "CrazyClimber", "DemonAttack", "Freeway", "Frostbite", "Gopher"],
                ["Hero", "Jamesbond", "Kangaroo", "Krull", "KungFuMaster", "MsPacman", "Pong"],
-               ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
+               ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]"""
 
     gameset_idx = int(sys.argv[1])
 
