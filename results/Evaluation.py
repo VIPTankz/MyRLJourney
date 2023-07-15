@@ -1,7 +1,7 @@
 import numpy as np
 import statistics
 np.set_printoptions(suppress=True)
-runs = 20
+runs = 5
 
 
 human_scores = np.array([7127.80,1719.53,742.00,8503.33,753.13,\
@@ -37,10 +37,9 @@ print_ind = True
 print(len(games))
 
 hns = []
-labels = ["EffDQN", "DrQ"]
+labels = ["DrQ","EffDQN"]
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
-games = ["CrazyClimber"]
 count = 0
 for game in games:
 
@@ -63,7 +62,9 @@ for i in range(len(labels)):
         results[i, j] = sum(x) / len(x)
 
 print("\nAverages: ")
-print(results)
+for j in range(len(results)):
+    for i in range(len(results[0])):
+        print(games[i] + ": " + str(results[j,i]))
 results = np.subtract(results, random_scores)
 results = np.divide(results, human_scores)
 #print(results)

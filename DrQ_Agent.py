@@ -12,6 +12,7 @@ import kornia.augmentation as aug
 import kornia
 import pickle
 from ChurnData import ChurnData
+import matplotlib.pyplot as plt
 
 class Intensity(nn.Module):
     def __init__(self, scale):
@@ -86,7 +87,7 @@ class Agent():
         self.lr = lr
         self.n_actions = n_actions
         self.input_dims = input_dims
-        self.batch_size = batch_size
+        self.batch_size = 1
         self.replace_target_cnt = replace
         self.action_space = [i for i in range(self.n_actions)]
         self.learn_step_counter = 0
@@ -94,11 +95,12 @@ class Agent():
         self.n = 10
         self.chkpt_dir = ""
         self.gamma = discount
-        self.grad_steps = 1
+        self.grad_steps = 8
         self.run = run
         self.algo_name = "EffDQN"
 
         self.collecting_churn_data = False
+        self.gen_data = False
 
         self.memory = NStepExperienceReplay(input_dims, max_mem_size, self.batch_size, self.n, self.gamma)
 
@@ -131,6 +133,14 @@ class Agent():
         self.game = game
 
         self.action_swaps = np.zeros((self.n_actions, self.n_actions), dtype=np.int64)
+
+        self.action_changes = np.zeros(self.n_actions, dtype=np.int64)
+        self.action_changes2 = np.zeros(self.n_actions, dtype=np.int64)
+        self.action_changes3 = np.zeros(self.n_actions, dtype=np.int64)
+        self.steps = 10000
+        self.lists = []
+        self.lists2 = []
+        self.lists3 = []
 
     def get_grad_steps(self):
         return self.grad_steps
@@ -216,9 +226,79 @@ class Agent():
         loss.backward()
         T.nn.utils.clip_grad_norm_(self.net.parameters(), 10)
         self.net.optimizer.step()
+
         self.learn_step_counter += 1
 
         self.epsilon.update_eps()
+
+        if self.gen_data:
+
+            with T.no_grad():
+                V_s_af, A_s_af = self.net.forward(states)  # states_aug
+
+                A_s_af_copy = T.clone(A_s_af)
+                A_s_copy = T.clone(A_s)
+                for i in range(len(A_s_af_copy[0])):
+
+                    if i != actions[0]:
+                        A_s_af_copy[0, i] = 0
+                        A_s_copy[0, i] = 0
+
+                self.action_changes = np.add(self.action_changes, (T.abs(A_s_af - A_s)).detach().cpu().numpy())
+                A_s_af[0, actions[0]] = 0
+                A_s[0, actions[0]] = 0
+                self.action_changes2 = np.add(self.action_changes2, (T.abs(A_s_af - A_s)).detach().cpu().numpy())
+
+                self.action_changes3 = np.add(self.action_changes3, (T.abs(A_s_af_copy - A_s_copy)).detach().cpu().numpy())
+                #print(self.action_changes)
+                #print(self.action_changes.sum())
+                #print("\n\n")
+                self.lists.append([self.action_changes[0,0],self.action_changes[0,1],self.action_changes[0,2],self.action_changes[0,3],self.action_changes.sum()])
+                self.lists2.append([self.action_changes2[0, 0], self.action_changes2[0, 1], self.action_changes2[0, 2],
+                                   self.action_changes2[0, 3], self.action_changes2.sum()])
+                self.lists3.append([self.action_changes3[0, 0], self.action_changes3[0, 1], self.action_changes3[0, 2],
+                                   self.action_changes3[0, 3], self.action_changes3.sum()])
+
+                if self.learn_step_counter % self.steps == 0:
+                    y = np.arange(len(self.lists))
+                    count = 0
+                    for i in range(5):
+                        if count != 4:
+                            label = "Action " + str(count)
+                        else:
+                            label = "Total"
+                        plt.plot(y, np.array(self.lists)[:,count], label=label)  # Plot the chart
+                        count += 1
+                    plt.legend()
+                    plt.title("Total Change")
+                    plt.show()  # display
+                    plt.clf()
+                    y = np.arange(len(self.lists))
+                    count = 0
+                    for i in range(5):
+                        if count != 4:
+                            label = "Action " + str(count)
+                        else:
+                            label = "Total"
+                        plt.plot(y, np.array(self.lists2)[:,count], label=label)  # Plot the chart
+                        count += 1
+                    plt.legend()
+                    plt.title("Change Via Generalisation")
+                    plt.show()  # display
+
+                    plt.clf()
+                    y = np.arange(len(self.lists))
+                    count = 0
+                    for i in range(5):
+                        if count != 4:
+                            label = "Action " + str(count)
+                        else:
+                            label = "Total"
+                        plt.plot(y, np.array(self.lists3)[:,count], label=label)  # Plot the chart
+                        count += 1
+                    plt.legend()
+                    plt.title("Change Via On Targetted Action")
+                    plt.show()  # display
 
         if self.collecting_churn_data:
             if not self.reset_churn and self.env_steps > self.start_churn + self.churn_dur:
