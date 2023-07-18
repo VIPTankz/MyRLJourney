@@ -1,7 +1,7 @@
 import numpy as np
 import statistics
 np.set_printoptions(suppress=True)
-runs = 5
+runs = 4
 
 
 human_scores = np.array([7127.80,1719.53,742.00,8503.33,753.13,\
@@ -37,7 +37,7 @@ print_ind = True
 print(len(games))
 
 hns = []
-labels = ["DrQ","EffDQN"]
+labels = ["OTDrQ"]
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
 count = 0
