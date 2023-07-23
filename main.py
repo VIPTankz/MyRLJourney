@@ -47,10 +47,7 @@ if __name__ == '__main__':
                ["Hero", "Jamesbond", "Kangaroo", "Krull", "KungFuMaster", "MsPacman", "Pong"],
                ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]"""
 
-    gameset = [["Assault", "Asterix"], ["Boxing", "Breakout"], ["DemonAttack", "Freeway"], ["Gopher", "Hero"],
-               ["Jamesbond","Krull"], ["KungFuMaster", "MsPacman"]]
-
-    #, ["PrivateEye", "Qbert"], ["Seaquest","UpNDown"]
+    gameset = [["PrivateEye"], ["Qbert"], ["Seaquest"], ["UpNDown"]]
 
     gameset_idx = int(sys.argv[1])
 
@@ -69,7 +66,7 @@ if __name__ == '__main__':
         run_spec = False
 
     for game in games:
-        for runs in range(2):
+        for runs in range(4):
 
             if run_spec:
                 runs += run
