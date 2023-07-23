@@ -34,14 +34,23 @@ if __name__ == '__main__':
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
     """
 
+    """
     gameset = [["Alien","Amidar","Assault","Asterix"],["BankHeist","BattleZone","Boxing","Breakout"],
                ["ChopperCommand","CrazyClimber","DemonAttack","Freeway"],["Frostbite","Gopher","Hero","Jamesbond"],
                ["Kangaroo","Krull","KungFuMaster","MsPacman"],["Pong","PrivateEye","Qbert"],["RoadRunner","Seaquest","UpNDown"]]
+               
+    currently changed farm_atari to use 6 sets
+    """
 
     """gameset = [["Alien", "Amidar", "Assault", "Asterix", "BankHeist", "BattleZone", "Boxing"],
                ["Breakout", "ChopperCommand", "CrazyClimber", "DemonAttack", "Freeway", "Frostbite", "Gopher"],
                ["Hero", "Jamesbond", "Kangaroo", "Krull", "KungFuMaster", "MsPacman", "Pong"],
                ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]"""
+
+    gameset = [["Assault", "Asterix"], ["Boxing", "Breakout"], ["DemonAttack", "Freeway"], ["Gopher", "Hero"],
+               ["Jamesbond","Krull"], ["KungFuMaster", "MsPacman"]]
+
+    #, ["PrivateEye", "Qbert"], ["Seaquest","UpNDown"]
 
     gameset_idx = int(sys.argv[1])
 

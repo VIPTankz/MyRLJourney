@@ -87,7 +87,7 @@ class Agent():
         self.lr = lr
         self.n_actions = n_actions
         self.input_dims = input_dims
-        self.batch_size = 32
+        self.batch_size = batch_size
         self.replace_target_cnt = replace
         self.action_space = [i for i in range(self.n_actions)]
         self.learn_step_counter = 0
