@@ -57,7 +57,9 @@ class DuelingDeepQNetwork(nn.Module):
         V = self.V(observationV)
         A = self.A(observationA)
 
-        return V, A
+        Q = V + A - A.mean(dim=1, keepdim=True)
+
+        return Q
 
     def save_checkpoint(self):
         print('... saving checkpoint ...')
@@ -90,17 +92,11 @@ class Agent():
         self.batch_size = batch_size
         self.replace_target_cnt = replace
         self.action_space = [i for i in range(self.n_actions)]
-        self.learn_step_counter = 0
         self.min_sampling_size = 1600
         self.n = 10
         self.chkpt_dir = ""
         self.gamma = discount
-        self.grad_steps = 8
-        self.run = run
-        self.algo_name = "EffDQN"
-
-        self.collecting_churn_data = False
-        self.gen_data = False
+        self.replay_ratio = 8
 
         self.memory = NStepExperienceReplay(input_dims, max_mem_size, self.batch_size, self.n, self.gamma)
 
@@ -118,29 +114,7 @@ class Agent():
         self.intensity = Intensity(scale=0.1)
 
         self.env_steps = 0
-        self.reset_churn = False
-        self.second_save = False
-
-        self.start_churn = self.min_sampling_size
-        self.churn_sample = 10000
-        self.churn_dur = 23000
-        self.second_churn = 75000
-        self.total_churn = 0
-        self.churn_data = []
-        self.churn_actions = np.array([0 for i in range(self.n_actions)], dtype=np.float64)
-        self.total_actions = np.array([0 for i in range(self.n_actions)], dtype=np.int64)
-        self.count_since_reset = 0
-        self.game = game
-
-        self.action_swaps = np.zeros((self.n_actions, self.n_actions), dtype=np.int64)
-
-        self.action_changes = np.zeros(self.n_actions, dtype=np.int64)
-        self.action_changes2 = np.zeros(self.n_actions, dtype=np.int64)
-        self.action_changes3 = np.zeros(self.n_actions, dtype=np.int64)
-        self.steps = 10000
-        self.lists = []
-        self.lists2 = []
-        self.lists3 = []
+        self.grad_steps = 0
 
     def get_grad_steps(self):
         return self.grad_steps
@@ -152,8 +126,8 @@ class Agent():
     def choose_action(self, observation):
         if np.random.random() > self.epsilon.eps:
             state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
-            _, advantage = self.net.forward(state)
-            action = T.argmax(advantage).item()
+            q_vals = self.net.forward(state)
+            action = T.argmax(q_vals).item()
         else:
             action = np.random.choice(self.action_space)
 
@@ -162,11 +136,9 @@ class Agent():
     def store_transition(self, state, action, reward, state_, done):
         self.memory.store_transition(state, action, reward, state_, done)
         self.env_steps += 1
-        self.total_actions[action] += 1
 
     def replace_target_network(self):
-        if self.learn_step_counter % self.replace_target_cnt == 0:
-            self.tgt_net.load_state_dict(self.net.state_dict())
+        self.tgt_net.load_state_dict(self.net.state_dict())
 
     def save_models(self):
         self.net.save_checkpoint()
@@ -177,7 +149,7 @@ class Agent():
         self.tgt_net.load_checkpoint()
 
     def learn(self):
-        for i in range(self.grad_steps):
+        for i in range(self.replay_ratio):
             self.learn_call()
 
     def learn_call(self):
@@ -187,7 +159,7 @@ class Agent():
 
         self.net.optimizer.zero_grad()
 
-        if self.learn_step_counter % self.replace_target_cnt == 0:
+        if self.grad_steps % self.replace_target_cnt == 0:
             self.replace_target_network()
 
         states, actions, rewards, new_states, dones = self.memory.sample_memory()
@@ -204,220 +176,21 @@ class Agent():
         states_aug_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
         states_aug_policy_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
 
-        V_s, A_s = self.net.forward(states_aug)  # states_aug
+        q_pred = self.net.forward(states_aug)[indices, actions]
+        q_actions = self.net.forward(states_aug_policy_)
+        q_targets = self.tgt_net.forward(states_aug_)
 
-        V_s_, A_s_ = self.tgt_net.forward(states_aug_)  # states_aug_
+        max_actions = T.argmax(q_actions, dim=1)
+        q_targets[dones] = 0.0
+        q_target = rewards + (self.gamma ** self.n) * q_targets[indices, max_actions]
 
-        V_s_eval, A_s_eval = self.tgt_net.forward(states_aug_policy_)  # states_aug_policy_
-
-        q_pred = T.add(V_s, (A_s - A_s.mean(dim=1, keepdim=True)))[indices, actions]
-
-        q_next = T.add(V_s_, (A_s_ - A_s_.mean(dim=1, keepdim=True)))
-
-        q_eval = T.add(V_s_eval, (A_s_eval - A_s_eval.mean(dim=1, keepdim=True)))
-
-        max_actions = T.argmax(q_eval, dim=1)
-
-        q_next[dones] = 0.0
-        q_target = rewards + (self.gamma ** self.n) * q_next[indices, max_actions]
-
-        loss = self.net.loss(q_target, q_pred).to(self.net.device)
+        loss = self.net.loss(q_pred, q_target).to(self.net.device)
 
         loss.backward()
         T.nn.utils.clip_grad_norm_(self.net.parameters(), 10)
         self.net.optimizer.step()
 
-        self.learn_step_counter += 1
+        self.grad_steps += 1
 
         self.epsilon.update_eps()
-
-        if self.gen_data:
-
-            with T.no_grad():
-                V_s_af, A_s_af = self.net.forward(states)  # states_aug
-
-                A_s_af_copy = T.clone(A_s_af)
-                A_s_copy = T.clone(A_s)
-                for i in range(len(A_s_af_copy[0])):
-
-                    if i != actions[0]:
-                        A_s_af_copy[0, i] = 0
-                        A_s_copy[0, i] = 0
-
-                self.action_changes = np.add(self.action_changes, (T.abs(A_s_af - A_s)).detach().cpu().numpy())
-                A_s_af[0, actions[0]] = 0
-                A_s[0, actions[0]] = 0
-                self.action_changes2 = np.add(self.action_changes2, (T.abs(A_s_af - A_s)).detach().cpu().numpy())
-
-                self.action_changes3 = np.add(self.action_changes3, (T.abs(A_s_af_copy - A_s_copy)).detach().cpu().numpy())
-                #print(self.action_changes)
-                #print(self.action_changes.sum())
-                #print("\n\n")
-                self.lists.append([self.action_changes[0,0],self.action_changes[0,1],self.action_changes[0,2],self.action_changes[0,3],self.action_changes.sum()])
-                self.lists2.append([self.action_changes2[0, 0], self.action_changes2[0, 1], self.action_changes2[0, 2],
-                                   self.action_changes2[0, 3], self.action_changes2.sum()])
-                self.lists3.append([self.action_changes3[0, 0], self.action_changes3[0, 1], self.action_changes3[0, 2],
-                                   self.action_changes3[0, 3], self.action_changes3.sum()])
-
-                if self.learn_step_counter % self.steps == 0:
-                    y = np.arange(len(self.lists))
-                    count = 0
-                    for i in range(5):
-                        if count != 4:
-                            label = "Action " + str(count)
-                        else:
-                            label = "Total"
-                        plt.plot(y, np.array(self.lists)[:,count], label=label)  # Plot the chart
-                        count += 1
-                    plt.legend()
-                    plt.title("Total Change")
-                    plt.show()  # display
-                    plt.clf()
-                    y = np.arange(len(self.lists))
-                    count = 0
-                    for i in range(5):
-                        if count != 4:
-                            label = "Action " + str(count)
-                        else:
-                            label = "Total"
-                        plt.plot(y, np.array(self.lists2)[:,count], label=label)  # Plot the chart
-                        count += 1
-                    plt.legend()
-                    plt.title("Change Via Generalisation")
-                    plt.show()  # display
-
-                    plt.clf()
-                    y = np.arange(len(self.lists))
-                    count = 0
-                    for i in range(5):
-                        if count != 4:
-                            label = "Action " + str(count)
-                        else:
-                            label = "Total"
-                        plt.plot(y, np.array(self.lists3)[:,count], label=label)  # Plot the chart
-                        count += 1
-                    plt.legend()
-                    plt.title("Change Via On Targetted Action")
-                    plt.show()  # display
-
-        if self.collecting_churn_data:
-            if not self.reset_churn and self.env_steps > self.start_churn + self.churn_dur:
-                self.reset_churn = True
-
-                # save data
-                self.save_churn_data()
-
-                self.total_churn = 0
-                self.churn_data = []
-                self.churn_actions = np.array([0 for i in range(self.n_actions)], dtype=np.float64)
-                self.count_since_reset = 0
-                self.action_swaps = np.zeros((self.n_actions, self.n_actions), dtype=np.int64)
-
-            if not self.second_save and self.env_steps > self.second_churn + self.churn_dur:
-                self.second_save = True
-                # save data
-                self.save_churn_data()
-
-                self.total_churn = 0
-                self.churn_data = []
-                self.churn_actions = np.array([0 for i in range(self.n_actions)], dtype=np.float64)
-                self.count_since_reset = 0
-
-            if self.start_churn < self.env_steps < self.start_churn + self.churn_dur or \
-                    self.second_churn < self.env_steps < self.second_churn + self.churn_dur:
-
-                self.collect_churn_data()
-                self.count_since_reset += 1
-
-
-    def save_churn_data(self):
-        avg_churn = self.total_churn / self.count_since_reset
-        median_churn = np.percentile(self.churn_data, 50)
-        per90 = np.percentile(self.churn_data, 90)
-        per99 = np.percentile(self.churn_data, 99)
-        per99_9 = np.percentile(self.churn_data, 99.9)
-        churns_per_action = self.churn_actions
-        percent_churns_per_actions = self.churn_actions / np.sum(self.churn_actions)
-        total_action_percents = self.total_actions / np.sum(self.total_actions)
-        churn_std = np.std(percent_churns_per_actions)
-        action_std = np.std(total_action_percents)
-
-        x = torch.FloatTensor(self.churn_data)
-        x = torch.topk(x, 50).values
-        top50churns = []
-        for i in x:
-            top50churns.append(i.item())
-
-        game = self.game
-        if not self.second_save:
-            start_timesteps = self.start_churn
-            end_timesteps = self.start_churn + self.churn_dur
-        else:
-            start_timesteps = self.second_churn
-            end_timesteps = self.second_churn + self.churn_dur
-
-        percent0churn = self.churn_data.count(0.) / len(self.churn_data)
-
-        churn_data = ChurnData(avg_churn, per90, per99, per99_9, churns_per_action, percent_churns_per_actions,
-                               total_action_percents,churn_std, action_std, top50churns, game, start_timesteps,
-                               end_timesteps, percent0churn, self.algo_name, median_churn, self.action_swaps)
-
-        with open(self.algo_name + "_" + game + str(start_timesteps) + "_" + str(self.run) + '.pkl', 'wb') as outp:
-            pickle.dump(churn_data, outp, pickle.HIGHEST_PROTOCOL)
-
-    def collect_churn_data(self):
-        sample_size = min(self.churn_sample, self.memory.mem_cntr - self.n)
-        states, _, _, _, _ = self.memory.sample_memory(bs=sample_size)
-
-        states = T.tensor(states).to(self.net.device)
-
-        _, cur_vals = self.net(states)
-        _, tgt_vals = self.tgt_net(states)
-
-        output = torch.argmax(cur_vals, dim=1)
-        tgt_output = torch.argmax(tgt_vals, dim=1)
-
-        policy_churn = ((sample_size - torch.sum(output == tgt_output)) / sample_size).item()
-        self.total_churn += policy_churn
-        self.churn_data.append(policy_churn)
-
-        dif = torch.abs(torch.subtract(cur_vals, tgt_vals))
-        dif = torch.sum(dif, dim=0).detach().cpu().numpy()
-
-        self.churn_actions += dif
-
-        changes = output != tgt_output
-        output = output[changes]
-        tgt_output = tgt_output[changes]
-
-        for i in range(len(output)):
-            self.action_swaps[output[i], tgt_output[i]] += 1
-
-        if np.random.random() > 0.9 and len(self.churn_data) > 100:
-            percent_actions = self.churn_actions / np.sum(self.churn_actions)
-
-            print("\n\n")
-            print("Avg churn: " + str(self.total_churn / self.count_since_reset))
-            print("90th per: " + str(np.percentile(self.churn_data, 90)))
-            print("99th per: " + str(np.percentile(self.churn_data, 99)))
-            print("99.9th per: " + str(np.percentile(self.churn_data, 99.9)))
-
-            x = torch.FloatTensor(self.churn_data)
-            x = torch.topk(x, 50).values
-            temp = []
-            for i in x:
-                temp.append(i.item())
-            print("Top Churns: " + str(temp))
-
-            print("Percentages of churn by action: " + str(percent_actions))
-            print("Portions of actions taken: " + str(self.total_actions / np.sum(self.total_actions)))
-
-            print("std churn: " + str(np.std(percent_actions)))
-            print("std actions taken: " + str(np.std(self.total_actions / np.sum(self.total_actions))))
-
-            #print(self.churn_data)
-            print("Percent 0 Churn: " + str(self.churn_data.count(0.) / len(self.churn_data)))
-
-            print("Action Swap Matrix: \n" + str(self.action_swaps))
-
 

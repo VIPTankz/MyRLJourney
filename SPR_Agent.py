@@ -227,11 +227,11 @@ class SPRNetwork(nn.Module):
         self.tau = 1
 
         self.encoder = Encoder(device)
-        self.tgt_encoder = EMA(self.encoder, tau = self.tau)
+        self.tgt_encoder = EMA(self.encoder, tau=self.tau)
         self.conv_output_size = 64 * 7 * 7
 
         self.mlp_layer1 = MLPLayer1(self.conv_output_size, device)
-        self.tgt_mlp_layer1 = EMA(self.mlp_layer1, tau = self.tau)
+        self.tgt_mlp_layer1 = EMA(self.mlp_layer1, tau=self.tau)
 
         self.qlearning_head = QLearningHeadFinal(n_actions, atoms, Vmax, Vmin, device)
 
@@ -277,6 +277,18 @@ class SPRNetwork(nn.Module):
         # flatten conv layer output
         conv_out = x.view(batch_size, -1)
         V, A = self.mlp_layer1(conv_out)
+        cat_out, qvals = self.qlearning_head(V, A)
+        return cat_out, qvals
+
+    def tgt_decode(self, x):
+        """
+        Takes input from encoder, and produces both the categorical outputs and qvals
+        """
+        batch_size = x.size()[0]
+
+        # flatten conv layer output
+        conv_out = x.view(batch_size, -1)
+        V, A = self.tgt_mlp_layer1(conv_out)
         cat_out, qvals = self.qlearning_head(V, A)
         return cat_out, qvals
 
@@ -376,7 +388,8 @@ class SPRNetwork(nn.Module):
 
 class Agent:
     def __init__(self, n_actions, input_dims, device,
-                 max_mem_size=100000, replace=1, total_frames=100000, lr=0.0001, batch_size=32, discount=0.99):
+                 max_mem_size=100000, replace=1, total_frames=100000, lr=0.0001, batch_size=32, discount=0.99,
+                 game=None, run=None):
 
         self.lr = lr
         self.n_actions = n_actions
@@ -414,7 +427,7 @@ class Agent:
                               chkpt_dir=self.chkpt_dir, atoms=self.N_ATOMS, Vmax=self.Vmax, Vmin=self.Vmin, K=self.K,
                               batch_size=self.batch_size, device=device)
 
-        self.tgt_net = EMA(self.net, tau=1)
+        #self.tgt_net = EMA(self.net, tau=1)
 
         # augmentation
         self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
@@ -476,7 +489,7 @@ class Agent:
 
         # update EMAs
         self.net.update_EMAs()
-        self.tgt_net.update()
+        #self.tgt_net.update()
 
         # reset noise on noisy layers
         self.net.sample_noise()
@@ -497,15 +510,16 @@ class Agent:
 
         # Data Augmentation
 
-        states = (self.intensity(self.random_shift(states.float() / 255.)) * 255).to(T.uint8)
-        states_ = (self.intensity(self.random_shift(states_.float() / 255.)) * 255).to(T.uint8)
+        states = (self.intensity(self.random_shift(states.float()))).to(T.uint8)
+        states_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
 
         # Forward passes on network
         encodings = self.net.encode(states)
         distr_v, qvals_v = self.net.decode(encodings)
 
         # targets generated using target network
-        next_distr_v, next_qvals_v = self.tgt_net.decode(self.tgt_net.encode(states_))
+        #next_distr_v, next_qvals_v = self.tgt_net.decode(self.tgt_net.encode(states_))
+        next_distr_v, next_qvals_v = self.net.tgt_decode(self.net.tgt_encode(states_))
 
         # Rainbow Loss Code
         next_actions_v = next_qvals_v.max(1)[1]

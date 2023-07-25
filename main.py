@@ -7,6 +7,7 @@ import sys
 import torch as T
 from AtariSetup import AtariPreprocessing, TimeLimit, FrameStack, ImageToPyTorch
 
+
 def make_env(game, eval):
     env = gym.make('ALE/' + game + '-v5')
     env.seed(runs + eval * 10000)
@@ -23,10 +24,12 @@ def make_env(game, eval):
 
     return env
 
+
 if __name__ == '__main__':
 
     from DrQ_Agent import Agent
-    agent_name = "OTDrQ"
+
+    agent_name = "DrQ"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
@@ -47,9 +50,14 @@ if __name__ == '__main__':
                ["Hero", "Jamesbond", "Kangaroo", "Krull", "KungFuMaster", "MsPacman", "Pong"],
                ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]"""
 
-    gameset = [["PrivateEye"], ["Qbert"], ["Seaquest"], ["UpNDown"]]
+    gameset = [["Alien", "Amidar", "Assault", "Asterix"], ["BankHeist", "BattleZone", "Boxing", "Breakout"],
+               ["ChopperCommand", "CrazyClimber", "DemonAttack", "Freeway"], ["Frostbite", "Gopher", "Hero", "Jamesbond"],
+               ["Kangaroo", "Krull", "KungFuMaster", "MsPacman"], ["Pong", "PrivateEye", "Qbert", "RoadRunner"],
+               ["Seaquest", "UpNDown"]]
 
     gameset_idx = int(sys.argv[1])
+
+    # gameset = [["Breakout"]]
 
     games = gameset[gameset_idx]
     print("Currently Playing Games: " + str(games))
@@ -66,7 +74,7 @@ if __name__ == '__main__':
         run_spec = False
 
     for game in games:
-        for runs in range(4):
+        for runs in range(1):
 
             if run_spec:
                 runs += run
@@ -78,7 +86,7 @@ if __name__ == '__main__':
             print(env.observation_space)
             print(env.action_space)
 
-            agent = Agent(n_actions=env.action_space.n, input_dims=[4,84,84],total_frames=100000,device=device,
+            agent = Agent(n_actions=env.action_space.n, input_dims=[4, 84, 84], total_frames=100000, device=device,
                           game=game, run=runs)
 
             scores = []
@@ -106,7 +114,7 @@ if __name__ == '__main__':
                     reward = np.clip(reward, -1., 1.)
 
                     agent.store_transition(observation, action, reward,
-                                                  observation_ , done)
+                                           observation_, done)
 
                     agent.learn()
 
