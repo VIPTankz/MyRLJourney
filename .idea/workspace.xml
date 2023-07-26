@@ -5,29 +5,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/DrQ_Agent_hacked.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/GradTest.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/EffDQN_unique_conv_layers_Breakout0_target_gen_data.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gen_results/EffDQN_Alien0_target_gen_data.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gen_results/EffDQN_Breakout0_target_gen_data.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gen_results/EffDQN_Breakout1_target_gen_data.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gen_results/EffDQN_Hero0_target_gen_data.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gen_results/EffDQN_PrivateEye0_target_gen_data.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gen_results/EffDQN_lr_conv1e-5_Breakout0_target_gen_data.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gen_results/EffDQN_unique_conv_layers_Breakout0_target_gen_data.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gen_results/EffDQN_unique_mlps_Breakout0_target_gen_data.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gen_results/churn_on_different_games_vanilla.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gen_results/gen_data_for_different_models.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gen_results/gen_eval.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrQ_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/DrQ_Agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrQ_Sep_Agent.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DER_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/DER_Agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQ_Agent_hacked.py" beforeDir="false" afterPath="$PROJECT_DIR$/DrQ_Agent_hacked.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/SPR_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/SPR_Agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/farm_atari.txt" beforeDir="false" afterPath="$PROJECT_DIR$/farm_atari.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/OTDrQ/OTDrQGopherEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/OTDrQ/OTDrQGopherEvaluation (0).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/OTDrQ/OTDrQGopherEvaluation (2).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/OTDrQ/OTDrQGopherEvaluation (2).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/OTDrQ/OTDrQGopherExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/OTDrQ/OTDrQGopherExperiment (0).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/OTDrQ/OTDrQGopherExperiment (2).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/OTDrQ/OTDrQGopherExperiment (2).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/OTDrQ/OTDrQKrullEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/OTDrQ/OTDrQKrullEvaluation (0).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/OTDrQ/OTDrQKrullEvaluation (2).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/OTDrQ/OTDrQKrullEvaluation (2).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/OTDrQ/OTDrQKrullExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/OTDrQ/OTDrQKrullExperiment (0).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/OTDrQ/OTDrQKrullExperiment (2).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/OTDrQ/OTDrQKrullExperiment (2).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/OTDrQ/OTDrQPrivateEyeEvaluation (2).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/OTDrQ/OTDrQPrivateEyeEvaluation (2).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/OTDrQ/OTDrQPrivateEyeExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/OTDrQ/OTDrQPrivateEyeExperiment (0).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/OTDrQ/OTDrQPrivateEyeExperiment (2).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/OTDrQ/OTDrQPrivateEyeExperiment (2).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/OTDrQ/OTDrQSeaquestEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/OTDrQ/OTDrQSeaquestEvaluation (0).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/OTDrQ/OTDrQSeaquestEvaluation (2).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/OTDrQ/OTDrQSeaquestEvaluation (2).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/OTDrQ/OTDrQSeaquestExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/OTDrQ/OTDrQSeaquestExperiment (0).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/OTDrQ/OTDrQSeaquestExperiment (2).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/OTDrQ/OTDrQSeaquestExperiment (2).npy" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

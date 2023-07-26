@@ -27,9 +27,9 @@ def make_env(game, eval):
 
 if __name__ == '__main__':
 
-    from DrQ_Agent import Agent
+    from DrQ_Agent_hacked import Agent
 
-    agent_name = "DrQ"
+    agent_name = "DrQHack"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     gameset_idx = int(sys.argv[1])
 
-    # gameset = [["Breakout"]]
+    gameset = [["Breakout"]]
 
     games = gameset[gameset_idx]
     print("Currently Playing Games: " + str(games))

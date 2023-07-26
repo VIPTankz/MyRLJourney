@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import torch as T
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -22,6 +23,17 @@ class Intensity(nn.Module):
         r = T.randn((x.size(0), 1, 1, 1), device=x.device)
         noise = 1.0 + (self.scale * r.clamp(-2.0, 2.0))
         return x * noise
+
+
+def renormalize(tensor, first_dim=1):
+    if first_dim < 0:
+        first_dim = len(tensor.shape) + first_dim
+    flat_tensor = tensor.view(*tensor.shape[:first_dim], -1)
+    max = torch.max(flat_tensor, first_dim, keepdim=True).values
+    min = torch.min(flat_tensor, first_dim, keepdim=True).values
+    flat_tensor = (flat_tensor - min)/(max - min)
+
+    return flat_tensor.view(*tensor.shape)
 
 
 class NoisyLinear(nn.Module):
@@ -84,6 +96,9 @@ class Encoder(nn.Module):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
+
+        # normalise activations
+        x = renormalize(x)
 
         return x
 
@@ -212,6 +227,9 @@ class TransitionModel(nn.Module):
 
         x = self.batch_norm1(F.relu(self.conv_trans1(x)))
         z_hat = self.batch_norm2(F.relu(self.conv_trans2(x)))
+
+        # normalise activations
+        z_hat = renormalize(z_hat)
 
         return z_hat
 
@@ -518,8 +536,9 @@ class Agent:
         distr_v, qvals_v = self.net.decode(encodings)
 
         # targets generated using target network
-        #next_distr_v, next_qvals_v = self.tgt_net.decode(self.tgt_net.encode(states_))
         next_distr_v, next_qvals_v = self.net.tgt_decode(self.net.tgt_encode(states_))
+
+        # no double dqn since there's no target network
 
         # Rainbow Loss Code
         next_actions_v = next_qvals_v.max(1)[1]
@@ -553,7 +572,7 @@ class Agent:
         target_latents = self.net.calculate_tgt_latents(future_states, future_dones)
 
         spr_loss = self.net.spr_loss(pred_latents, target_latents)
-        spr_loss = spr_loss.sum()
+        spr_loss = spr_loss.sum() / self.batch_size
 
         # Final Loss
         loss = rainbow_loss + self.spr_loss_coef * spr_loss
