@@ -5,23 +5,130 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/EffDQN_unique_conv_layers_Breakout0_target_gen_data.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gen_results/EffDQN_Alien0_target_gen_data.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gen_results/EffDQN_Breakout0_target_gen_data.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gen_results/EffDQN_Breakout1_target_gen_data.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gen_results/EffDQN_Hero0_target_gen_data.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gen_results/EffDQN_PrivateEye0_target_gen_data.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gen_results/EffDQN_lr_conv1e-5_Breakout0_target_gen_data.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gen_results/EffDQN_unique_conv_layers_Breakout0_target_gen_data.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gen_results/EffDQN_unique_mlps_Breakout0_target_gen_data.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gen_results/churn_on_different_games_vanilla.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gen_results/gen_data_for_different_models.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gen_results/gen_eval.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/churn_results/DDQN/DDQN_Breakout1600_0.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/churn_results/DDQN/DDQN_Breakout75000_0.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/churn_results/DDQN_n1/DDQN_n1_Breakout1600_0.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/churn_results/DDQN_n1/DDQN_n1_Breakout75000_0.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQAlienEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQAlienEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQAlienExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQAlienExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQAmidarEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQAmidarEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQAmidarExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQAmidarExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQAssaultEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQAssaultEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQAssaultExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQAssaultExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQAsterixEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQAsterixEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQAsterixExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQAsterixExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQBankHeistEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQBankHeistEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQBankHeistExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQBankHeistExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQBattleZoneEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQBattleZoneEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQBattleZoneExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQBattleZoneExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQBoxingEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQBoxingEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQBoxingExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQBoxingExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQBreakoutEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQBreakoutEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQBreakoutExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQBreakoutExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQChopperCommandEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQChopperCommandEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQChopperCommandExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQChopperCommandExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQCrazyClimberEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQCrazyClimberEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQCrazyClimberExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQCrazyClimberExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQDemonAttackEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQDemonAttackEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQDemonAttackExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQDemonAttackExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQFreewayEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQFreewayEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQFreewayExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQFreewayExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQFrostbiteEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQFrostbiteEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQFrostbiteExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQFrostbiteExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQGopherEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQGopherEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQGopherExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQGopherExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQHeroEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQHeroEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQHeroExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQHeroExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQJamesbondEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQJamesbondEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQJamesbondExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQJamesbondExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQKangarooEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQKangarooEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQKangarooExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQKangarooExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQKrullEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQKrullEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQKrullExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQKrullExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQKungFuMasterEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQKungFuMasterEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQKungFuMasterExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQKungFuMasterExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQMsPacmanEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQMsPacmanEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQMsPacmanExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQMsPacmanExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQPongEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQPongEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQPongExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQPongExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQPrivateEyeEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQPrivateEyeEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQPrivateEyeExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQPrivateEyeExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQQbertEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQQbertEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQQbertExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQQbertExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQRoadRunnerEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQRoadRunnerEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQRoadRunnerExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQRoadRunnerExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQSeaquestEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQSeaquestEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQSeaquestEvaluation (2).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQSeaquestEvaluation (3).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQSeaquestExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQSeaquestExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQSeaquestExperiment (2).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQSeaquestExperiment (3).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQUpNDownEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQUpNDownEvaluation (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQUpNDownEvaluation (2).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQUpNDownEvaluation (3).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQUpNDownExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQUpNDownExperiment (1).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQUpNDownExperiment (2).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DrQ/DrQUpNDownExperiment (3).npy" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DER_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/DER_Agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChurnData.py" beforeDir="false" afterPath="$PROJECT_DIR$/ChurnData.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQ_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/DrQ_Agent.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DrQ_Agent_hacked.py" beforeDir="false" afterPath="$PROJECT_DIR$/DrQ_Agent_hacked.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SPR_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/SPR_Agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EffDQN_unique_conv_layers_Breakout0_target_gen_data.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/farm_atari.txt" beforeDir="false" afterPath="$PROJECT_DIR$/farm_atari.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/Evaluation.py" beforeDir="false" afterPath="$PROJECT_DIR$/results/Evaluation.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

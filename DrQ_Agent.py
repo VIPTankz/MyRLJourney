@@ -82,7 +82,7 @@ class EpsilonGreedy():
 
 class Agent():
     def __init__(self, n_actions, input_dims, device,
-                 max_mem_size=100000, replace=1,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99,
+                 max_mem_size=100000, replace=1, total_frames=100000, lr=0.0001, batch_size=32, discount=0.99,
                  game=None, run=None):
 
         self.epsilon = EpsilonGreedy()

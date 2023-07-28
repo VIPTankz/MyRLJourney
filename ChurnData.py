@@ -35,10 +35,6 @@ if __name__ == "__main__":
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
-    games = ["Alien","Amidar","Assault","Asterix","BankHeist","Breakout","ChopperCommand","CrazyClimber",\
-             "DemonAttack","Freeway","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
-             "PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
-
     churn_25 = 0
     churn_75 = 0
     churn_std25 = 0
@@ -46,17 +42,15 @@ if __name__ == "__main__":
     action_std25 = 0
     action_std75 = 0
 
+    games = ["Breakout"]
 
     for game in games:
-        file_ = ["churn_results\\DER_noiseless\\DER_noiseless_churn_" + game]
+        file_ = ["churn_results\\DDQN\\DDQN_" + game]
 
         files = []
         for i in file_:
-            files.append(i + "2000_0.pkl")
+            files.append(i + "1600_0.pkl")
             files.append(i + "75000_0.pkl")
-
-        files = ["churn_results\\DrDER\\DrDER_no_reset_churn_Breakout2000_0.pkl",
-                 "churn_results\\DrDER\\DrDER_no_reset_churn_Breakout75000_0.pkl"]
 
         for filename in files:
             print("---------------------------------------")

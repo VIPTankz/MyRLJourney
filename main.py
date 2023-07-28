@@ -11,14 +11,12 @@ from AtariSetup import AtariPreprocessing, TimeLimit, FrameStack, ImageToPyTorch
 def make_env(game, eval):
     env = gym.make('ALE/' + game + '-v5')
     env.seed(runs + eval * 10000)
-    # env = AtariPreprocessing(env, frame_skip=1, terminal_on_life_loss=True)
-    # env = gym.wrappers.FrameStack(env, 4)
 
     env = AtariPreprocessing(env.env,
                              frame_skip=4,
                              max_random_noops=30,
                              terminal_on_life_loss=True)
-    env = TimeLimit(env, max_episode_steps=27000)
+    env = TimeLimit(env, max_episode_steps=108000)
     env = FrameStack(env, k=4)
     env = ImageToPyTorch(env)
 
@@ -29,7 +27,7 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked import Agent
 
-    agent_name = "DrQHack"
+    agent_name = "DDQN"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
@@ -37,27 +35,27 @@ if __name__ == '__main__':
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
     """
 
-    """
-    gameset = [["Alien","Amidar","Assault","Asterix"],["BankHeist","BattleZone","Boxing","Breakout"],
-               ["ChopperCommand","CrazyClimber","DemonAttack","Freeway"],["Frostbite","Gopher","Hero","Jamesbond"],
-               ["Kangaroo","Krull","KungFuMaster","MsPacman"],["Pong","PrivateEye","Qbert"],["RoadRunner","Seaquest","UpNDown"]]
+
+    gameset = [["Alien","Amidar","Assault","Asterix"], ["BankHeist","BattleZone","Boxing","Breakout"],
+               ["ChopperCommand","CrazyClimber","DemonAttack","Freeway"], ["Frostbite","Gopher","Hero","Jamesbond"],
+               ["Kangaroo","Krull","KungFuMaster","MsPacman"], ["Pong","PrivateEye","Qbert"], ["RoadRunner","Seaquest","UpNDown"]]
                
-    currently changed farm_atari to use 6 sets
-    """
+    # currently changed farm_atari to use 6 sets
+
 
     """gameset = [["Alien", "Amidar", "Assault", "Asterix", "BankHeist", "BattleZone", "Boxing"],
                ["Breakout", "ChopperCommand", "CrazyClimber", "DemonAttack", "Freeway", "Frostbite", "Gopher"],
                ["Hero", "Jamesbond", "Kangaroo", "Krull", "KungFuMaster", "MsPacman", "Pong"],
                ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]"""
 
+    """
     gameset = [["Alien", "Amidar", "Assault", "Asterix"], ["BankHeist", "BattleZone", "Boxing", "Breakout"],
                ["ChopperCommand", "CrazyClimber", "DemonAttack", "Freeway"], ["Frostbite", "Gopher", "Hero", "Jamesbond"],
-               ["Kangaroo", "Krull", "KungFuMaster", "MsPacman"], ["Pong", "PrivateEye", "Qbert", "RoadRunner"],
-               ["Seaquest", "UpNDown"]]
+               ["Kangaroo", "Krull", "KungFuMaster", "MsPacman"], ["Pong", "PrivateEye", "Qbert"],
+               ["Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
+    """
 
     gameset_idx = int(sys.argv[1])
-
-    gameset = [["Breakout"]]
 
     games = gameset[gameset_idx]
     print("Currently Playing Games: " + str(games))
@@ -73,11 +71,13 @@ if __name__ == '__main__':
     except:
         run_spec = False
 
-    for game in games:
-        for runs in range(1):
+    for runs in range(3):
+        if run_spec:
+            runs += run
 
-            if run_spec:
-                runs += run
+        for game in games:
+
+
 
             # gym version 0.25.2
             # ie pre 5 arg step
@@ -87,7 +87,7 @@ if __name__ == '__main__':
             print(env.action_space)
 
             agent = Agent(n_actions=env.action_space.n, input_dims=[4, 84, 84], total_frames=100000, device=device,
-                          game=game, run=runs)
+                          game=game, run=runs, name=agent_name)
 
             scores = []
             scores_temp = []
@@ -100,9 +100,8 @@ if __name__ == '__main__':
                 score = 0
                 episodes += 1
                 done = False
-                trun = False
                 observation = env.reset()
-                while not done and not trun and steps < n_steps:
+                while not done and steps < n_steps:
                     steps += 1
                     action = agent.choose_action(observation)
                     observation_, reward, _, info = env.step(action)
@@ -139,10 +138,9 @@ if __name__ == '__main__':
             eval_episodes = 0
             while eval_episodes < 100:
                 done = False
-                trun = False
                 observation = env.reset()
                 score = 0
-                while not done and not trun:
+                while not done:
                     steps += 1
                     action = agent.choose_action(observation)
                     observation_, reward, _, info = env.step(action)

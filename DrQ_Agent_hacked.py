@@ -264,8 +264,8 @@ class EpsilonGreedy():
 
 class Agent():
     def __init__(self, n_actions, input_dims, device,
-                 max_mem_size=100000,total_frames=100000,lr=0.0001,batch_size=32,discount=0.99,
-                 game=None, run=None):
+                 max_mem_size=100000, total_frames=100000, lr=0.0001, batch_size=32, discount=0.99,
+                 game=None, run=None, name=None):
 
         self.epsilon = EpsilonGreedy()
         self.lr = lr
@@ -281,14 +281,14 @@ class Agent():
         self.gamma = discount
 
         self.run = run
-        self.algo_name = "DDQN"
+        self.algo_name = name
         self.game = game
 
         # IMPORTANT params, check these
-        self.n = 1
+        self.n = 10
         self.duelling = False
         self.aug = False
-        self.replace_target_cnt = 100
+        self.replace_target_cnt = 1
         self.replay_ratio = 1
         self.network = "normal"
         self.collecting_churn_data = True
