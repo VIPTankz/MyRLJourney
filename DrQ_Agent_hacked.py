@@ -288,7 +288,7 @@ class Agent():
         self.n = 10
         self.duelling = False
         self.aug = False
-        self.replace_target_cnt = 1
+        self.replace_target_cnt = 100
         self.replay_ratio = 1
         self.network = "normal"
         self.collecting_churn_data = True
