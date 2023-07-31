@@ -38,8 +38,8 @@ if __name__ == '__main__':
 
     gameset = [["Alien","Amidar","Assault","Asterix"], ["BankHeist","BattleZone","Boxing","Breakout"],
                ["ChopperCommand","CrazyClimber","DemonAttack","Freeway"], ["Frostbite","Gopher","Hero","Jamesbond"],
-               ["Kangaroo","Krull","KungFuMaster","MsPacman"], ["Pong","PrivateEye","Qbert"], ["RoadRunner","Seaquest","UpNDown"]]
-               
+               ["Kangaroo","Krull","KungFuMaster","MsPacman", "Pong"], ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
+
     # currently changed farm_atari to use 6 sets
 
 
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     except:
         run_spec = False
 
-    for runs in range(3):
+    for runs in range(1):
         if run_spec:
             runs += run
 
