@@ -13,7 +13,7 @@ import kornia
 import pickle
 from ChurnData import ChurnData
 import matplotlib.pyplot as plt
-from torchsummary import summary
+#from torchsummary import summary
 
 class Intensity(nn.Module):
     def __init__(self, scale):
@@ -333,7 +333,7 @@ class Agent():
             self.tgt_net = LeggedQNetwork(self.lr, self.n_actions,
                                                input_dims=self.input_dims, device=device)
 
-        summary(self.net, (4, 84, 84))
+        #summary(self.net, (4, 84, 84))
 
         self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
         self.intensity = Intensity(scale=0.1)

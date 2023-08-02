@@ -5,9 +5,36 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/churn_results/DDQN_target100/DDQN_target100_Kangaroo1600_0.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/churn_results/DDQN_target100/DDQN_target100_Kangaroo75000_0.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/churn_results/DDQN_target100/DDQN_target100_Krull1600_0.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/churn_results/DDQN_target100/DDQN_target100_Krull75000_0.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/churn_results/DDQN_target100/DDQN_target100_KungFuMaster1600_0.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/churn_results/DDQN_target100/DDQN_target100_KungFuMaster75000_0.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/churn_results/DDQN_target100/DDQN_target100_MsPacman1600_0.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/churn_results/DDQN_target100/DDQN_target100_MsPacman75000_0.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/churn_results/DDQN_target100/DDQN_target100_Pong1600_0.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/churn_results/DDQN_target100/DDQN_target100_Pong75000_0.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/farm_atari0.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/farm_atari1.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/farm_atari2.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DDQN_target100/DDQN_target100KangarooEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DDQN_target100/DDQN_target100KangarooExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DDQN_target100/DDQN_target100KrullEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DDQN_target100/DDQN_target100KrullExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DDQN_target100/DDQN_target100KungFuMasterEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DDQN_target100/DDQN_target100KungFuMasterExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DDQN_target100/DDQN_target100MsPacmanEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DDQN_target100/DDQN_target100MsPacmanExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DDQN_target100/DDQN_target100PongEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/results/DDQN_target100/DDQN_target100PongExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runGPU0.slurm" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runGPU1.slurm" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runGPU2.slurm" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DrQ_Agent_hacked.py" beforeDir="false" afterPath="$PROJECT_DIR$/DrQ_Agent_hacked.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/farm_atari.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/runGPU.slurm" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

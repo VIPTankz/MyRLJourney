@@ -3,7 +3,7 @@
 #SBATCH --ntasks=7
 #SBATCH --mem=96000
 #SBATCH -p batch
-#SBATCH --job-name=RL_atari_benchmark
+#SBATCH --job-name=RL_atari_benchmark2
 #SBATCH --time=60:00:00
 
 module load conda/py3-latest
@@ -12,4 +12,4 @@ source activate atari_work
 cd /home/$USER/MyRLJourney
 pip install -e .
 
-staskfarm farm_atari.txt
+staskfarm farm_atari2.txt
