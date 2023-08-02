@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked import Agent
 
-    agent_name = "DDQN_target100"
+    agent_name = "DDQN"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\

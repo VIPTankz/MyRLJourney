@@ -288,7 +288,7 @@ class Agent():
         self.n = 10
         self.duelling = False
         self.aug = False
-        self.replace_target_cnt = 100
+        self.replace_target_cnt = 1
         self.replay_ratio = 1
         self.network = "normal"
         self.collecting_churn_data = True
@@ -315,6 +315,10 @@ class Agent():
 
             self.tgt_net = QNetwork(self.lr, self.n_actions,
                                                input_dims=self.input_dims, device=device)
+
+            if self.replace_target_cnt > 1:
+                self.churn_net = QNetwork(self.lr, self.n_actions,
+                                        input_dims=self.input_dims, device=device)
 
         elif self.network == "split":
             self.net = HydraQNetwork(self.lr, self.n_actions,
@@ -396,6 +400,7 @@ class Agent():
     def replace_target_network(self):
         self.tgt_net.load_state_dict(self.net.state_dict())
 
+
     def save_models(self):
         self.net.save_checkpoint()
         self.tgt_net.save_checkpoint()
@@ -414,6 +419,9 @@ class Agent():
             return
 
         self.net.optimizer.zero_grad()
+
+        if self.replace_target_cnt > 1:
+            self.churn_net.load_state_dict(self.net.state_dict())
 
         if self.grad_steps % self.replace_target_cnt == 0:
             self.replace_target_network()
@@ -588,7 +596,11 @@ class Agent():
         states = T.tensor(states).to(self.net.device)
 
         cur_vals = self.net(states)
-        tgt_vals = self.tgt_net(states)
+
+        if self.replace_target_cnt > 1:
+            tgt_vals = self.churn_net(states)
+        else:
+            tgt_vals = self.tgt_net(states)
 
         output = torch.argmax(cur_vals, dim=1)
         tgt_output = torch.argmax(tgt_vals, dim=1)
@@ -609,6 +621,7 @@ class Agent():
         for i in range(len(output)):
             self.action_swaps[output[i], tgt_output[i]] += 1
 
+        """
         if np.random.random() > 0.99 and len(self.churn_data) > 100:
             percent_actions = self.churn_actions / np.sum(self.churn_actions)
 
@@ -635,5 +648,6 @@ class Agent():
             print("Percent 0 Churn: " + str(self.churn_data.count(0.) / len(self.churn_data)))
 
             print("Action Swap Matrix: \n" + str(self.action_swaps))
+        """
 
 
