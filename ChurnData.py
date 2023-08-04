@@ -42,11 +42,6 @@ if __name__ == "__main__":
     action_std25 = 0
     action_std75 = 0
 
-    games = ["Alien", "Amidar", "Assault", "Asterix", "BankHeist", "BattleZone", "Boxing", "Breakout", "ChopperCommand",
-             "CrazyClimber", "DemonAttack", "Freeway"]
-
-    #games = ["Kangaroo", "Krull", "KungFuMaster", "MsPacman", "Pong"]
-
     for game in games:
         file_ = ["churn_results\\DDQN\\DDQN" + "_" + game]
 

@@ -14,6 +14,7 @@ import pickle
 from ChurnData import ChurnData
 import matplotlib.pyplot as plt
 #from torchsummary import summary
+from Identify import Identify
 
 class Intensity(nn.Module):
     def __init__(self, scale):
@@ -293,6 +294,11 @@ class Agent():
         self.network = "normal"
         self.collecting_churn_data = True
         self.gen_data = False
+        self.identify_data = False
+
+        if self.identify_data:
+            self.identify = Identify(self.min_sampling_size)
+
         if self.gen_data:
             self.batch_size = 1
 
@@ -383,6 +389,21 @@ class Agent():
         self.epsilon.eps = 0.05
 
     def choose_action(self, observation):
+        if self.identify_data and self.memory.mem_cntr >= self.min_sampling_size:
+            state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
+            q_vals = self.net.forward(state)
+            action_exploit = T.argmax(q_vals).item()
+            action_explore = np.random.choice(self.action_space)
+
+            self.identify.Qvals.append(q_vals.detach().cpu().numpy())
+
+            if np.random.random() > self.epsilon.eps:
+                action = action_exploit
+            else:
+                action = action_explore
+
+            return action
+
         if np.random.random() > self.epsilon.eps:
             state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
             q_vals = self.net.forward(state)
@@ -396,6 +417,14 @@ class Agent():
         self.memory.store_transition(state, action, reward, state_, done)
         self.env_steps += 1
         self.total_actions[action] += 1
+
+        if self.identify_data:
+            if self.memory.mem_cntr >= self.min_sampling_size:
+                self.identify.states.append(state)
+                self.identify.actions.append(action)
+                self.identify.rewards.append(reward)
+                self.identify.dones.append(done)
+
 
     def replace_target_network(self):
         self.tgt_net.load_state_dict(self.net.state_dict())
@@ -448,6 +477,8 @@ class Agent():
             q_targets = self.tgt_net.forward(states_)  # states_aug_
             q_actions = self.net.forward(states_)
 
+        if self.identify_data:
+            q_pred_og = q_pred.detach().cpu()
         q_pred = q_pred[indices, actions]
 
         with torch.no_grad():
@@ -465,6 +496,46 @@ class Agent():
         self.grad_steps += 1
 
         self.epsilon.update_eps()
+
+        if self.identify_data:
+
+            self.identify.batch_Qvals.append(q_pred_og.detach().cpu().numpy())
+            self.identify.batch_idxs.append(self.memory.last_batch)
+            self.identify.batch_loss.append(loss.detach().cpu().item())
+            self.identify.batch_target_states_vals.append(q_targets.detach().cpu().numpy())
+            self.identify.batch_target_actions.append(max_actions.detach().cpu().numpy())
+
+            new_q_vals = self.net(states)
+            self.identify.batch_new_Qvals.append(new_q_vals.detach().cpu().numpy())
+
+            # policy churn calculation
+            sample_size = min(self.churn_sample, self.memory.mem_cntr - self.n)
+            states, _, _, _, _ = self.memory.sample_memory(bs=sample_size)
+            states = T.tensor(states).to(self.net.device)
+            cur_vals = self.net(states)
+            if self.replace_target_cnt > 1:
+                tgt_vals = self.churn_net(states)
+            else:
+                tgt_vals = self.tgt_net(states)
+
+            output = torch.argmax(cur_vals, dim=1)
+            tgt_output = torch.argmax(tgt_vals, dim=1)
+
+            policy_churn = ((sample_size - torch.sum(output == tgt_output)) / sample_size).item()
+            self.identify.churn.append(policy_churn)
+
+            # change this to be at the end
+            if self.env_steps == 2400:
+                self.identify.er_states = self.memory.state_memory
+                self.identify.er_actions = self.memory.action_memory
+                self.identify.er_rewards = self.memory.reward_memory
+                self.identify.er_dones = self.memory.terminal_memory
+                self.identify.er_next_states = self.memory.new_state_memory
+
+                with open(self.algo_name + "_" + self.game + '_identify_data.pkl', 'wb') as outp:
+                    pickle.dump(self.identify, outp, pickle.HIGHEST_PROTOCOL)
+
+                raise Exception("Stop we are done here")
 
         if self.gen_data:
 

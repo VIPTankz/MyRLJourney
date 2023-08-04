@@ -90,6 +90,7 @@ class NStepExperienceReplay:
             max_mem = self.mem_cntr - self.n
             batch = np.random.choice(max_mem, bs, replace=False)
 
+        self.last_batch = batch
         states = self.state_memory[batch]
         actions = self.action_memory[batch]
 
