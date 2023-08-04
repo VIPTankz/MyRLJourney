@@ -107,7 +107,7 @@ if __name__ == '__main__':
                     observation_, reward, _, info = env.step(action)
 
                     time_limit = 'TimeLimit.truncated' in info
-                    done = info['game_over'] or time_limit
+                    done = info['game_over'] or time_limit or done
 
                     score += reward
                     reward = np.clip(reward, -1., 1.)
@@ -146,7 +146,7 @@ if __name__ == '__main__':
                     observation_, reward, _, info = env.step(action)
 
                     time_limit = 'TimeLimit.truncated' in info
-                    done = info['game_over'] or time_limit
+                    done = info['game_over'] or time_limit or done
 
                     score += reward
                     observation = observation_
