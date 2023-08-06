@@ -289,7 +289,7 @@ class Agent():
         self.n = 10
         self.duelling = False
         self.aug = False
-        self.replace_target_cnt = 1
+        self.replace_target_cnt = 100
         self.replay_ratio = 1
         self.network = "normal"
         self.collecting_churn_data = True
@@ -525,7 +525,7 @@ class Agent():
             self.identify.churn.append(policy_churn)
 
             # change this to be at the end
-            if self.env_steps == 2400:
+            if self.env_steps == 1800:
                 self.identify.er_states = self.memory.state_memory
                 self.identify.er_actions = self.memory.action_memory
                 self.identify.er_rewards = self.memory.reward_memory
