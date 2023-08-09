@@ -43,7 +43,7 @@ if __name__ == "__main__":
     action_std75 = 0
 
     for game in games:
-        file_ = ["churn_results\\DDQN\\DDQN" + "_" + game]
+        file_ = ["churn_results\\DDQN_replace_100\\DDQN_replace_100" + "_" + game]
 
         files = []
         for i in file_:

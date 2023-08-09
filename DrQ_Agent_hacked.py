@@ -286,10 +286,10 @@ class Agent():
         self.game = game
 
         # IMPORTANT params, check these
-        self.n = 10
+        self.n = 1
         self.duelling = False
         self.aug = False
-        self.replace_target_cnt = 100
+        self.replace_target_cnt = 1
         self.replay_ratio = 1
         self.network = "normal"
         self.collecting_churn_data = True
