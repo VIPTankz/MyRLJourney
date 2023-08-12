@@ -4,11 +4,12 @@ import numpy as np
 from ButtonLib import Button
 from Identify import Identify
 import torch
+import mgzip
 
 
-file = "DDQN_Breakout_identify_data.pkl"
+file = "..\\DDQN_Breakout_identify_data.pkl"
 
-with open(file, 'rb') as f:
+with mgzip.open(file, 'rb') as f:
     data = pickle.load(f)
 
 pygame.init()
@@ -106,7 +107,6 @@ while running:
         textSurface = myFontLarge.render("Current Frame: " + str(frame), False, (255, 255, 255), 30)
         screen.blit(textSurface, (220, 20))
 
-
         if mode == "batch":
 
             textSurface = myfont.render("Batch Index: " + str(batch_idx), False, (255, 255, 255), 30)
@@ -182,9 +182,6 @@ while running:
 
             textSurface = myfont.render("Terminal? " + str(data.dones[frame]), False, (255, 255, 255), 30)
             screen.blit(textSurface, (20, 240))
-
-
-
 
     pygame.display.flip()
 

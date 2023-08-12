@@ -41,9 +41,13 @@ if __name__ == "__main__":
     churn_std75 = 0
     action_std25 = 0
     action_std75 = 0
+    percent0_25 = 0
+    percent0_75 = 0
+
+    name = "DDQN_n1"
 
     for game in games:
-        file_ = ["churn_results\\DDQN_replace_100\\DDQN_replace_100" + "_" + game]
+        file_ = ["churn_results\\" + name + "\\" + name + "_" + game]
 
         files = []
         for i in file_:
@@ -84,19 +88,18 @@ if __name__ == "__main__":
 
                 print("Action Swap Matrix: \n" + str(churn_data.action_swaps))
 
-
-
-
                 print("\n\n")
 
                 if churn_data.start_timesteps == 1600:
                     churn_25 += churn_data.avg_churn
                     churn_std25 += churn_data.churn_std
                     action_std25 += churn_data.action_std
+                    percent0_25 += churn_data.percent0churn
                 else:
                     churn_75 += churn_data.avg_churn
                     churn_std75 += churn_data.churn_std
                     action_std75 += churn_data.action_std
+                    percent0_75 += churn_data.percent0churn
 
     print("================")
     print("AVG churn early: " + str(churn_25 / len(games)))
@@ -105,6 +108,9 @@ if __name__ == "__main__":
     print("AVG churn std late: " + str(churn_std75 / len(games)))
     print("AVG action std early: " + str(action_std25 / len(games)))
     print("AVG action std late: " + str(action_std75 / len(games)))
+
+    print("AVG action std early: " + str(percent0_25 / len(games)))
+    print("AVG action std late: " + str(percent0_75 / len(games)))
 
     df_cm = pd.DataFrame(churn_data.action_swaps, index=[i for i in range(len(churn_data.action_swaps))],
                          columns=[i for i in range(len(churn_data.action_swaps[0]))])

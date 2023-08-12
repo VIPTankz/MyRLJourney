@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked import Agent
 
-    agent_name = "DDQN_n1"
+    agent_name = "DDQN"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
@@ -54,6 +54,8 @@ if __name__ == '__main__':
                ["Kangaroo", "Krull", "KungFuMaster", "MsPacman"], ["Pong", "PrivateEye", "Qbert"],
                ["Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
     """
+
+    gameset = [["Breakout"]]
 
     gameset_idx = int(sys.argv[1])
 
@@ -104,7 +106,7 @@ if __name__ == '__main__':
                 while not done and steps < n_steps:
                     steps += 1
                     action = agent.choose_action(observation)
-                    observation_, reward, _, info = env.step(action)
+                    observation_, reward, done, info = env.step(action)
 
                     time_limit = 'TimeLimit.truncated' in info
                     done = info['game_over'] or time_limit or done
@@ -143,7 +145,7 @@ if __name__ == '__main__':
                 while not done:
                     steps += 1
                     action = agent.choose_action(observation)
-                    observation_, reward, _, info = env.step(action)
+                    observation_, reward, done, info = env.step(action)
 
                     time_limit = 'TimeLimit.truncated' in info
                     done = info['game_over'] or time_limit or done

@@ -15,6 +15,7 @@ from ChurnData import ChurnData
 import matplotlib.pyplot as plt
 #from torchsummary import summary
 from Identify import Identify
+import mgzip
 
 class Intensity(nn.Module):
     def __init__(self, scale):
@@ -286,7 +287,7 @@ class Agent():
         self.game = game
 
         # IMPORTANT params, check these
-        self.n = 1
+        self.n = 10
         self.duelling = False
         self.aug = False
         self.replace_target_cnt = 1
@@ -420,6 +421,7 @@ class Agent():
 
         if self.identify_data:
             if self.memory.mem_cntr >= self.min_sampling_size:
+
                 self.identify.states.append(state)
                 self.identify.actions.append(action)
                 self.identify.rewards.append(reward)
@@ -525,15 +527,15 @@ class Agent():
             self.identify.churn.append(policy_churn)
 
             # change this to be at the end
-            if self.env_steps == 1800:
+            if self.env_steps == 8000:
                 self.identify.er_states = self.memory.state_memory
                 self.identify.er_actions = self.memory.action_memory
                 self.identify.er_rewards = self.memory.reward_memory
                 self.identify.er_dones = self.memory.terminal_memory
                 self.identify.er_next_states = self.memory.new_state_memory
 
-                with open(self.algo_name + "_" + self.game + '_identify_data.pkl', 'wb') as outp:
-                    pickle.dump(self.identify, outp, pickle.HIGHEST_PROTOCOL)
+                with mgzip.open("..\\" + self.algo_name + "_" + self.game + '_identify_data.pkl', 'wb') as f:
+                    pickle.dump(self.identify, f)
 
                 raise Exception("Stop we are done here")
 
@@ -580,7 +582,6 @@ class Agent():
                     new_val = self.target_percent_mov_avg
                 self.target_percent_mov_avg = self.target_percent_mov_avg * tau + new_val * (1 - tau)
                 self.target_percent_list.append(self.target_percent_mov_avg)
-
 
                 if np.random.random() > 0.999:
                     print("\nTotal Change: " + str(self.total_change))
