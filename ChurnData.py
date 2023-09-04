@@ -109,8 +109,8 @@ if __name__ == "__main__":
     print("AVG action std early: " + str(action_std25 / len(games)))
     print("AVG action std late: " + str(action_std75 / len(games)))
 
-    print("AVG action std early: " + str(percent0_25 / len(games)))
-    print("AVG action std late: " + str(percent0_75 / len(games)))
+    print("AVG 0 Churn early: " + str(percent0_25 / len(games)))
+    print("AVG 0 Churn late: " + str(percent0_75 / len(games)))
 
     df_cm = pd.DataFrame(churn_data.action_swaps, index=[i for i in range(len(churn_data.action_swaps))],
                          columns=[i for i in range(len(churn_data.action_swaps[0]))])

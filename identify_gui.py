@@ -7,7 +7,8 @@ import torch
 import mgzip
 
 
-file = "..\\DDQN_Breakout_identify_data.pkl"
+#file = "..\\DDQN_Breakout_identify_data.pkl"
+file = "..\\DDQN_n1_spread_Breakout_identify_data.pkl"
 
 with mgzip.open(file, 'rb') as f:
     data = pickle.load(f)
@@ -19,7 +20,6 @@ all_fonts = pygame.font.get_fonts()
 fontNumber = 4
 myfont = pygame.font.SysFont(all_fonts[fontNumber], 25)
 myFontLarge = pygame.font.SysFont(all_fonts[fontNumber], 40)
-
 
 fps = 30  # the game's frames per second
 
@@ -58,7 +58,7 @@ cur_screen = "home"
 mode = "env" # env or batch
 frame = 0
 batch_idx = 0
-n = 10
+n = 1
 discount = 0.99
 
 max_frames = len(data.states)

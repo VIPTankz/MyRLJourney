@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked import Agent
 
-    agent_name = "DDQN"
+    agent_name = "DDQN_n1_spread"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
@@ -106,16 +106,16 @@ if __name__ == '__main__':
                 while not done and steps < n_steps:
                     steps += 1
                     action = agent.choose_action(observation)
-                    observation_, reward, done, info = env.step(action)
+                    observation_, reward, done_, info = env.step(action)
 
                     time_limit = 'TimeLimit.truncated' in info
-                    done = info['game_over'] or time_limit or done
+                    done = info['game_over'] or time_limit
 
                     score += reward
                     reward = np.clip(reward, -1., 1.)
 
                     agent.store_transition(observation, action, reward,
-                                           observation_, done)
+                                           observation_, done_)
 
                     agent.learn()
 
@@ -145,10 +145,10 @@ if __name__ == '__main__':
                 while not done:
                     steps += 1
                     action = agent.choose_action(observation)
-                    observation_, reward, done, info = env.step(action)
+                    observation_, reward, _, info = env.step(action)
 
                     time_limit = 'TimeLimit.truncated' in info
-                    done = info['game_over'] or time_limit or done
+                    done = info['game_over'] or time_limit
 
                     score += reward
                     observation = observation_

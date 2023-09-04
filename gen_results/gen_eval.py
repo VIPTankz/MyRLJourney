@@ -3,7 +3,7 @@ import numpy as np
 
 runs = 1
 games = ["Breakout"] #["Alien", "Breakout", "Hero", "PrivateEye"]
-algorithms = ["EffDQN", "EffDQN_lr_conv1e-5", "EffDQN_unique_mlps", "EffDQN_unique_conv_layers"]
+algorithms = ["DDQN_n1_bs1","DDQN_n10_bs1"]
 
 labels = algorithms[:]
 

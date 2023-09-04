@@ -182,8 +182,8 @@ class QNetwork(nn.Module):
         self.fc1 = nn.Linear(64 * 7 * 7, 512)
         self.Q = nn.Linear(512, n_actions)
 
-        #self.optimizer = optim.SGD(self.parameters(), lr=lr)
-        self.optimizer = optim.Adam(self.parameters(), lr=lr, eps=0.00015)
+        self.optimizer = optim.SGD(self.parameters(), lr=lr)
+        #self.optimizer = optim.Adam(self.parameters(), lr=lr, eps=0.00015)
         """self.optimizer = optim.SGD(
             [
                 {"params": self.conv1.parameters(), lr: 0.00001},
@@ -266,14 +266,14 @@ class EpsilonGreedy():
 
 class Agent():
     def __init__(self, n_actions, input_dims, device,
-                 max_mem_size=100000, total_frames=100000, lr=0.0001, batch_size=32, discount=0.99,
+                 max_mem_size=100000, total_frames=100000, lr=0.0001, discount=0.99,
                  game=None, run=None, name=None):
 
         self.epsilon = EpsilonGreedy()
         self.lr = lr
         self.n_actions = n_actions
         self.input_dims = input_dims
-        self.batch_size = batch_size
+
 
         self.action_space = [i for i in range(self.n_actions)]
         self.learn_step_counter = 0
@@ -287,7 +287,8 @@ class Agent():
         self.game = game
 
         # IMPORTANT params, check these
-        self.n = 10
+        self.n = 1
+        self.batch_size = 32
         self.duelling = False
         self.aug = False
         self.replace_target_cnt = 1
@@ -296,6 +297,10 @@ class Agent():
         self.collecting_churn_data = True
         self.gen_data = False
         self.identify_data = False
+
+        self.delayed_reward = True
+        self.reward_spread = 5
+        self.prev_rewards = deque([0, 0, 0, 0, 0], self.reward_spread)
 
         if self.identify_data:
             self.identify = Identify(self.min_sampling_size)
@@ -415,6 +420,19 @@ class Agent():
         return action
 
     def store_transition(self, state, action, reward, state_, done):
+        if self.delayed_reward:
+            self.prev_rewards.appendleft(reward)
+            if done:
+                reward = 0
+                for i in range(len(self.prev_rewards)):
+                    reward += self.prev_rewards[i] * ((self.reward_spread - i) / self.reward_spread)
+
+                self.prev_rewards = deque([0, 0, 0, 0, 0], self.reward_spread)
+            else:
+                reward = 0
+                for i in self.prev_rewards:
+                    reward += i / self.reward_spread
+
         self.memory.store_transition(state, action, reward, state_, done)
         self.env_steps += 1
         self.total_actions[action] += 1
@@ -527,7 +545,7 @@ class Agent():
             self.identify.churn.append(policy_churn)
 
             # change this to be at the end
-            if self.env_steps == 8000:
+            if self.env_steps == 2500: #this value needs to be greater than min sampling size
                 self.identify.er_states = self.memory.state_memory
                 self.identify.er_actions = self.memory.action_memory
                 self.identify.er_rewards = self.memory.reward_memory
