@@ -433,8 +433,8 @@ class Agent():
         self.target_percent_list = []
         self.target_percent_mov_avg = 0.5
 
-        self.reward_target_avg = 0
-        self.bootstrap_target_avg = 0
+        self.reward_target_avg = []
+        self.bootstrap_target_avg = []
         self.reward_proportions = True
 
     def get_grad_steps(self):
@@ -579,8 +579,8 @@ class Agent():
                 q_target = rewards + (self.gamma ** self.n) * q_targets[indices, max_actions]
 
                 if self.reward_proportions:
-                    self.reward_target_avg += rewards.mean().cpu()
-                    self.bootstrap_target_avg += ((self.gamma ** self.n) * q_targets[indices, max_actions]).mean().cpu()
+                    self.reward_target_avg.append(float(rewards.mean().cpu()))
+                    self.bootstrap_target_avg.append(float(((self.gamma ** self.n) * q_targets[indices, max_actions]).mean().cpu()))
 
             loss = self.net.loss(q_target, q_pred).to(self.net.device)
 
@@ -594,8 +594,23 @@ class Agent():
 
         if self.reward_proportions:
             if self.grad_steps % 500 == 0:
-                print("\nRewards: " + str(self.reward_target_avg / self.grad_steps))
-                print("Bootstraps: " + str(self.bootstrap_target_avg / self.grad_steps))
+                print("\nRewards: " + str(sum(self.reward_target_avg) / self.grad_steps))
+                print("Bootstraps: " + str(sum(self.bootstrap_target_avg) / self.grad_steps))
+
+                length = len(self.reward_target_avg)
+                x = np.arange(length)
+                y = np.array(self.reward_target_avg) / (np.array(self.reward_target_avg) + np.array(self.bootstrap_target_avg))
+                plt.plot(x,y)
+                plt.xlabel("TimeSteps")
+                plt.ylabel("Reward Proportion")
+                plt.title("N=10")
+                plt.show()
+
+            if self.grad_steps > 1000:
+                np.save("DDDQN_n10_proportionRewards" + self.game + ".npy", np.array(self.reward_target_avg))
+                np.save("DDDQN_n10_proportionBootstrap" + self.game + ".npy", np.array(self.bootstrap_target_avg))
+
+
 
         if self.identify_data:
 
