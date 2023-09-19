@@ -55,7 +55,7 @@ if __name__ == '__main__':
                ["Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
     """
 
-    gameset = [["Breakout"]]
+    gameset = [["Asterix","Boxing","Breakout","Freeway","Gopher"]]
 
     gameset_idx = int(sys.argv[1])
 

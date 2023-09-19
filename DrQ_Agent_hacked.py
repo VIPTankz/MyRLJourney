@@ -299,7 +299,7 @@ class EpsilonGreedy():
 
 class Agent():
     def __init__(self, n_actions, input_dims, device,
-                 max_mem_size=100000, total_frames=100000, lr=0.0001, discount=0.99,
+                 max_mem_size=100000, total_frames=100000, lr=0.0001, discount=0.9,
                  game=None, run=None, name=None):
 
         self.epsilon = EpsilonGreedy()
@@ -320,7 +320,7 @@ class Agent():
         self.game = game
 
         # IMPORTANT params, check these
-        self.n = 10
+        self.n = 3
         self.batch_size = 32
         self.duelling = False
         self.aug = False
@@ -579,8 +579,8 @@ class Agent():
                 q_target = rewards + (self.gamma ** self.n) * q_targets[indices, max_actions]
 
                 if self.reward_proportions:
-                    self.reward_target_avg.append(float(rewards.mean().cpu()))
-                    self.bootstrap_target_avg.append(float(((self.gamma ** self.n) * q_targets[indices, max_actions]).mean().cpu()))
+                    self.reward_target_avg.append(abs(float(rewards.mean().cpu())))
+                    self.bootstrap_target_avg.append(abs(float(((self.gamma ** self.n) * q_targets[indices, max_actions]).mean().cpu())))
 
             loss = self.net.loss(q_target, q_pred).to(self.net.device)
 
@@ -606,9 +606,9 @@ class Agent():
                 plt.title("N=10")
                 plt.show()"""
 
-            if self.grad_steps > 1000:
-                np.save("DDDQN_n1_proportionRewards" + self.game + ".npy", np.array(self.reward_target_avg))
-                np.save("DDDQN_n1_proportionBootstrap" + self.game + ".npy", np.array(self.bootstrap_target_avg))
+                if self.grad_steps > 1000:
+                    np.save("DDDQN_n1_9_proportionRewards" + self.game + ".npy", np.array(self.reward_target_avg))
+                    np.save("DDDQN_n1_9_proportionBootstrap" + self.game + ".npy", np.array(self.bootstrap_target_avg))
 
 
 
