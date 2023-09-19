@@ -597,18 +597,18 @@ class Agent():
                 print("\nRewards: " + str(sum(self.reward_target_avg) / self.grad_steps))
                 print("Bootstraps: " + str(sum(self.bootstrap_target_avg) / self.grad_steps))
 
-                length = len(self.reward_target_avg)
+                """length = len(self.reward_target_avg)
                 x = np.arange(length)
                 y = np.array(self.reward_target_avg) / (np.array(self.reward_target_avg) + np.array(self.bootstrap_target_avg))
                 plt.plot(x,y)
                 plt.xlabel("TimeSteps")
                 plt.ylabel("Reward Proportion")
                 plt.title("N=10")
-                plt.show()
+                plt.show()"""
 
             if self.grad_steps > 1000:
-                np.save("DDDQN_n10_proportionRewards" + self.game + ".npy", np.array(self.reward_target_avg))
-                np.save("DDDQN_n10_proportionBootstrap" + self.game + ".npy", np.array(self.bootstrap_target_avg))
+                np.save("DDDQN_n1_proportionRewards" + self.game + ".npy", np.array(self.reward_target_avg))
+                np.save("DDDQN_n1_proportionBootstrap" + self.game + ".npy", np.array(self.bootstrap_target_avg))
 
 
 

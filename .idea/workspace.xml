@@ -216,6 +216,7 @@
       <change afterPath="$PROJECT_DIR$/results/DDQN_n1_spread_high/DDQN_n1_spread_highSeaquestExperiment (0).npy" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/results/DDQN_n1_spread_high/DDQN_n1_spread_highUpNDownEvaluation (0).npy" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/results/DDQN_n1_spread_high/DDQN_n1_spread_highUpNDownExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reward_proportions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ChurnData.py" beforeDir="false" afterPath="$PROJECT_DIR$/ChurnData.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DrQ_Agent_hacked.py" beforeDir="false" afterPath="$PROJECT_DIR$/DrQ_Agent_hacked.py" afterDir="false" />
