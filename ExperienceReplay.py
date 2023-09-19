@@ -45,7 +45,7 @@ class ExperienceReplay:
         return self.mem_cntr > self.batch_size
 
 class NStepExperienceReplay:
-    def __init__(self, input_dims, max_mem, batch_size, n, discount):
+    def __init__(self, input_dims, max_mem, batch_size, n, discount,state_dtype=np.uint8):
         self.mem_size = max_mem
         self.batch_size = batch_size
         self.input_dims = input_dims
@@ -53,9 +53,9 @@ class NStepExperienceReplay:
         self.n = n
         self.discount = discount
         self.state_memory = np.zeros((self.mem_size, *input_dims),
-                                     dtype=np.uint8)
+                                     dtype=state_dtype)
         self.new_state_memory = np.zeros((self.mem_size, *input_dims),
-                                         dtype=np.uint8)
+                                         dtype=state_dtype)
         self.action_memory = np.zeros(self.mem_size, dtype=np.int64)
         self.reward_memory = np.zeros(self.mem_size, dtype=np.float32)
         self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool_)

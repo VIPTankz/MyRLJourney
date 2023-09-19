@@ -182,15 +182,7 @@ class QNetwork(nn.Module):
         self.fc1 = nn.Linear(64 * 7 * 7, 512)
         self.Q = nn.Linear(512, n_actions)
 
-        self.optimizer = optim.SGD(self.parameters(), lr=lr)
-        #self.optimizer = optim.Adam(self.parameters(), lr=lr, eps=0.00015)
-        """self.optimizer = optim.SGD(
-            [
-                {"params": self.conv1.parameters(), lr: 0.00001},
-                {"params": self.conv2.parameters(), lr: 0.00001},
-                {"params": self.conv3.parameters(), lr: 0.00001}
-            ],
-            lr=lr)"""
+        self.optimizer = optim.Adam(self.parameters(), lr=lr, eps=0.00015)
 
         self.loss = nn.MSELoss()
         self.device = device
@@ -207,6 +199,47 @@ class QNetwork(nn.Module):
         Q = self.Q(observationQ)
 
         return Q
+
+class SepQNetwork(nn.Module):
+    def __init__(self, lr, n_actions, input_dims, device):
+        super(SepQNetwork, self).__init__()
+
+        self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
+        self.conv3 = nn.Conv2d(64, 64, 3)
+
+        self.fc1 = nn.Linear(64 * 7 * 7, 512)
+        self.QS = nn.Linear(512, n_actions)
+        self.QR = nn.Linear(512, n_actions)
+
+        self.optimizer = optim.Adam(self.parameters(), lr=lr, eps=0.00015)
+        """self.optimizer = optim.SGD(
+            [
+                {"params": self.conv1.parameters(), lr: 0.00001},
+                {"params": self.conv2.parameters(), lr: 0.00001},
+                {"params": self.conv3.parameters(), lr: 0.00001}
+            ],
+            lr=lr)"""
+
+        self.loss = nn.MSELoss()
+        self.device = device
+        self.to(self.device)
+
+    def forward(self, observation, sep=False):
+        observation = T.div(observation, 255)
+        observation = observation.view(-1, 4, 84, 84)
+        observation = F.relu(self.conv1(observation))
+        observation = F.relu(self.conv2(observation))
+        observation = F.relu(self.conv3(observation))
+        observation = observation.view(-1, 64 * 7 * 7)
+        observationQ = F.relu(self.fc1(observation))
+        QR = self.QR(observationQ)
+        QS = self.QS(observationQ)
+
+        if sep:
+            return QR, QS
+        else:
+            return QR + QS
 
 class DuelingDeepQNetwork(nn.Module):
     def __init__(self, lr, n_actions, name, input_dims, chkpt_dir, device):
@@ -287,18 +320,20 @@ class Agent():
         self.game = game
 
         # IMPORTANT params, check these
-        self.n = 1
+        self.n = 10
         self.batch_size = 32
         self.duelling = False
         self.aug = False
         self.replace_target_cnt = 1
         self.replay_ratio = 1
         self.network = "normal"
-        self.collecting_churn_data = True
+        self.collecting_churn_data = False
         self.gen_data = False
         self.identify_data = False
 
-        self.delayed_reward = True
+        self.sep_q_state = False
+
+        self.delayed_reward = False
         self.reward_spread = 5
         self.prev_rewards = deque([0, 0, 0, 0, 0], self.reward_spread)
 
@@ -321,7 +356,7 @@ class Agent():
                                               name='lunar_lander_dueling_ddqn_q_next',
                                               chkpt_dir=self.chkpt_dir, device=device)
 
-        elif self.network == "normal":
+        elif self.network == "normal" and not self.sep_q_state:
             self.net = QNetwork(self.lr, self.n_actions,
                                            input_dims=self.input_dims, device=device)
 
@@ -331,6 +366,13 @@ class Agent():
             if self.replace_target_cnt > 1:
                 self.churn_net = QNetwork(self.lr, self.n_actions,
                                         input_dims=self.input_dims, device=device)
+
+        elif self.network == "normal" and self.sep_q_state:
+            self.net = SepQNetwork(self.lr, self.n_actions,
+                                           input_dims=self.input_dims, device=device)
+
+            self.tgt_net = SepQNetwork(self.lr, self.n_actions,
+                                               input_dims=self.input_dims, device=device)
 
         elif self.network == "split":
             self.net = HydraQNetwork(self.lr, self.n_actions,
@@ -350,6 +392,10 @@ class Agent():
                                                input_dims=self.input_dims, device=device)
 
         #summary(self.net, (4, 84, 84))
+
+        if self.gen_data:
+            self.net.optimizer = optim.Adam(self.net.parameters(), lr=lr, eps=0.00015)
+            self.tgt_net.optimizer = optim.Adam(self.net.parameters(), lr=lr, eps=0.00015)
 
         self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
         self.intensity = Intensity(scale=0.1)
@@ -386,6 +432,10 @@ class Agent():
 
         self.target_percent_list = []
         self.target_percent_mov_avg = 0.5
+
+        self.reward_target_avg = 0
+        self.bootstrap_target_avg = 0
+        self.reward_proportions = True
 
     def get_grad_steps(self):
         return self.grad_steps
@@ -492,6 +542,25 @@ class Agent():
             q_pred = self.net.forward(states_aug)  # states_aug
             q_targets = self.tgt_net.forward(states_aug_)  # states_aug_
             q_actions = self.net.forward(states_aug_policy_)  # states_aug_policy_
+        elif self.sep_q_state:
+            qr_pred, qs_pred = self.net.forward(states, sep=True)  # states_aug
+            q_targets = self.tgt_net.forward(states_)  # states_aug_
+            q_actions = self.net.forward(states_)
+
+            qr_pred = qr_pred[indices, actions]
+            qs_pred = qs_pred[indices, actions]
+
+            with torch.no_grad():
+                max_actions = T.argmax(q_actions, dim=1)
+                q_targets[dones] = 0.0
+
+                q_next_state_targets = (self.gamma ** self.n) * q_targets[indices, max_actions]
+
+            reward_loss = (qr_pred - rewards) ** 2
+            next_state_loss = (qs_pred - q_next_state_targets) ** 2
+            loss = reward_loss + next_state_loss
+            loss = loss.mean().to(self.net.device)
+
         else:
             q_pred = self.net.forward(states)  # states_aug
             q_targets = self.tgt_net.forward(states_)  # states_aug_
@@ -499,15 +568,21 @@ class Agent():
 
         if self.identify_data:
             q_pred_og = q_pred.detach().cpu()
-        q_pred = q_pred[indices, actions]
 
-        with torch.no_grad():
-            max_actions = T.argmax(q_actions, dim=1)
-            q_targets[dones] = 0.0
+        if not self.sep_q_state:
+            q_pred = q_pred[indices, actions]
 
-            q_target = rewards + (self.gamma ** self.n) * q_targets[indices, max_actions]
+            with torch.no_grad():
+                max_actions = T.argmax(q_actions, dim=1)
+                q_targets[dones] = 0.0
 
-        loss = self.net.loss(q_target, q_pred).to(self.net.device)
+                q_target = rewards + (self.gamma ** self.n) * q_targets[indices, max_actions]
+
+                if self.reward_proportions:
+                    self.reward_target_avg += rewards.mean().cpu()
+                    self.bootstrap_target_avg += ((self.gamma ** self.n) * q_targets[indices, max_actions]).mean().cpu()
+
+            loss = self.net.loss(q_target, q_pred).to(self.net.device)
 
         loss.backward()
         T.nn.utils.clip_grad_norm_(self.net.parameters(), 10)
@@ -516,6 +591,11 @@ class Agent():
         self.grad_steps += 1
 
         self.epsilon.update_eps()
+
+        if self.reward_proportions:
+            if self.grad_steps % 500 == 0:
+                print("\nRewards: " + str(self.reward_target_avg / self.grad_steps))
+                print("Bootstraps: " + str(self.bootstrap_target_avg / self.grad_steps))
 
         if self.identify_data:
 

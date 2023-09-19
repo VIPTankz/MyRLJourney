@@ -10,6 +10,7 @@ labels = algorithms[:]
 files = []
 
 for run in range(runs):
+    run += 1
     for game in games:
         for algorithm in algorithms:
             files.append(algorithm + "_" + game + str(run) + "_target_gen_data.npy")

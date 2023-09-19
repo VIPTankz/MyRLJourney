@@ -28,6 +28,29 @@ class ChurnData:
         self.algo_name = algo_name
         self.action_swaps = action_swaps
 
+class ChurnData2:
+    def __init__(self, avg_churn, per90, per99, per99_9, churns_per_action, percent_churns_per_action,
+                 total_action_percents, churn_std, action_std, top50churns, game, start_timesteps, end_timesteps,
+                 percent0churn, algo_name, median_churn, action_swaps): #
+
+        self.avg_churn = avg_churn
+        self.median_churn = median_churn
+        self.per90 = per90
+        self.per99 = per99
+        self.per99_9 = per99_9
+        self.churns_per_action = churns_per_action
+        self.percent_churns_per_action = percent_churns_per_action
+        self.total_action_percents = total_action_percents
+        self.churn_std = churn_std
+        self.action_std = action_std
+        self.top50churns = top50churns
+        self.game = game
+        self.start_timesteps = start_timesteps
+        self.end_timesteps = end_timesteps
+        self.percent0churn = percent0churn
+        self.algo_name = algo_name
+        self.action_swaps = action_swaps
+
 if __name__ == "__main__":
 
 
@@ -44,7 +67,7 @@ if __name__ == "__main__":
     percent0_25 = 0
     percent0_75 = 0
 
-    name = "DDQN_n1"
+    name = "DDQN_n20"
 
     for game in games:
         file_ = ["churn_results\\" + name + "\\" + name + "_" + game]
