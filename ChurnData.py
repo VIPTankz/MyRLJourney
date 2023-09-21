@@ -67,7 +67,7 @@ if __name__ == "__main__":
     percent0_25 = 0
     percent0_75 = 0
 
-    name = "DDQN_aug"
+    name = "DDQN_lr_x2_5"
 
     for game in games:
         file_ = ["churn_results\\" + name + "\\" + name + "_" + game]

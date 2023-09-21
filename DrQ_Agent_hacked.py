@@ -610,8 +610,6 @@ class Agent():
                     np.save("DDDQN_n1_9_proportionRewards" + self.game + ".npy", np.array(self.reward_target_avg))
                     np.save("DDDQN_n1_9_proportionBootstrap" + self.game + ".npy", np.array(self.bootstrap_target_avg))
 
-
-
         if self.identify_data:
 
             self.identify.batch_Qvals.append(q_pred_og.detach().cpu().numpy())
