@@ -299,7 +299,7 @@ class EpsilonGreedy():
 
 class Agent():
     def __init__(self, n_actions, input_dims, device,
-                 max_mem_size=100000, total_frames=100000, lr=0.0001, discount=0.9,
+                 max_mem_size=100000, total_frames=100000, lr=0.0001, discount=0.99,
                  game=None, run=None, name=None):
 
         self.epsilon = EpsilonGreedy()
@@ -320,7 +320,7 @@ class Agent():
         self.game = game
 
         # IMPORTANT params, check these
-        self.n = 3
+        self.n = 10
         self.batch_size = 32
         self.duelling = False
         self.aug = False
@@ -607,8 +607,8 @@ class Agent():
                 plt.show()"""
 
                 if self.grad_steps > 1000:
-                    np.save("DDDQN_n1_9_proportionRewards" + self.game + ".npy", np.array(self.reward_target_avg))
-                    np.save("DDDQN_n1_9_proportionBootstrap" + self.game + ".npy", np.array(self.bootstrap_target_avg))
+                    np.save(self.algo_name + "_proportionRewards" + self.game + str(self.run) + ".npy", np.array(self.reward_target_avg))
+                    np.save(self.algo_name + "_proportionBootstrap" + self.game + str(self.run) + ".npy", np.array(self.bootstrap_target_avg))
 
         if self.identify_data:
 
