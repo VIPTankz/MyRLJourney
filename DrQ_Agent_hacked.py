@@ -320,14 +320,14 @@ class Agent():
         self.game = game
 
         # IMPORTANT params, check these
-        self.n = 10
+        self.n = 1
         self.batch_size = 32
         self.duelling = False
         self.aug = False
         self.replace_target_cnt = 1
         self.replay_ratio = 1
         self.network = "normal"
-        self.collecting_churn_data = False
+        self.collecting_churn_data = True
         self.gen_data = False
         self.identify_data = False
 
@@ -406,7 +406,7 @@ class Agent():
         self.second_save = False
 
         self.start_churn = self.min_sampling_size
-        self.churn_sample = 10000
+        self.churn_sample = 256
         self.churn_dur = 23000
         self.second_churn = 75000
         self.total_churn = 0
@@ -436,6 +436,9 @@ class Agent():
         self.reward_target_avg = []
         self.bootstrap_target_avg = []
         self.reward_proportions = True
+
+        self.action_gap_data = True
+        self.action_gaps = []
 
     def get_grad_steps(self):
         return self.grad_steps
@@ -566,7 +569,7 @@ class Agent():
             q_targets = self.tgt_net.forward(states_)  # states_aug_
             q_actions = self.net.forward(states_)
 
-        if self.identify_data:
+        if self.identify_data or self.action_gap_data:
             q_pred_og = q_pred.detach().cpu()
 
         if not self.sep_q_state:
@@ -591,6 +594,28 @@ class Agent():
         self.grad_steps += 1
 
         self.epsilon.update_eps()
+
+        if self.action_gap_data:
+            #print(q_pred_og)
+            #print(torch.topk(q_pred_og, 2).values)
+            #print(q_pred_og.shape)
+            #print(torch.topk(q_pred_og, 2).values.shape)
+
+            top2 = torch.topk(q_pred_og, 2).values
+            first_column = top2[:, 0]
+            second_column = top2[:, 1]
+
+            # Calculate the difference between the first and second columns
+            result_tensor = first_column - second_column
+
+            avg = result_tensor.mean()
+            #print(avg)
+
+            self.action_gaps.append(avg.item())
+
+            if self.grad_steps % 500 == 0 and self.grad_steps > 80000:
+                action_gaps = np.array(self.action_gaps)
+                np.save(self.algo_name + "_actionGaps" + self.game + str(self.run) + ".npy", action_gaps)
 
         if self.reward_proportions:
             if self.grad_steps % 500 == 0:

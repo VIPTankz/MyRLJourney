@@ -1,8 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 print("hi")
-games = ["Asterix","Breakout","Freeway","Gopher"]
-algorithms = ["DDDQN_n10_proportion","DDDQN_n3_proportion", "DDDQN_n1_proportion", "DDDQN_n1_9_proportion", "DDDQN_n10_999_proportion"]
+runs = 1
+games = ["Alien", "Amidar", "Assault", "Asterix", "BankHeist", "BattleZone", "Boxing", "Breakout", "ChopperCommand",
+         "CrazyClimber", \
+         "DemonAttack", "Freeway", "Frostbite", "Gopher", "Hero", "Jamesbond", "Kangaroo", "Krull", "KungFuMaster", \
+         "MsPacman", "Pong", "PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]
+
+algorithms = ["DDQN"]
 labels = ["n=10", "n=3","n=1","n=1 gamma=0.9","n=10 gamma=0.999"]
 
 
@@ -38,8 +43,8 @@ for j in algorithms:
     game_temp_b = []
     game_temp_r = []
     for i in games:
-        game_temp_r.append(np.load(j + "Rewards" + i + ".npy"))
-        game_temp_b.append(np.load(j + "Bootstrap" + i + ".npy"))
+        game_temp_r.append(np.load(j + "\\" + j + "_proportionRewards" + i + "0.npy"))
+        game_temp_b.append(np.load(j + "\\" + j + "_proportionBootstrap" + i + "0.npy"))
 
     reward_data.append(game_temp_r)
     bootstrap_data.append(game_temp_b)

@@ -4,7 +4,341 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="" />
+    <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapAlien0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapAmidar0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapAssault0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapAsterix0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapBankHeist0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapBattleZone0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapBoxing0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapBreakout0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapChopperCommand0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapCrazyClimber0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapDemonAttack0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapFreeway0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapFrostbite0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapGopher0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapHero0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapJamesbond0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapKangaroo0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapKrull0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapKungFuMaster0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapMsPacman0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapPong0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapPrivateEye0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapQbert0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapRoadRunner0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapSeaquest0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionBootstrapUpNDown0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsAlien0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsAmidar0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsAssault0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsAsterix0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsBankHeist0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsBattleZone0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsBoxing0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsBreakout0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsChopperCommand0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsCrazyClimber0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsDemonAttack0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsFreeway0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsFrostbite0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsGopher0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsHero0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsJamesbond0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsKangaroo0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsKrull0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsKungFuMaster0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsMsPacman0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsPong0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsPrivateEye0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsQbert0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsRoadRunner0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsSeaquest0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/DDQN/DDQN_proportionRewardsUpNDown0.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_999_proportionBootstrapAsterix.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_999_proportionBootstrapBoxing.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_999_proportionBootstrapBreakout.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_999_proportionBootstrapFreeway.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_999_proportionBootstrapGopher.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_999_proportionRewardsAsterix.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_999_proportionRewardsBoxing.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_999_proportionRewardsBreakout.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_999_proportionRewardsFreeway.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_999_proportionRewardsGopher.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_proportionBootstrapAsterix.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_proportionBootstrapBoxing.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_proportionBootstrapBreakout.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_proportionBootstrapFreeway.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_proportionBootstrapGopher.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_proportionRewardsAsterix.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_proportionRewardsBoxing.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_proportionRewardsBreakout.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_proportionRewardsFreeway.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n10_proportionRewardsGopher.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_9_proportionBootstrapAsterix.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_9_proportionBootstrapBoxing.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_9_proportionBootstrapBreakout.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_9_proportionBootstrapFreeway.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_9_proportionBootstrapGopher.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_9_proportionRewardsAsterix.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_9_proportionRewardsBoxing.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_9_proportionRewardsBreakout.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_9_proportionRewardsFreeway.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_9_proportionRewardsGopher.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_proportionBootstrapAsterix.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_proportionBootstrapBoxing.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_proportionBootstrapBreakout.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_proportionBootstrapFreeway.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_proportionBootstrapGopher.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_proportionRewardsAsterix.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_proportionRewardsBoxing.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_proportionRewardsBreakout.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_proportionRewardsFreeway.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n1_proportionRewardsGopher.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n3_proportionBootstrapAsterix.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n3_proportionBootstrapBoxing.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n3_proportionBootstrapBreakout.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n3_proportionBootstrapFreeway.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n3_proportionBootstrapGopher.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n3_proportionRewardsAsterix.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n3_proportionRewardsBoxing.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n3_proportionRewardsBreakout.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n3_proportionRewardsFreeway.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDDQN_n3_proportionRewardsGopher.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDQN_propAsterixEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDQN_propAsterixExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDQN_propBoxingEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDQN_propBoxingExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDQN_propBreakoutEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDQN_propBreakoutExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDQN_propFreewayEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDQN_propFreewayExperiment (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDQN_propGopherEvaluation (0).npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proportion_results/archive/DDQN_propGopherExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNAlienEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNAlienExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNAmidarEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNAmidarExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNAssaultEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNAssaultExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNAsterixEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNAsterixExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNBankHeistEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNBankHeistExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNBattleZoneEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNBattleZoneExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNBoxingEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNBoxingExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNBreakoutEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNBreakoutExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNChopperCommandEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNChopperCommandExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNCrazyClimberEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNCrazyClimberExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNDemonAttackEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNDemonAttackExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNFreewayEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNFreewayExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNFrostbiteEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNFrostbiteExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNGopherEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNGopherExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNHeroEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNHeroExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNJamesbondEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNJamesbondExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNKangarooEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNKangarooExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNKrullEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNKrullExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNKungFuMasterEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNKungFuMasterExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNMsPacmanEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNMsPacmanExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNPongEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNPongExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNPrivateEyeEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNPrivateEyeExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNQbertEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNQbertExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNRoadRunnerEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNRoadRunnerExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNSeaquestEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNSeaquestExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNUpNDownEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQNUpNDownExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapAlien0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapAmidar0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapAssault0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapAsterix0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapBankHeist0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapBattleZone0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapBoxing0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapBreakout0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapChopperCommand0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapCrazyClimber0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapDemonAttack0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapFreeway0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapFrostbite0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapGopher0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapHero0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapJamesbond0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapKangaroo0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapKrull0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapKungFuMaster0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapMsPacman0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapPong0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapPrivateEye0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapQbert0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapRoadRunner0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapSeaquest0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionBootstrapUpNDown0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsAlien0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsAmidar0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsAssault0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsAsterix0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsBankHeist0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsBattleZone0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsBoxing0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsBreakout0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsChopperCommand0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsCrazyClimber0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsDemonAttack0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsFreeway0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsFrostbite0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsGopher0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsHero0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsJamesbond0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsKangaroo0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsKrull0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsKungFuMaster0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsMsPacman0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsPong0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsPrivateEye0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsQbert0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsRoadRunner0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsSeaquest0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DDQN_proportionRewardsUpNDown0.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQ_Agent_hacked.py" beforeDir="false" afterPath="$PROJECT_DIR$/DrQ_Agent_hacked.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_999_proportionBootstrapAsterix.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_999_proportionBootstrapBoxing.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_999_proportionBootstrapBreakout.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_999_proportionBootstrapFreeway.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_999_proportionBootstrapGopher.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_999_proportionRewardsAsterix.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_999_proportionRewardsBoxing.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_999_proportionRewardsBreakout.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_999_proportionRewardsFreeway.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_999_proportionRewardsGopher.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_proportionBootstrapAsterix.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_proportionBootstrapBoxing.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_proportionBootstrapBreakout.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_proportionBootstrapFreeway.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_proportionBootstrapGopher.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_proportionRewardsAsterix.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_proportionRewardsBoxing.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_proportionRewardsBreakout.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_proportionRewardsFreeway.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n10_proportionRewardsGopher.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_9_proportionBootstrapAsterix.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_9_proportionBootstrapBoxing.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_9_proportionBootstrapBreakout.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_9_proportionBootstrapFreeway.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_9_proportionBootstrapGopher.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_9_proportionRewardsAsterix.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_9_proportionRewardsBoxing.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_9_proportionRewardsBreakout.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_9_proportionRewardsFreeway.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_9_proportionRewardsGopher.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_proportionBootstrapAsterix.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_proportionBootstrapBoxing.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_proportionBootstrapBreakout.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_proportionBootstrapFreeway.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_proportionBootstrapGopher.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_proportionRewardsAsterix.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_proportionRewardsBoxing.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_proportionRewardsBreakout.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_proportionRewardsFreeway.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n1_proportionRewardsGopher.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n3_proportionBootstrapAsterix.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n3_proportionBootstrapBoxing.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n3_proportionBootstrapBreakout.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n3_proportionBootstrapFreeway.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n3_proportionBootstrapGopher.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n3_proportionRewardsAsterix.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n3_proportionRewardsBoxing.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n3_proportionRewardsBreakout.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n3_proportionRewardsFreeway.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDDQN_n3_proportionRewardsGopher.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDQN_propAsterixEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDQN_propAsterixExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDQN_propBoxingEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDQN_propBoxingExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDQN_propBreakoutEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDQN_propBreakoutExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDQN_propFreewayEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDQN_propFreewayExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDQN_propGopherEvaluation (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/DDQN_propGopherExperiment (0).npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/proportion_results/reward_proportions.py" beforeDir="false" afterPath="$PROJECT_DIR$/proportion_results/reward_proportions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNAlienEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNAlienEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNAlienExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNAlienExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNAmidarEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNAmidarEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNAmidarExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNAmidarExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNAssaultEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNAssaultEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNAssaultExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNAssaultExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNAsterixEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNAsterixEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNAsterixExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNAsterixExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNBankHeistEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNBankHeistEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNBankHeistExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNBankHeistExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNBattleZoneEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNBattleZoneEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNBattleZoneExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNBattleZoneExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNBoxingEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNBoxingEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNBoxingExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNBoxingExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNBreakoutEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNBreakoutEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNBreakoutExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNBreakoutExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNChopperCommandEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNChopperCommandEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNChopperCommandExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNChopperCommandExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNCrazyClimberEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNCrazyClimberEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNCrazyClimberExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNCrazyClimberExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNDemonAttackEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNDemonAttackEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNDemonAttackExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNDemonAttackExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNFreewayEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNFreewayEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNFreewayExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNFreewayExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNFrostbiteEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNFrostbiteEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNFrostbiteExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNFrostbiteExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNGopherEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNGopherEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNGopherExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNGopherExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNHeroEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNHeroEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNHeroExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNHeroExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNJamesbondEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNJamesbondEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNJamesbondExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNJamesbondExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNKangarooEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNKangarooEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNKangarooExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNKangarooExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNKrullEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNKrullEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNKrullExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNKrullExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNKungFuMasterEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNKungFuMasterEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNKungFuMasterExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNKungFuMasterExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNMsPacmanEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNMsPacmanEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNMsPacmanExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNMsPacmanExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNPongEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNPongEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNPongExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNPongExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNPrivateEyeEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNPrivateEyeEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNPrivateEyeExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNPrivateEyeExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNQbertEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNQbertEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNQbertExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNQbertExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNRoadRunnerEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNRoadRunnerEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNRoadRunnerExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNRoadRunnerExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNSeaquestEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNSeaquestEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNSeaquestExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNSeaquestExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNUpNDownEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNUpNDownEvaluation (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/DDQN/DDQNUpNDownExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DDQN/DDQNUpNDownExperiment (0).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/Evaluation.py" beforeDir="false" afterPath="$PROJECT_DIR$/results/Evaluation.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -31,14 +365,14 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "C:/Users/Tyler/Documents/GitHub/MyRLJourney"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Tyler/Documents/GitHub/MyRLJourney&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\TYLER\Documents\GitHub\MyRLJourney" />

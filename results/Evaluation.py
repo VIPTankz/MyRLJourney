@@ -37,7 +37,7 @@ print_ind = True
 print(len(games))
 
 hns = []
-labels = ["DDQN_aug"]
+labels = ["DDQN"]
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
 count = 0
