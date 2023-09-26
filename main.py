@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked import Agent
 
-    agent_name = "DDQN"
+    agent_name = "DDQN_n1_discount904"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
@@ -35,22 +35,22 @@ if __name__ == '__main__':
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
     """
 
-
+    # 6 sets - Iridis
     gameset = [["Alien","Amidar","Assault","Asterix"], ["BankHeist","BattleZone","Boxing","Breakout"],
                ["ChopperCommand","CrazyClimber","DemonAttack","Freeway"], ["Frostbite","Gopher","Hero","Jamesbond"],
                ["Kangaroo","Krull","KungFuMaster","MsPacman", "Pong"], ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
-    # currently changed farm_atari to use 6 sets
+    # 3 Sets - RTX 4090
+    gameset = [["Alien","Amidar","Assault","Asterix", "BankHeist","BattleZone","Boxing","Breakout"],
+               ["ChopperCommand","CrazyClimber","DemonAttack","Freeway", "Frostbite","Gopher","Hero","Jamesbond", "Kangaroo"],
+               ["Krull","KungFuMaster","MsPacman", "Pong", "PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
-
-    """gameset = [["Alien", "Amidar", "Assault", "Asterix", "BankHeist", "BattleZone", "Boxing"],
-               ["Breakout", "ChopperCommand", "CrazyClimber", "DemonAttack", "Freeway", "Frostbite", "Gopher"],
-               ["Hero", "Jamesbond", "Kangaroo", "Krull", "KungFuMaster", "MsPacman", "Pong"],
-               ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]"""
-
-    gameset = [["ChopperCommand","CrazyClimber","DemonAttack","Freeway", "Frostbite","Gopher","Hero","Jamesbond",
-                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong", "PrivateEye", "Qbert", "RoadRunner", "Seaquest",
-                "UpNDown"]]
+    """
+    #single set - util
+    gameset = [["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout",
+                "ChopperCommand","CrazyClimber","DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond",
+               "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
+    """
 
     gameset_idx = int(sys.argv[1])
 
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     except:
         run_spec = False
 
-    for runs in range(1):
+    for runs in range(5):
         if run_spec:
             runs += run
 

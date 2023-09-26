@@ -299,7 +299,7 @@ class EpsilonGreedy():
 
 class Agent():
     def __init__(self, n_actions, input_dims, device,
-                 max_mem_size=100000, total_frames=100000, lr=0.0001, discount=0.99,
+                 max_mem_size=100000, total_frames=100000, lr=0.0001,
                  game=None, run=None, name=None):
 
         self.epsilon = EpsilonGreedy()
@@ -313,14 +313,14 @@ class Agent():
         self.min_sampling_size = 1600
 
         self.chkpt_dir = ""
-        self.gamma = discount
 
         self.run = run
         self.algo_name = name
         self.game = game
 
         # IMPORTANT params, check these
-        self.n = 10
+        self.n = 1 #CHANGED
+        self.gamma = 0.904 #CHANGED
         self.batch_size = 32
         self.duelling = False
         self.aug = False
