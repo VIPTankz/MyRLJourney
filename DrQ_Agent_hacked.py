@@ -325,7 +325,7 @@ class Agent():
         self.duelling = False
         self.aug = False
         self.replace_target_cnt = 1
-        self.replay_ratio = 0.25
+        self.replay_ratio = 0.25 #CHANGED
         self.network = "normal"
         self.collecting_churn_data = False
         self.gen_data = False
@@ -391,7 +391,6 @@ class Agent():
             self.tgt_net = LeggedQNetwork(self.lr, self.n_actions,
                                                input_dims=self.input_dims, device=device)
 
-        #summary(self.net, (4, 84, 84))
 
         if self.gen_data:
             self.net.optimizer = optim.Adam(self.net.parameters(), lr=lr, eps=0.00015)
