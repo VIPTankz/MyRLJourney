@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked import Agent
 
-    agent_name = "DDQN_n1"
+    agent_name = "DDQN"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
@@ -79,8 +79,6 @@ if __name__ == '__main__':
             runs += run
 
         for game in games:
-
-
 
             # gym version 0.25.2
             # ie pre 5 arg step

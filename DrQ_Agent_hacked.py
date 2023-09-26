@@ -320,14 +320,14 @@ class Agent():
         self.game = game
 
         # IMPORTANT params, check these
-        self.n = 1
+        self.n = 10
         self.batch_size = 32
         self.duelling = False
         self.aug = False
         self.replace_target_cnt = 1
-        self.replay_ratio = 1
+        self.replay_ratio = 0.25
         self.network = "normal"
-        self.collecting_churn_data = True
+        self.collecting_churn_data = False
         self.gen_data = False
         self.identify_data = False
 
@@ -440,6 +440,8 @@ class Agent():
         self.action_gap_data = True
         self.action_gaps = []
 
+        self.replay_ratio_cnt = 0
+
     def get_grad_steps(self):
         return self.grad_steps
 
@@ -512,8 +514,13 @@ class Agent():
         self.tgt_net.load_checkpoint()
 
     def learn(self):
-        for i in range(self.replay_ratio):
-            self.learn_call()
+        if self.replay_ratio < 1:
+            if self.replay_ratio_cnt == 0:
+                self.learn_call()
+            self.replay_ratio_cnt = (self.replay_ratio_cnt + 1) % (int(1 / self.replay_ratio))
+        else:
+            for i in range(self.replay_ratio):
+                self.learn_call()
 
     def learn_call(self):
 
