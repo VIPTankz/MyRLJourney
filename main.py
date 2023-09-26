@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked import Agent
 
-    agent_name = "DDQN_rr_025"
+    agent_name = "DDQN"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
@@ -48,12 +48,9 @@ if __name__ == '__main__':
                ["Hero", "Jamesbond", "Kangaroo", "Krull", "KungFuMaster", "MsPacman", "Pong"],
                ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]"""
 
-    """
-    gameset = [["Alien", "Amidar", "Assault", "Asterix"], ["BankHeist", "BattleZone", "Boxing", "Breakout"],
-               ["ChopperCommand", "CrazyClimber", "DemonAttack", "Freeway"], ["Frostbite", "Gopher", "Hero", "Jamesbond"],
-               ["Kangaroo", "Krull", "KungFuMaster", "MsPacman"], ["Pong", "PrivateEye", "Qbert"],
-               ["Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
-    """
+    gameset = [["ChopperCommand","CrazyClimber","DemonAttack","Freeway", "Frostbite","Gopher","Hero","Jamesbond",
+                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong", "PrivateEye", "Qbert", "RoadRunner", "Seaquest",
+                "UpNDown"]]
 
     gameset_idx = int(sys.argv[1])
 
@@ -71,7 +68,7 @@ if __name__ == '__main__':
     except:
         run_spec = False
 
-    for runs in range(5):
+    for runs in range(1):
         if run_spec:
             runs += run
 

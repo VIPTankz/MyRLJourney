@@ -58,6 +58,8 @@ if __name__ == "__main__":
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
+    game_stds = {}
+
     churn_25 = 0
     churn_75 = 0
     churn_std25 = 0
@@ -67,12 +69,15 @@ if __name__ == "__main__":
     percent0_25 = 0
     percent0_75 = 0
 
-    name = "DDQN"
-    runs = 5
+    early_churn_data_total = []
+    late_churn_data_total = []
+
+    name = "DDQN_n3"
+    runs = 1
 
     for game in games:
         for run in range(runs):
-            file_ = ["churn_results\\" + name + "\\" + name + "_" + game]
+            file_ = ["unreliable\\churn_results\\" + name + "\\" + name + "_" + game]
 
             files = []
             for i in file_:
@@ -83,7 +88,8 @@ if __name__ == "__main__":
                 with open(filename, 'rb') as inp:
                     churn_data = pickle.load(inp)
 
-                    """print("Churn Data for " + filename)
+                    print("\n\nChurn Data for " + filename)
+                    """
                     print("Game: " + str(churn_data.game))
                     print("Start Timestep: " + str(churn_data.start_timesteps))
                     print("End Timestep: " + str(churn_data.end_timesteps))
@@ -103,9 +109,9 @@ if __name__ == "__main__":
                     to_actions = to_actions / sum(to_actions)
 
                     #print("Total Churn per Action  : " + str(['%.5f' % elem for elem in churn_data.churns_per_action]))
-                    """print("Percent Churn per Action: " + str(['%.5f' % elem for elem in churn_data.percent_churns_per_action]))
+                    print("Percent Churn per Action: " + str(['%.5f' % elem for elem in churn_data.percent_churns_per_action]))
                     print("Total Action Percent    : " + str(['%.5f' % elem for elem in churn_data.total_action_percents]))
-                    print("Swap Percentages From   : " + str(['%.5f' % elem for elem in from_actions]))
+                    """print("Swap Percentages From   : " + str(['%.5f' % elem for elem in from_actions]))
                     print("Swap Percentages To     : " + str(['%.5f' % elem for elem in to_actions]))
                     print("Churn std: " + str(round(churn_data.churn_std, 5)))
                     print("Action std: " + str(round(churn_data.action_std, 5)))
@@ -119,11 +125,15 @@ if __name__ == "__main__":
                         churn_std25 += churn_data.churn_std
                         action_std25 += churn_data.action_std
                         percent0_25 += churn_data.percent0churn
+                        for i,j in zip(['%.5f' % elem for elem in churn_data.percent_churns_per_action], ['%.5f' % elem for elem in churn_data.total_action_percents]):
+                            early_churn_data_total.append([float(i) * 100,float(j) * 100])
                     else:
                         churn_75 += churn_data.avg_churn
                         churn_std75 += churn_data.churn_std
                         action_std75 += churn_data.action_std
                         percent0_75 += churn_data.percent0churn
+                        for i,j in zip([elem for elem in churn_data.percent_churns_per_action], [elem for elem in churn_data.total_action_percents]):
+                            late_churn_data_total.append([float(i) * 100,float(j) * 100])
 
     print("================")
     print("AVG churn early: " + str(churn_25 / (len(games) * runs)))
