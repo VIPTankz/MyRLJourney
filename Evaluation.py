@@ -1,7 +1,7 @@
 import numpy as np
 import statistics
 np.set_printoptions(suppress=True)
-runs = 5
+runs = 1
 
 
 human_scores = np.array([7127.80,1719.53,742.00,8503.33,753.13,\
@@ -37,14 +37,14 @@ print_ind = True
 print(len(games))
 
 hns = []
-labels = ["DDQN"]
+labels = ["DDQN_discount999"]
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
 count = 0
 for game in games:
 
     for i in range(len(labels)):
-        data_files[i].append("results\\" + labels[i] + "\\" + labels[i] + game + "Evaluation")
+        data_files[i].append("unreliable\\results\\" + labels[i] + "\\" + labels[i] + game + "Evaluation")
 
         print("\n" + game + " Evaluation Scores")
 

@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked import Agent
 
-    agent_name = "DDQN_n1_discount904"
+    agent_name = "DDQN"
 
     """
     games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
@@ -45,12 +45,12 @@ if __name__ == '__main__':
                ["ChopperCommand","CrazyClimber","DemonAttack","Freeway", "Frostbite","Gopher","Hero","Jamesbond", "Kangaroo"],
                ["Krull","KungFuMaster","MsPacman", "Pong", "PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
-    """
+
     #single set - util
     gameset = [["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout",
                 "ChopperCommand","CrazyClimber","DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond",
                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
-    """
+
 
     gameset_idx = int(sys.argv[1])
 

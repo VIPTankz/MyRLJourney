@@ -72,7 +72,7 @@ if __name__ == "__main__":
     early_churn_data_total = []
     late_churn_data_total = []
 
-    name = "DDQN_n3"
+    name = "DDQN_n1_discount904"
     runs = 1
 
     for game in games:
@@ -136,8 +136,8 @@ if __name__ == "__main__":
                             late_churn_data_total.append([float(i) * 100,float(j) * 100])
 
     print("================")
-    print("AVG churn early: " + str(churn_25 / (len(games) * runs)))
-    print("AVG churn late: " + str(churn_75 / (len(games) * runs)))
+    print("AVG churn early: " + str(round((churn_25 / (len(games) * runs) * 100),1)) + "%")
+    print("AVG churn late: " + str(round((churn_75 / (len(games) * runs) * 100),1)) + "%")
     print("AVG churn std early: " + str(churn_std25 / (len(games) * runs)))
     print("AVG churn std late: " + str(churn_std75 / (len(games) * runs)))
     print("AVG action std early: " + str(action_std25 / (len(games) * runs)))

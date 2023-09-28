@@ -319,8 +319,8 @@ class Agent():
         self.game = game
 
         # IMPORTANT params, check these
-        self.n = 1 #CHANGED
-        self.gamma = 0.904 #CHANGED
+        self.n = 10
+        self.gamma = 0.99
         self.batch_size = 32
         self.duelling = False
         self.aug = False
@@ -328,7 +328,7 @@ class Agent():
         self.replay_ratio = 1
         self.network = "normal"
         self.collecting_churn_data = False
-        self.gen_data = False
+        self.gen_data = True
         self.identify_data = False
 
         self.sep_q_state = False
@@ -393,8 +393,8 @@ class Agent():
 
 
         if self.gen_data:
-            self.net.optimizer = optim.Adam(self.net.parameters(), lr=lr, eps=0.00015)
-            self.tgt_net.optimizer = optim.Adam(self.net.parameters(), lr=lr, eps=0.00015)
+            self.net.optimizer = optim.RMSprop(self.net.parameters(), lr=lr)
+            self.tgt_net.optimizer = optim.RMSprop(self.net.parameters(), lr=lr)
 
         self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
         self.intensity = Intensity(scale=0.1)
@@ -434,9 +434,9 @@ class Agent():
 
         self.reward_target_avg = []
         self.bootstrap_target_avg = []
-        self.reward_proportions = True
+        self.reward_proportions = False
 
-        self.action_gap_data = True
+        self.action_gap_data = False
         self.action_gaps = []
 
         self.replay_ratio_cnt = 0
@@ -735,8 +735,6 @@ class Agent():
                 if self.grad_steps == 97000:
                     np_dat = np.array(self.target_percent_list,dtype=np.float32)
                     np.save(self.algo_name + '_' + self.game + str(self.run) + '_target_gen_data.npy', np_dat)
-
-
 
         if self.collecting_churn_data:
             if not self.reset_churn and self.env_steps > self.start_churn + self.churn_dur:
