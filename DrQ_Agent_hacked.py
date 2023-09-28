@@ -327,7 +327,11 @@ class Agent():
         self.replace_target_cnt = 1
         self.replay_ratio = 1
         self.network = "normal"
+
+        #data collection
         self.collecting_churn_data = False
+        self.action_gap_data = False
+        self.reward_proportions = False
         self.gen_data = True
         self.identify_data = False
 
@@ -434,9 +438,7 @@ class Agent():
 
         self.reward_target_avg = []
         self.bootstrap_target_avg = []
-        self.reward_proportions = False
 
-        self.action_gap_data = False
         self.action_gaps = []
 
         self.replay_ratio_cnt = 0

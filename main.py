@@ -29,12 +29,6 @@ if __name__ == '__main__':
 
     agent_name = "DDQN"
 
-    """
-    games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
-             "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
-             "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
-    """
-
     # 6 sets - Iridis
     gameset = [["Alien","Amidar","Assault","Asterix"], ["BankHeist","BattleZone","Boxing","Breakout"],
                ["ChopperCommand","CrazyClimber","DemonAttack","Freeway"], ["Frostbite","Gopher","Hero","Jamesbond"],
