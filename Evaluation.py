@@ -1,5 +1,4 @@
 import numpy as np
-import statistics
 np.set_printoptions(suppress=True)
 runs = 5
 

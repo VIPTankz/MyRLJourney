@@ -25,9 +25,9 @@ def make_env(game, eval):
 
 if __name__ == '__main__':
 
-    from DrQ_Agent_hacked import Agent
+    from DER import Agent
 
-    agent_name = "DDQN_n3"
+    agent_name = "DER"
 
     # 12 sets - Iridis
     gameset = [["Alien","Amidar","Assault"],
@@ -53,9 +53,6 @@ if __name__ == '__main__':
     gameset = [["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout",
                 "ChopperCommand","CrazyClimber","DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond",
                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
-
-    gameset = [["MsPacman", "Pong"]]
-    #CHANGE THIS AND RUNS
 
     gameset_idx = int(sys.argv[1])
 

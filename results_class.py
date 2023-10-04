@@ -1,23 +1,32 @@
+import os
 import pickle
 import numpy as np
 
-class Results():
-    def __init__(self):
-        self.x = 2
 
+def save_files_to_existing_pickle(directory_path, pickle_filename):
+    file_data = {}
 
-result_file = Results()
-result_file.y = 2
+    # Check if the pickle file already exists in the "whole_results" subdirectory
+    result_pickle_path = os.path.join("whole_results", pickle_filename)
+    if os.path.exists(result_pickle_path):
+        with open(result_pickle_path, 'rb') as existing_pickle:
+            file_data = pickle.load(existing_pickle)
 
-saving = False
+    for filename in os.listdir(directory_path):
+        if filename.endswith('.pkl'):
+            with open(os.path.join(directory_path, filename), 'rb') as file:
+                file_data[os.path.splitext(filename)[0]] = pickle.load(file)
+        elif filename.endswith('.npy'):
+            file_data[os.path.splitext(filename)[0]] = np.load(os.path.join(directory_path, filename))
 
-if saving:
-    with open("someobject1.result", "wb") as output_file:
-        pickle.dump(result_file, output_file)
+    # Save the pickle file inside the "whole_results" subdirectory
+    with open(result_pickle_path, 'wb') as pickle_file:
+        pickle.dump(file_data, pickle_file)
 
-else:
-    file = pickle.load(open("someobject.result",'rb'))
-    if hasattr(file, 'x'):
-        print(file.x)
-    if hasattr(file, 'y'):
-        print(file.y)
+if __name__ == "__main__":
+    directory_path = "processing"  # Change this to your directory path
+    pickle_filename = "DDQN_n1.RESULT"  # Change this to the desired pickle filename
+    save_files_to_existing_pickle(directory_path, pickle_filename)
+
+    print("Done!")
+

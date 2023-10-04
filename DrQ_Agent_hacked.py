@@ -120,33 +120,6 @@ class LeggedQNetwork(nn.Module):
         print('... loading checkpoint ...')
         self.load_state_dict(T.load(self.checkpoint_file))
 
-class SanityNetwork(nn.Module):
-    def __init__(self, lr, n_actions, input_dims, device):
-        super(SanityNetwork, self).__init__()
-        self.n_actions = n_actions
-
-        #self.V_network = ActionNetwork()
-        self.action_networks = nn.ParameterList([ActionNetwork() for i in range(self.n_actions)])
-
-        self.optimizer = optim.SGD(self.parameters(), lr=lr)
-        #self.optimizer = optim.Adam(self.parameters(), lr=lr, eps=0.00015)
-        self.loss = nn.MSELoss()
-        self.device = device
-        self.to(self.device)
-
-    def forward(self, observation):
-        outs = []
-
-        for i in self.action_networks:
-            outs.append(i(observation))
-
-        Q = torch.stack(outs, dim=1)
-        #V = self.V_network(observation)
-
-        #Q = V + (A - A.mean(dim=1, keepdim=True)).squeeze(dim=-1)
-
-        return Q
-
 
 class ActionNetwork(nn.Module):
     def __init__(self):
@@ -199,47 +172,6 @@ class QNetwork(nn.Module):
         Q = self.Q(observationQ)
 
         return Q
-
-class SepQNetwork(nn.Module):
-    def __init__(self, lr, n_actions, input_dims, device):
-        super(SepQNetwork, self).__init__()
-
-        self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
-        self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
-        self.conv3 = nn.Conv2d(64, 64, 3)
-
-        self.fc1 = nn.Linear(64 * 7 * 7, 512)
-        self.QS = nn.Linear(512, n_actions)
-        self.QR = nn.Linear(512, n_actions)
-
-        self.optimizer = optim.Adam(self.parameters(), lr=lr, eps=0.00015)
-        """self.optimizer = optim.SGD(
-            [
-                {"params": self.conv1.parameters(), lr: 0.00001},
-                {"params": self.conv2.parameters(), lr: 0.00001},
-                {"params": self.conv3.parameters(), lr: 0.00001}
-            ],
-            lr=lr)"""
-
-        self.loss = nn.MSELoss()
-        self.device = device
-        self.to(self.device)
-
-    def forward(self, observation, sep=False):
-        observation = T.div(observation, 255)
-        observation = observation.view(-1, 4, 84, 84)
-        observation = F.relu(self.conv1(observation))
-        observation = F.relu(self.conv2(observation))
-        observation = F.relu(self.conv3(observation))
-        observation = observation.view(-1, 64 * 7 * 7)
-        observationQ = F.relu(self.fc1(observation))
-        QR = self.QR(observationQ)
-        QS = self.QS(observationQ)
-
-        if sep:
-            return QR, QS
-        else:
-            return QR + QS
 
 class DuelingDeepQNetwork(nn.Module):
     def __init__(self, lr, n_actions, name, input_dims, chkpt_dir, device):
@@ -318,8 +250,10 @@ class Agent():
         self.algo_name = name
         self.game = game
 
+        #MAKE SURE YOU CHECKED THE NAME AND DATA COLLETION
+
         # IMPORTANT params, check these
-        self.n = 3#changed
+        self.n = 10
         self.gamma = 0.99
         self.batch_size = 32
         self.duelling = False
@@ -334,12 +268,6 @@ class Agent():
         self.reward_proportions = True
         self.gen_data = False
         self.identify_data = False
-
-        self.sep_q_state = False
-
-        self.delayed_reward = False
-        self.reward_spread = 5
-        self.prev_rewards = deque([0, 0, 0, 0, 0], self.reward_spread)
 
         if self.identify_data:
             self.identify = Identify(self.min_sampling_size)
@@ -360,7 +288,7 @@ class Agent():
                                               name='lunar_lander_dueling_ddqn_q_next',
                                               chkpt_dir=self.chkpt_dir, device=device)
 
-        elif self.network == "normal" and not self.sep_q_state:
+        elif self.network == "normal":
             self.net = QNetwork(self.lr, self.n_actions,
                                            input_dims=self.input_dims, device=device)
 
@@ -371,12 +299,7 @@ class Agent():
                 self.churn_net = QNetwork(self.lr, self.n_actions,
                                         input_dims=self.input_dims, device=device)
 
-        elif self.network == "normal" and self.sep_q_state:
-            self.net = SepQNetwork(self.lr, self.n_actions,
-                                           input_dims=self.input_dims, device=device)
 
-            self.tgt_net = SepQNetwork(self.lr, self.n_actions,
-                                               input_dims=self.input_dims, device=device)
 
         elif self.network == "split":
             self.net = HydraQNetwork(self.lr, self.n_actions,
@@ -388,12 +311,14 @@ class Agent():
                                                input_dims=self.input_dims,
                                                name='lunar_lander_dueling_ddqn_q_next',
                                                chkpt_dir=self.chkpt_dir, device=device)
-        else:
+        elif self.network == "legged":
             self.net = LeggedQNetwork(self.lr, self.n_actions,
                                            input_dims=self.input_dims, device=device)
 
             self.tgt_net = LeggedQNetwork(self.lr, self.n_actions,
                                                input_dims=self.input_dims, device=device)
+        else:
+            raise Exception("Invalid Network type")
 
 
         if self.gen_data:
@@ -476,18 +401,6 @@ class Agent():
         return action
 
     def store_transition(self, state, action, reward, state_, done):
-        if self.delayed_reward:
-            self.prev_rewards.appendleft(reward)
-            if done:
-                reward = 0
-                for i in range(len(self.prev_rewards)):
-                    reward += self.prev_rewards[i] * ((self.reward_spread - i) / self.reward_spread)
-
-                self.prev_rewards = deque([0, 0, 0, 0, 0], self.reward_spread)
-            else:
-                reward = 0
-                for i in self.prev_rewards:
-                    reward += i / self.reward_spread
 
         self.memory.store_transition(state, action, reward, state_, done)
         self.env_steps += 1

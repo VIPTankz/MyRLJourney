@@ -193,8 +193,6 @@ class Agent():
         self.run = run
         self.algo_name = "DER_noiseless_churn"
 
-        self.resets = True
-
         #n-step
         self.n = 20
         self.nstep_states = deque([], self.n)
@@ -284,9 +282,6 @@ class Agent():
 
         if self.memory.count < self.min_sampling_size:
             return
-
-        if self.env_steps == 40000 or self.env_steps == 75000 and self.resets:
-            self.net.reset_mlp()
 
         self.net.optimizer.zero_grad()
 
