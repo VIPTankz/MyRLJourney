@@ -5,7 +5,7 @@ import torch as T
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from PrioritisedExperienceReplay import PrioritizedReplayBuffer
+from memory import ReplayMemory
 import numpy as np
 from collections import deque
 import kornia.augmentation as aug
@@ -18,44 +18,44 @@ from Identify import Identify
 import mgzip
 import math
 
-class NoisyFactorizedLinear(nn.Module):
-    def __init__(self, in_features, out_features, std_init=0.5):
-        super(NoisyFactorizedLinear, self).__init__()
-        self.in_features = in_features
-        self.out_features = out_features
-        self.std_init = std_init
-        self.weight_mu = nn.Parameter(T.empty(out_features, in_features))
-        self.weight_sigma = nn.Parameter(T.empty(out_features, in_features))
-        self.register_buffer('weight_epsilon', T.empty(out_features, in_features))
-        self.bias_mu = nn.Parameter(T.empty(out_features))
-        self.bias_sigma = nn.Parameter(T.empty(out_features))
-        self.register_buffer('bias_epsilon', T.empty(out_features))
-        self.reset_parameters()
-        self.sample_noise()
+class NoisyLinear(nn.Module):
+  def __init__(self, in_features, out_features, std_init=0.5):
+    super(NoisyLinear, self).__init__()
+    self.training = True
+    self.in_features = in_features
+    self.out_features = out_features
+    self.std_init = std_init
+    self.weight_mu = nn.Parameter(torch.empty(out_features, in_features))
+    self.weight_sigma = nn.Parameter(torch.empty(out_features, in_features))
+    self.register_buffer('weight_epsilon', torch.empty(out_features, in_features))
+    self.bias_mu = nn.Parameter(torch.empty(out_features))
+    self.bias_sigma = nn.Parameter(torch.empty(out_features))
+    self.register_buffer('bias_epsilon', torch.empty(out_features))
+    self.reset_parameters()
+    self.reset_noise()
 
-    def reset_parameters(self):
-        mu_range = 1.0 / math.sqrt(self.in_features)
-        self.weight_mu.data.uniform_(-mu_range, mu_range)
-        self.weight_sigma.data.fill_(self.std_init / math.sqrt(self.in_features))
-        self.bias_mu.data.uniform_(-mu_range, mu_range)
-        self.bias_sigma.data.fill_(self.std_init / math.sqrt(self.out_features))
+  def reset_parameters(self):
+    mu_range = 1 / math.sqrt(self.in_features)
+    self.weight_mu.data.uniform_(-mu_range, mu_range)
+    self.weight_sigma.data.fill_(self.std_init / math.sqrt(self.in_features))
+    self.bias_mu.data.uniform_(-mu_range, mu_range)
+    self.bias_sigma.data.fill_(self.std_init / math.sqrt(self.out_features))
 
-    def _scale_noise(self, size):
-        x = T.randn(size)
-        return x.sign().mul_(x.abs().sqrt_())
+  def _scale_noise(self, size):
+    x = torch.randn(size, device=self.weight_mu.device)
+    return x.sign().mul_(x.abs().sqrt_())
 
-    def sample_noise(self):
-        epsilon_in = self._scale_noise(self.in_features)
-        epsilon_out = self._scale_noise(self.out_features)
-        self.weight_epsilon.copy_(epsilon_out.ger(epsilon_in))
-        self.bias_epsilon.copy_(epsilon_out)
+  def reset_noise(self):
+    epsilon_in = self._scale_noise(self.in_features)
+    epsilon_out = self._scale_noise(self.out_features)
+    self.weight_epsilon.copy_(epsilon_out.ger(epsilon_in))
+    self.bias_epsilon.copy_(epsilon_out)
 
-    def forward(self, inp, use_noise=True):
-        if use_noise:
-            return F.linear(inp, self.weight_mu + self.weight_sigma * self.weight_epsilon, self.bias_mu +
-                            self.bias_sigma * self.bias_epsilon)
-        else:
-            return F.linear(inp, self.weight_mu, self.bias_mu)
+  def forward(self, input):
+    if self.training:
+      return F.linear(input, self.weight_mu + self.weight_sigma * self.weight_epsilon, self.bias_mu + self.bias_sigma * self.bias_epsilon)
+    else:
+      return F.linear(input, self.weight_mu, self.bias_mu)
 
 class DuelingDeepQNetwork(nn.Module):
     def __init__(self, lr, n_actions, name, input_dims, chkpt_dir,atoms,Vmax,Vmin, device):
@@ -68,14 +68,13 @@ class DuelingDeepQNetwork(nn.Module):
         self.DELTA_Z = (self.Vmax - self.Vmin) / (self.atoms - 1)
         self.n_actions = n_actions
 
-        self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
-        self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
-        self.conv3 = nn.Conv2d(64, 64, 3)
+        self.conv1 = nn.Conv2d(4, 32, 5, stride=5, padding=0)
+        self.conv2 = nn.Conv2d(32, 64, 5, stride=5)
 
-        self.fc1V = NoisyFactorizedLinear(64 * 7 * 7, 512)
-        self.fc1A = NoisyFactorizedLinear(64 * 7 * 7, 512)
-        self.V = NoisyFactorizedLinear(512, atoms)
-        self.A = NoisyFactorizedLinear(512, n_actions * atoms)
+        self.fc1V = NoisyLinear(64 * 3 * 3, 256)
+        self.fc1A = NoisyLinear(64 * 3 * 3, 256)
+        self.V = NoisyLinear(256, atoms)
+        self.A = NoisyLinear(256, n_actions * atoms)
 
         self.register_buffer("supports", T.arange(Vmin, Vmax + self.DELTA_Z, self.DELTA_Z))
         self.softmax = nn.Softmax(dim=1)
@@ -83,53 +82,59 @@ class DuelingDeepQNetwork(nn.Module):
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
         self.device = device
+        self.use_noise = True
         print("Device: " + str(self.device),flush=True)
         self.to(self.device)
-
-    def reset_mlp(self):
-        self.fc1V = NoisyFactorizedLinear(64 * 7 * 7, 512)
-        self.fc1A = NoisyFactorizedLinear(64 * 7 * 7, 512)
-        self.V = NoisyFactorizedLinear(512, self.atoms)
-        self.A = NoisyFactorizedLinear(512, self.n_actions * self.atoms)
 
     def conv(self, x):
 
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
-        x = F.relu(self.conv3(x))
 
         return x
 
-    def fc_val(self, x, use_noise=True):
+    def reset_noise(self):
+        self.fc1V.reset_noise()
+        self.fc1A.reset_noise()
+        self.V.reset_noise()
+        self.A.reset_noise()
+
+    def set_eval(self):
+        self.fc1V.training = False
+        self.fc1A.training = False
+        self.V.training = False
+        self.A.training = False
+
+    def fc_val(self, x):
         x = F.relu(self.fc1V(x))
         x = self.V(x)
 
         return x
 
-    def fc_adv(self, x, use_noise=True):
-        x = F.relu(self.fc1A(x, use_noise))
-        x = self.A(x, use_noise)
+    def fc_adv(self, x):
+        x = F.relu(self.fc1A(x))
+        x = self.A(x)
 
         return x
 
-    def forward(self, x, use_noise=True):
+    def forward(self, x):
         batch_size = x.size()[0]
         fx = x.float() / 256
         conv_out = self.conv(fx).view(batch_size, -1)
-        val_out = self.fc_val(conv_out, use_noise).view(batch_size, 1, self.atoms)
-        adv_out = self.fc_adv(conv_out, use_noise).view(batch_size, -1, self.atoms)
+        val_out = self.fc_val(conv_out).view(batch_size, 1, self.atoms)
+        adv_out = self.fc_adv(conv_out).view(batch_size, -1, self.atoms)
         adv_mean = adv_out.mean(dim=1, keepdim=True)
         return val_out + (adv_out - adv_mean)
 
-    def both(self, x, use_noise=True):
-        cat_out = self(x, use_noise)
+    def both(self, x):
+        cat_out = self(x)
         probs = self.apply_softmax(cat_out)
         weights = probs * self.supports
         res = weights.sum(dim=2)
         return cat_out, res
 
-    def qvals(self, x, use_noise=True):
-        return self.both(x, use_noise)[1]
+    def qvals(self, x):
+        return self.both(x)[1]
 
     def apply_softmax(self, t):
         return self.softmax(t.view(-1, self.atoms)).view(t.size())
@@ -143,22 +148,11 @@ class DuelingDeepQNetwork(nn.Module):
         self.load_state_dict(T.load(self.checkpoint_file))
 
 
-class EpsilonGreedy():
-    def __init__(self):
-        self.eps = 1.0
-        self.steps = 5000
-        self.eps_final = 0.1
-
-    def update_eps(self):
-        self.eps = max(self.eps - (self.eps - self.eps_final) / self.steps, self.eps_final)
-
-
 class Agent():
     def __init__(self, n_actions, input_dims, device,
                  max_mem_size=100000, total_frames=100000, lr=0.0001,
                  game=None, run=None, name=None):
 
-        self.epsilon = EpsilonGreedy()
         self.lr = lr
         self.n_actions = n_actions
         self.input_dims = input_dims
@@ -180,7 +174,7 @@ class Agent():
         self.n = 20
         self.gamma = 0.99
         self.batch_size = 32
-        self.replace_target_cnt = 1
+        self.replace_target_cnt = 2000
         self.replay_ratio = 1
         self.network = "normal"
 
@@ -197,14 +191,12 @@ class Agent():
         if self.gen_data:
             self.batch_size = 1
 
-
         #c51
         self.Vmax = 10
         self.Vmin = -10
         self.N_ATOMS = 51
 
-        self.memory = PrioritizedReplayBuffer(input_dims, n_actions, max_mem_size, eps=1e-5, alpha=0.5, beta=0.4,
-                                              total_frames=total_frames)
+        self.memory = ReplayMemory(max_mem_size, self.n, self.gamma, device)
 
         self.net = DuelingDeepQNetwork(self.lr, self.n_actions,
                                           input_dims=self.input_dims, name='DER_eval',
@@ -267,14 +259,17 @@ class Agent():
 
         self.replay_ratio_cnt = 0
 
+        self.priority_weight_increase = (1 - 0.4) / (total_frames - self.min_sampling_size)
+
     def get_grad_steps(self):
         return self.grad_steps
 
     def set_eval_mode(self):
-        self.epsilon.eps_final = 0.05
-        self.epsilon.eps = 0.05
+        self.net.set_eval()
+        self.tgt_net.set_eval()
 
     def choose_action(self, observation):
+        self.net.reset_noise()
         state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
         with T.no_grad():
             advantage = self.net.qvals(state)
@@ -282,30 +277,13 @@ class Agent():
         return x
 
     def store_transition(self, state, action, reward, state_, done):
-        self.n_step(state, action, reward, state_, done)
+        self.memory.append(torch.from_numpy(state), action, reward, done)
         self.env_steps += 1
         self.total_actions[action] += 1
-
-    def n_step(self, state, action, reward, state_, done):
-        self.nstep_states.append(state)
-        self.nstep_rewards.append(reward)
-        self.nstep_actions.append(action)
-
-        if len(self.nstep_states) == self.n:
-            fin_reward = 0
-            for i in range(self.n):
-                fin_reward += self.nstep_rewards[i] * (self.gamma ** i)
-            self.memory.add(self.nstep_states[0], self.nstep_actions[0], fin_reward, state_, done)
-
-        if done:
-            self.nstep_states = deque([], self.n)
-            self.nstep_rewards = deque([], self.n)
-            self.nstep_actions = deque([], self.n)
 
 
     def replace_target_network(self):
         self.tgt_net.load_state_dict(self.net.state_dict())
-
 
     def save_models(self):
         self.net.save_checkpoint()
@@ -326,24 +304,27 @@ class Agent():
 
     def learn_call(self):
 
-        if self.memory.count < self.min_sampling_size:
+        if self.env_steps < self.min_sampling_size:
             return
+
+        self.memory.priority_weight = min(self.memory.priority_weight + self.priority_weight_increase, 1)
 
         self.net.optimizer.zero_grad()
 
         if self.grad_steps % self.replace_target_cnt == 0:
             self.replace_target_network()
 
-        batch, weights, tree_idxs = self.memory.sample(self.batch_size)
-
-        states, actions, rewards, new_states, dones = batch
+        idxs, states, actions, rewards, next_states, dones, weights = self.memory.sample(self.batch_size)
 
         states = T.tensor(states).to(self.net.device)
         rewards = T.tensor(rewards).to(self.net.device)
-        dones = T.tensor(dones).to(self.net.device)
+        dones = T.tensor(dones).to(self.net.device).bool().squeeze()
         actions = T.tensor(actions).to(self.net.device)
-        states_ = T.tensor(new_states).to(self.net.device)
+        states_ = T.tensor(next_states).to(self.net.device)
 
+        #maybe need to check data is in correct format?
+
+        self.tgt_net.reset_noise()
         distr_v, qvals_v = self.net.both(states)
         next_distr_v, next_qvals_v = self.tgt_net.both(states_)
         action_distr_v, action_qvals_v = self.net.both(states_)
@@ -373,9 +354,7 @@ class Agent():
 
         self.grad_steps += 1
 
-        self.epsilon.update_eps()
-
-        self.memory.update_priorities(tree_idxs, loss_v.cpu().detach().numpy())
+        self.memory.update_priorities(idxs, loss_v.cpu().detach().numpy())
 
 def distr_projection(next_distr, rewards, dones, Vmin, Vmax, n_atoms, gamma):
     """
