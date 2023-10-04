@@ -319,7 +319,7 @@ class Agent():
         self.game = game
 
         # IMPORTANT params, check these
-        self.n = 10
+        self.n = 3#changed
         self.gamma = 0.99
         self.batch_size = 32
         self.duelling = False
@@ -329,10 +329,10 @@ class Agent():
         self.network = "normal"
 
         #data collection
-        self.collecting_churn_data = False
-        self.action_gap_data = False
-        self.reward_proportions = False
-        self.gen_data = True
+        self.collecting_churn_data = True
+        self.action_gap_data = True
+        self.reward_proportions = True
+        self.gen_data = False
         self.identify_data = False
 
         self.sep_q_state = False

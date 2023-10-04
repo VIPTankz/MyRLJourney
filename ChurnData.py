@@ -72,12 +72,12 @@ if __name__ == "__main__":
     early_churn_data_total = []
     late_churn_data_total = []
 
-    name = "DDQN_n1_discount904"
-    runs = 1
+    name = "DDQN_n20"
+    runs = 5
 
     for game in games:
         for run in range(runs):
-            file_ = ["unreliable\\churn_results\\" + name + "\\" + name + "_" + game]
+            file_ = ["churn_results\\" + name + "\\" + name + "_" + game]
 
             files = []
             for i in file_:

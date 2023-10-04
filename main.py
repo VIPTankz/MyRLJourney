@@ -27,12 +27,21 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked import Agent
 
-    agent_name = "DDQN"
+    agent_name = "DDQN_n3"
 
-    # 6 sets - Iridis
-    gameset = [["Alien","Amidar","Assault","Asterix"], ["BankHeist","BattleZone","Boxing","Breakout"],
-               ["ChopperCommand","CrazyClimber","DemonAttack","Freeway"], ["Frostbite","Gopher","Hero","Jamesbond"],
-               ["Kangaroo","Krull","KungFuMaster","MsPacman", "Pong"], ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
+    # 12 sets - Iridis
+    gameset = [["Alien","Amidar","Assault"],
+               ["Asterix","BankHeist"],
+               ["BattleZone","Boxing"],
+               ["Breakout","ChopperCommand"],
+               ["CrazyClimber","DemonAttack"],
+               ["Freeway","Frostbite"],
+               ["Gopher","Hero"],
+               ["Jamesbond","Kangaroo"],
+               ["Krull","KungFuMaster"],
+               ["MsPacman", "Pong"],
+               ["PrivateEye", "Qbert"],
+               ["RoadRunner", "Seaquest", "UpNDown"]]
 
     # 3 Sets - RTX 4090
     gameset = [["Alien","Amidar","Assault","Asterix", "BankHeist","BattleZone","Boxing","Breakout"],
@@ -45,6 +54,8 @@ if __name__ == '__main__':
                 "ChopperCommand","CrazyClimber","DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond",
                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
+    gameset = [["MsPacman", "Pong"]]
+    #CHANGE THIS AND RUNS
 
     gameset_idx = int(sys.argv[1])
 
@@ -62,7 +73,7 @@ if __name__ == '__main__':
     except:
         run_spec = False
 
-    for runs in range(5):
+    for runs in range(1):
         if run_spec:
             runs += run
 
