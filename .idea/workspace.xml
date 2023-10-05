@@ -5,10 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/farm_atari_cpu0.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/farm_atari_cpu1.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/farm_atari_cpu2.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/farm_atari_cpu3.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DER.py" beforeDir="false" afterPath="$PROJECT_DIR$/DER.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Evaluation.py" beforeDir="false" afterPath="$PROJECT_DIR$/Evaluation.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/runCPU.slurm" beforeDir="false" afterPath="$PROJECT_DIR$/runCPU0.slurm" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -29,6 +29,11 @@ if __name__ == '__main__':
 
     agent_name = "DER"
 
+    # 12 sets - Iridis cpu
+    gameset = [["Alien"],["Amidar"],["Assault"],["Asterix"],["BankHeist"],["BattleZone"],["Boxing"],["Breakout"],
+                ["ChopperCommand"],["CrazyClimber"],["DemonAttack"],["Freeway"],["Frostbite"],["Gopher"],["Hero"],["Jamesbond"],
+               ["Kangaroo"],["Krull"],["KungFuMaster"],["MsPacman"], ["Pong"],["PrivateEye"], ["Qbert"], ["RoadRunner"], ["Seaquest"], ["UpNDown"]]
+    """
     # 12 sets - Iridis alpha
     gameset = [["Alien","Amidar","Assault"],
                ["Asterix","BankHeist"],
@@ -43,7 +48,7 @@ if __name__ == '__main__':
                ["PrivateEye", "Qbert"],
                ["RoadRunner", "Seaquest", "UpNDown"]]
 
-    """"# 12 sets - Iridis gpu
+    # 12 sets - Iridis gpu
     gameset = [["Alien","Amidar","Assault","Asterix","BankHeist"],
                ["BattleZone","Boxing", "Breakout","ChopperCommand"],
                ["CrazyClimber","DemonAttack", "Freeway","Frostbite"],
