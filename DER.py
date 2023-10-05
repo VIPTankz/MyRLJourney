@@ -286,7 +286,6 @@ class Agent():
         self.env_steps += 1
         self.total_actions[action] += 1
 
-
     def replace_target_network(self):
         self.tgt_net.load_state_dict(self.net.state_dict())
 

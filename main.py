@@ -43,7 +43,7 @@ if __name__ == '__main__':
                ["PrivateEye", "Qbert"],
                ["RoadRunner", "Seaquest", "UpNDown"]]
 
-    # 12 sets - Iridis gpu
+    """"# 12 sets - Iridis gpu
     gameset = [["Alien","Amidar","Assault","Asterix","BankHeist"],
                ["BattleZone","Boxing", "Breakout","ChopperCommand"],
                ["CrazyClimber","DemonAttack", "Freeway","Frostbite"],
@@ -63,7 +63,7 @@ if __name__ == '__main__':
                 "ChopperCommand","CrazyClimber","DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond",
                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
-    gameset = [["Amidar"]]
+    gameset = [["Amidar"]]"""
 
     gameset_idx = int(sys.argv[1])
 
@@ -72,6 +72,7 @@ if __name__ == '__main__':
 
     gpu = sys.argv[2]
     device = T.device('cuda:' + gpu if T.cuda.is_available() else 'cpu')
+    device = 'cpu'
     print("Device: " + str(device))
 
     try:
