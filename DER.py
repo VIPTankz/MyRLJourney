@@ -19,7 +19,7 @@ import mgzip
 import math
 
 class NoisyLinear(nn.Module):
-  def __init__(self, in_features, out_features, std_init=0.5):
+  def __init__(self, in_features, out_features, std_init=0.1):
     super(NoisyLinear, self).__init__()
     self.training = True
     self.in_features = in_features
@@ -73,8 +73,8 @@ class DuelingDeepQNetwork(nn.Module):
 
         self.fc1V = NoisyLinear(64 * 3 * 3, 256)
         self.fc1A = NoisyLinear(64 * 3 * 3, 256)
-        self.V = NoisyLinear(256, atoms)
-        self.A = NoisyLinear(256, n_actions * atoms)
+        self.fcV2 = NoisyLinear(256, atoms)
+        self.fcA2 = NoisyLinear(256, n_actions * atoms)
 
         self.register_buffer("supports", T.arange(Vmin, Vmax + self.DELTA_Z, self.DELTA_Z))
         self.softmax = nn.Softmax(dim=1)
@@ -92,28 +92,26 @@ class DuelingDeepQNetwork(nn.Module):
         x = F.relu(self.conv2(x))
 
         return x
-
     def reset_noise(self):
-        self.fc1V.reset_noise()
-        self.fc1A.reset_noise()
-        self.V.reset_noise()
-        self.A.reset_noise()
+        for name, module in self.named_children():
+            if 'fc' in name:
+                module.reset_noise()
 
     def set_eval(self):
         self.fc1V.training = False
         self.fc1A.training = False
-        self.V.training = False
-        self.A.training = False
+        self.fcV2.training = False
+        self.fcA2.training = False
 
     def fc_val(self, x):
         x = F.relu(self.fc1V(x))
-        x = self.V(x)
+        x = self.fcV2(x)
 
         return x
 
     def fc_adv(self, x):
         x = F.relu(self.fc1A(x))
-        x = self.A(x)
+        x = self.fcA2(x)
 
         return x
 
@@ -157,7 +155,6 @@ class Agent():
         self.n_actions = n_actions
         self.input_dims = input_dims
 
-
         self.action_space = [i for i in range(self.n_actions)]
         self.learn_step_counter = 0
         self.min_sampling_size = 1600
@@ -179,7 +176,7 @@ class Agent():
         self.network = "normal"
 
         #data collection
-        self.collecting_churn_data = True
+        self.collecting_churn_data = False
         self.action_gap_data = False
         self.reward_proportions = False
         self.gen_data = False
@@ -206,14 +203,14 @@ class Agent():
                                           input_dims=self.input_dims,name='DER_next',
                                           chkpt_dir=self.chkpt_dir,atoms=self.N_ATOMS,Vmax=self.Vmax,Vmin=self.Vmin, device=device)
 
+        for param in self.tgt_net.parameters():
+            param.requires_grad = False
 
         #n-step
         self.n = 20
         self.nstep_states = deque([], self.n)
         self.nstep_rewards = deque([], self.n)
         self.nstep_actions = deque([], self.n)
-
-
 
         if self.gen_data:
             self.net.optimizer = optim.RMSprop(self.net.parameters(), lr=lr)
@@ -223,6 +220,8 @@ class Agent():
         self.grad_steps = 0
         self.reset_churn = False
         self.second_save = False
+
+        self.epsilon = 0.001 #used for eval only
 
         self.start_churn = self.min_sampling_size
         self.churn_sample = 256
@@ -258,6 +257,7 @@ class Agent():
         self.action_gaps = []
 
         self.replay_ratio_cnt = 0
+        self.eval_mode = False
 
         self.priority_weight_increase = (1 - 0.4) / (total_frames - self.min_sampling_size)
 
@@ -267,13 +267,18 @@ class Agent():
     def set_eval_mode(self):
         self.net.set_eval()
         self.tgt_net.set_eval()
+        self.eval_mode = True
 
     def choose_action(self, observation):
-        self.net.reset_noise()
-        state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
-        with T.no_grad():
-            advantage = self.net.qvals(state)
-            x = T.argmax(advantage).item()
+        if np.random.random() > self.epsilon or not self.eval_mode:
+            with T.no_grad():
+                self.net.reset_noise()
+                state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
+
+                advantage = self.net.qvals(state)
+                x = T.argmax(advantage).item()
+        else:
+            x = np.random.choice(self.action_space)
         return x
 
     def store_transition(self, state, action, reward, state_, done):
@@ -316,31 +321,37 @@ class Agent():
 
         idxs, states, actions, rewards, next_states, dones, weights = self.memory.sample(self.batch_size)
 
-        states = T.tensor(states).to(self.net.device)
-        rewards = T.tensor(rewards).to(self.net.device)
-        dones = T.tensor(dones).to(self.net.device).bool().squeeze()
-        actions = T.tensor(actions).to(self.net.device)
-        states_ = T.tensor(next_states).to(self.net.device)
+        states = states.clone().detach().to(self.net.device)
+        rewards = rewards.clone().detach().to(self.net.device)
+        dones = dones.clone().detach().to(self.net.device).bool().squeeze()
+        actions = actions.clone().detach().to(self.net.device)
+        states_ = next_states.clone().detach().to(self.net.device)
 
-        #maybe need to check data is in correct format?
+        #use this code to check your states are correct
+        """
+        plt.imshow(states[0][0].unsqueeze(dim=0).cpu().permute(1, 2, 0))
+        plt.show()
+        """
 
-        self.tgt_net.reset_noise()
         distr_v, qvals_v = self.net.both(states)
-        next_distr_v, next_qvals_v = self.tgt_net.both(states_)
-        action_distr_v, action_qvals_v = self.net.both(states_)
-
-        next_actions_v = action_qvals_v.max(1)[1]
-
-        next_best_distr_v = next_distr_v[range(self.batch_size), next_actions_v.data]
-        next_best_distr_v = self.tgt_net.apply_softmax(next_best_distr_v)
-        next_best_distr = next_best_distr_v.data.cpu()
-
-        proj_distr = distr_projection(next_best_distr, rewards.cpu(), dones.cpu(), self.Vmin, self.Vmax, self.N_ATOMS,
-                                      self.gamma)
-
         state_action_values = distr_v[range(self.batch_size), actions.data]
         state_log_sm_v = F.log_softmax(state_action_values, dim=1)
-        proj_distr_v = proj_distr.to(self.net.device)
+
+        with torch.no_grad():
+            self.tgt_net.reset_noise()
+            next_distr_v, next_qvals_v = self.tgt_net.both(states_)
+            action_distr_v, action_qvals_v = self.net.both(states_)
+
+            next_actions_v = action_qvals_v.max(1)[1]
+
+            next_best_distr_v = next_distr_v[range(self.batch_size), next_actions_v.data]
+            next_best_distr_v = self.tgt_net.apply_softmax(next_best_distr_v)
+            next_best_distr = next_best_distr_v.data.cpu()
+
+            proj_distr = distr_projection(next_best_distr, rewards.cpu(), dones.cpu(), self.Vmin, self.Vmax, self.N_ATOMS,
+                                          self.gamma)
+
+            proj_distr_v = proj_distr.to(self.net.device)
 
         loss_v = -state_log_sm_v * proj_distr_v
         weights = T.squeeze(weights)

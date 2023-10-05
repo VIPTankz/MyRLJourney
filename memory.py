@@ -2,7 +2,7 @@
 from __future__ import division
 import numpy as np
 import torch
-
+from matplotlib import pyplot as plt
 
 Transition_dtype = np.dtype([('timestep', np.int32), ('state', np.uint8, (84, 84)), ('action', np.int32), ('reward', np.float32), ('nonterminal', np.bool_)])
 blank_trans = (0, np.zeros((84, 84), dtype=np.uint8), 0, 0.0, False)
@@ -134,8 +134,8 @@ class ReplayMemory():
     transitions = self._get_transitions(idxs)
     # Create un-discretised states and nth next states
     all_states = transitions['state']
-    states = torch.tensor(all_states[:, :self.history], device=self.device, dtype=torch.float32).div_(255)
-    next_states = torch.tensor(all_states[:, self.n:self.n + self.history], device=self.device, dtype=torch.float32).div_(255)
+    states = torch.tensor(all_states[:, :self.history], device=self.device, dtype=torch.uint8)
+    next_states = torch.tensor(all_states[:, self.n:self.n + self.history], device=self.device, dtype=torch.uint8)
     # Discrete actions to be used as index
     actions = torch.tensor(np.copy(transitions['action'][:, self.history - 1]), dtype=torch.int64, device=self.device)
     # Calculate truncated n-step discounted returns R^n = Σ_k=0->n-1 (γ^k)R_t+k+1 (note that invalid nth next states have reward 0)
@@ -173,7 +173,7 @@ class ReplayMemory():
     for t in reversed(range(self.history - 1)):
       blank_mask[t] = np.logical_or(blank_mask[t + 1], transitions_firsts[t + 1]) # If future frame has timestep 0
     transitions[blank_mask] = blank_trans
-    state = torch.tensor(transitions['state'], dtype=torch.float32, device=self.device).div_(255)  # Agent will turn into batch
+    state = torch.tensor(transitions['state'], dtype=torch.float32, device=self.device)  # Agent will turn into batch
     self.current_idx += 1
     return state
 

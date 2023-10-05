@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     agent_name = "DER"
 
-    # 12 sets - Iridis
+    # 12 sets - Iridis alpha
     gameset = [["Alien","Amidar","Assault"],
                ["Asterix","BankHeist"],
                ["BattleZone","Boxing"],
@@ -43,6 +43,15 @@ if __name__ == '__main__':
                ["PrivateEye", "Qbert"],
                ["RoadRunner", "Seaquest", "UpNDown"]]
 
+    # 12 sets - Iridis gpu
+    gameset = [["Alien","Amidar","Assault","Asterix","BankHeist"],
+               ["BattleZone","Boxing", "Breakout","ChopperCommand"],
+               ["CrazyClimber","DemonAttack", "Freeway","Frostbite"],
+               ["Gopher","Hero", "Jamesbond","Kangaroo"],
+               ["Krull","KungFuMaster", "MsPacman", "Pong"],
+               ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
+
+
     # 3 Sets - RTX 4090
     gameset = [["Alien","Amidar","Assault","Asterix", "BankHeist","BattleZone","Boxing","Breakout"],
                ["ChopperCommand","CrazyClimber","DemonAttack","Freeway", "Frostbite","Gopher","Hero","Jamesbond", "Kangaroo"],
@@ -53,6 +62,8 @@ if __name__ == '__main__':
     gameset = [["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout",
                 "ChopperCommand","CrazyClimber","DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond",
                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
+
+    gameset = [["Amidar"]]
 
     gameset_idx = int(sys.argv[1])
 
@@ -70,7 +81,7 @@ if __name__ == '__main__':
     except:
         run_spec = False
 
-    for runs in range(1):
+    for runs in range(5):
         if run_spec:
             runs += run
 
