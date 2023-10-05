@@ -69,7 +69,7 @@ class DuelingDeepQNetwork(nn.Module):
         self.n_actions = n_actions
 
         self.conv1 = nn.Conv2d(4, 32, 5, stride=5, padding=0)
-        self.conv2 = nn.Conv2d(32, 64, 5, stride=5)
+        self.conv2 = nn.Conv2d(32, 64, 5, stride=5, padding=0)
 
         self.fc1V = NoisyLinear(64 * 3 * 3, 256)
         self.fc1A = NoisyLinear(64 * 3 * 3, 256)
@@ -79,7 +79,7 @@ class DuelingDeepQNetwork(nn.Module):
         self.register_buffer("supports", T.arange(Vmin, Vmax + self.DELTA_Z, self.DELTA_Z))
         self.softmax = nn.Softmax(dim=1)
 
-        self.optimizer = optim.Adam(self.parameters(), lr=lr)
+        self.optimizer = optim.Adam(self.parameters(), lr=lr, eps=0.00015)
         self.loss = nn.MSELoss()
         self.device = device
         self.use_noise = True

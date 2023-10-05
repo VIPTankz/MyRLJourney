@@ -68,7 +68,8 @@ if __name__ == '__main__':
                 "ChopperCommand","CrazyClimber","DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond",
                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
-    gameset = [["Amidar"]]"""
+    """
+    #gameset = [["Amidar"]]
 
     gameset_idx = int(sys.argv[1])
 
