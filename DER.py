@@ -344,7 +344,7 @@ class Agent():
             next_best_distr = next_best_distr_v.data.cpu()
 
             proj_distr = distr_projection(next_best_distr, rewards.cpu(), dones.cpu(), self.Vmin, self.Vmax, self.N_ATOMS,
-                                          self.gamma ** self.N)
+                                          self.gamma ** self.n)
 
             proj_distr_v = proj_distr.to(self.net.device)
 
