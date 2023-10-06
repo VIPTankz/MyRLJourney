@@ -69,7 +69,7 @@ if __name__ == '__main__':
                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
     """
-    #gameset = [["Amidar"]]
+    gameset = [["Amidar"]]
 
     gameset_idx = int(sys.argv[1])
 
@@ -78,7 +78,6 @@ if __name__ == '__main__':
 
     gpu = sys.argv[2]
     device = T.device('cuda:' + gpu if T.cuda.is_available() else 'cpu')
-    device = 'cpu'
     print("Device: " + str(device))
 
     try:

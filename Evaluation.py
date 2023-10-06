@@ -1,6 +1,6 @@
 import numpy as np
 np.set_printoptions(suppress=True)
-runs = 5
+runs = 2
 
 
 human_scores = np.array([7127.80,1719.53,742.00,8503.33,753.13,\
@@ -29,14 +29,12 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
-games = ["Alien"]
-
 print_ind = True
 
 print(len(games))
 
 hns = []
-labels = ["DDQN"]
+labels = ["DER"]
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
 count = 0

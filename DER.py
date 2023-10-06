@@ -21,7 +21,6 @@ import math
 class NoisyLinear(nn.Module):
   def __init__(self, in_features, out_features, std_init=0.1):
     super(NoisyLinear, self).__init__()
-    self.training = True
     self.in_features = in_features
     self.out_features = out_features
     self.std_init = std_init
@@ -96,12 +95,6 @@ class DuelingDeepQNetwork(nn.Module):
         for name, module in self.named_children():
             if 'fc' in name:
                 module.reset_noise()
-
-    def set_eval(self):
-        self.fc1V.training = False
-        self.fc1A.training = False
-        self.fcV2.training = False
-        self.fcA2.training = False
 
     def fc_val(self, x):
         x = F.relu(self.fc1V(x))
@@ -203,6 +196,9 @@ class Agent():
                                           input_dims=self.input_dims,name='DER_next',
                                           chkpt_dir=self.chkpt_dir,atoms=self.N_ATOMS,Vmax=self.Vmax,Vmin=self.Vmin, device=device)
 
+        self.net.train()
+        self.tgt_net.train()
+
         for param in self.tgt_net.parameters():
             param.requires_grad = False
 
@@ -265,12 +261,12 @@ class Agent():
         return self.grad_steps
 
     def set_eval_mode(self):
-        self.net.set_eval()
-        self.tgt_net.set_eval()
+        self.net.eval()
+        self.tgt_net.eval()
         self.eval_mode = True
 
     def choose_action(self, observation):
-        if np.random.random() > self.epsilon or not self.eval_mode:
+        if (np.random.random() > self.epsilon or not self.eval_mode) and self.env_steps > 500:
             with T.no_grad():
                 self.net.reset_noise()
                 state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
