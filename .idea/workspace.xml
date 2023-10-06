@@ -5,30 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a3f1e33-df48-4bf0-a3d8-8bd397624908" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/results/DER/DERAmidarEvaluation (5).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DER/DERAmidarEvaluation (6).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DER/DERAmidarEvaluation (7).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DER/DERAmidarEvaluation (8).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DER/DERAmidarEvaluation (9).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DER/DERAmidarExperiment (5).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DER/DERAmidarExperiment (6).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DER/DERAmidarExperiment (7).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DER/DERAmidarExperiment (8).npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/results/DER/DERAmidarExperiment (9).npy" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DER_Agent.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Evaluation.py" beforeDir="false" afterPath="$PROJECT_DIR$/Evaluation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/maybe_new_der.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/DER/DERAmidarEvaluation (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DER/DERAmidarEvaluation (0).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/DER/DERAmidarEvaluation (1).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DER/DERAmidarEvaluation (1).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/DER/DERAmidarEvaluation (2).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DER/DERAmidarEvaluation (2).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/DER/DERAmidarEvaluation (3).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DER/DERAmidarEvaluation (3).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/DER/DERAmidarEvaluation (4).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DER/DERAmidarEvaluation (4).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/DER/DERAmidarExperiment (0).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DER/DERAmidarExperiment (0).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/DER/DERAmidarExperiment (1).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DER/DERAmidarExperiment (1).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/DER/DERAmidarExperiment (2).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DER/DERAmidarExperiment (2).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/DER/DERAmidarExperiment (3).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DER/DERAmidarExperiment (3).npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/DER/DERAmidarExperiment (4).npy" beforeDir="false" afterPath="$PROJECT_DIR$/results/DER/DERAmidarExperiment (4).npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DrQ_Agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/DrQ_Agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/action_swaps.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gen_graph.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/policy_churn_vs_n.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/policy_churn_vs_reward_prop.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target_action_architectures.png" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

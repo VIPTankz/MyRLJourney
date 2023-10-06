@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     from DER import Agent
 
-    agent_name = "DER"
+    agent_name = "DrQAgent"
 
     # 12 sets - Iridis cpu
     gameset = [["Alien"],["Amidar"],["Assault"],["Asterix"],["BankHeist"],["BattleZone"],["Boxing"],["Breakout"],
