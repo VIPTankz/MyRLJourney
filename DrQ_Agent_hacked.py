@@ -466,24 +466,6 @@ class Agent():
             q_pred = self.net.forward(states_aug)  # states_aug
             q_targets = self.tgt_net.forward(states_aug_)  # states_aug_
             q_actions = self.net.forward(states_aug_policy_)  # states_aug_policy_
-        elif self.sep_q_state:
-            qr_pred, qs_pred = self.net.forward(states, sep=True)  # states_aug
-            q_targets = self.tgt_net.forward(states_)  # states_aug_
-            q_actions = self.net.forward(states_)
-
-            qr_pred = qr_pred[indices, actions]
-            qs_pred = qs_pred[indices, actions]
-
-            with torch.no_grad():
-                max_actions = T.argmax(q_actions, dim=1)
-                q_targets[dones] = 0.0
-
-                q_next_state_targets = (self.gamma ** self.n) * q_targets[indices, max_actions]
-
-            reward_loss = (qr_pred - rewards) ** 2
-            next_state_loss = (qs_pred - q_next_state_targets) ** 2
-            loss = reward_loss + next_state_loss
-            loss = loss.mean().to(self.net.device)
 
         else:
             q_pred = self.net.forward(states)  # states_aug
@@ -493,20 +475,19 @@ class Agent():
         if self.identify_data or self.action_gap_data:
             q_pred_og = q_pred.detach().cpu()
 
-        if not self.sep_q_state:
-            q_pred = q_pred[indices, actions]
+        q_pred = q_pred[indices, actions]
 
-            with torch.no_grad():
-                max_actions = T.argmax(q_actions, dim=1)
-                q_targets[dones] = 0.0
+        with torch.no_grad():
+            max_actions = T.argmax(q_actions, dim=1)
+            q_targets[dones] = 0.0
 
-                q_target = rewards + (self.gamma ** self.n) * q_targets[indices, max_actions]
+            q_target = rewards + (self.gamma ** self.n) * q_targets[indices, max_actions]
 
-                if self.reward_proportions:
-                    self.reward_target_avg.append(abs(float(rewards.mean().cpu())))
-                    self.bootstrap_target_avg.append(abs(float(((self.gamma ** self.n) * q_targets[indices, max_actions]).mean().cpu())))
+            if self.reward_proportions:
+                self.reward_target_avg.append(abs(float(rewards.mean().cpu())))
+                self.bootstrap_target_avg.append(abs(float(((self.gamma ** self.n) * q_targets[indices, max_actions]).mean().cpu())))
 
-            loss = self.net.loss(q_target, q_pred).to(self.net.device)
+        loss = self.net.loss(q_target, q_pred).to(self.net.device)
 
         loss.backward()
         T.nn.utils.clip_grad_norm_(self.net.parameters(), 10)

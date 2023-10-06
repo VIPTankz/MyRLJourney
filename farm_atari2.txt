@@ -1,2 +1,0 @@
-python main.py "4" "0"
-python main.py "5" "1"

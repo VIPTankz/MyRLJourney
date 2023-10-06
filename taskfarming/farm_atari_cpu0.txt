@@ -1,0 +1,7 @@
+python ../main.py "0" "0"
+python ../main.py "1" "0"
+python ../main.py "2" "0"
+python ../main.py "3" "1"
+python ../main.py "4" "1"
+python ../main.py "5" "1"
+python ../main.py "6" "2"

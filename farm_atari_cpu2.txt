@@ -1,6 +1,0 @@
-python main.py "14" "0"
-python main.py "15" "0"
-python main.py "16" "0"
-python main.py "17" "1"
-python main.py "18" "1"
-python main.py "19" "1"
