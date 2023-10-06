@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import math
 import torch.nn.functional as F
-
+import torch.optim as optim
 # Factorised NoisyLinear layer with bias
 class NoisyLinear(nn.Module):
   def __init__(self, in_features, out_features, std_init=0.1):
@@ -44,7 +44,7 @@ class NoisyLinear(nn.Module):
 
 
 class C51_small(nn.Module):
-  def __init__(self, action_space, atoms, device):
+  def __init__(self, action_space, atoms, device, lr):
     super(C51_small, self).__init__()
     self.atoms = atoms
     self.action_space = action_space
@@ -56,9 +56,11 @@ class C51_small(nn.Module):
     self.fc_h_a = NoisyLinear(64 * 3 * 3, 256)
     self.fc_z_v = NoisyLinear(256, self.atoms)
     self.fc_z_a = NoisyLinear(256, action_space * self.atoms)
+    self.optimizer = optim.Adam(self.parameters(), lr=lr, eps=0.00015)
     self.to(self.device)
 
   def forward(self, x, log=False):
+    x = x.float() / 256
     x = self.convs(x)
     x = x.view(-1, 64 * 3 * 3)
     v = self.fc_z_v(F.relu(self.fc_h_v(x)))  # Value stream

@@ -266,7 +266,7 @@ class Agent():
         self.eval_mode = True
 
     def choose_action(self, observation):
-        if (np.random.random() > self.epsilon or not self.eval_mode) and self.env_steps > 500:
+        if np.random.random() > self.epsilon or not self.eval_mode:
             with T.no_grad():
                 self.net.reset_noise()
                 state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
@@ -318,7 +318,7 @@ class Agent():
 
         states = states.clone().detach().to(self.net.device)
         rewards = rewards.clone().detach().to(self.net.device)
-        dones = dones.clone().detach().to(self.net.device).bool().squeeze()
+        dones = dones.clone().detach().to(self.net.device).squeeze()
         actions = actions.clone().detach().to(self.net.device)
         states_ = next_states.clone().detach().to(self.net.device)
 
@@ -344,7 +344,7 @@ class Agent():
             next_best_distr = next_best_distr_v.data.cpu()
 
             proj_distr = distr_projection(next_best_distr, rewards.cpu(), dones.cpu(), self.Vmin, self.Vmax, self.N_ATOMS,
-                                          self.gamma)
+                                          self.gamma ** self.N)
 
             proj_distr_v = proj_distr.to(self.net.device)
 

@@ -10,6 +10,7 @@ import numpy as np
 from collections import deque
 from networks import C51_small
 from Identify import Identify
+
 import mgzip
 import math
 
@@ -63,8 +64,8 @@ class Agent():
 
         self.memory = ReplayMemory(max_mem_size, self.n, self.gamma, device)
 
-        self.net = C51_small(self.n_actions, self.atoms, device)
-        self.tgt_net = C51_small(self.n_actions, self.atoms, device)
+        self.net = C51_small(self.n_actions, self.atoms, device, lr=lr)
+        self.tgt_net = C51_small(self.n_actions, self.atoms, device, lr=lr)
 
         for param in self.tgt_net.parameters():
             param.requires_grad = False
@@ -135,13 +136,15 @@ class Agent():
     def choose_action(self, state):
         if np.random.random() > self.epsilon or not self.eval_mode:
             with torch.no_grad():
-                return (self.net(torch.from_numpy(state).unsqueeze(0)) * self.support).sum(2).argmax(1).item()
+
+                state = torch.from_numpy(state).unsqueeze(0).to(self.net.device)
+                return (self.net(state) * self.support).sum(2).argmax(1).item()
         else:
             x = np.random.choice(self.action_space)
         return x
 
     def store_transition(self, state, action, reward, state_, done):
-        self.memory.append(torch.from_numpy(state), action, reward, done)
+        self.memory.append(torch.from_numpy(state), action, reward, not done)
         self.env_steps += 1
         self.total_actions[action] += 1
 

@@ -104,7 +104,7 @@ class ReplayMemory():
   # Adds state and action at time t, reward and terminal at time t + 1
   def append(self, state, action, reward, terminal):
     state = state[-1].to(dtype=torch.uint8, device=torch.device('cpu'))  # Only store last frame and discretise to save memory
-    self.transitions.append((self.t, state, action, reward, terminal), self.transitions.max)  # Store new transition with maximum priority
+    self.transitions.append((self.t, state, action, reward, not terminal), self.transitions.max)  # Store new transition with maximum priority
     self.t = 0 if terminal else self.t + 1  # Start new episodes with t = 0
 
   # Returns the transitions with blank states where appropriate
@@ -152,6 +152,8 @@ class ReplayMemory():
     capacity = self.capacity if self.transitions.full else self.transitions.index
     weights = (capacity * probs) ** -self.priority_weight  # Compute importance-sampling weights w
     weights = torch.tensor(weights / weights.max(), dtype=torch.float32, device=self.device)  # Normalise by max importance-sampling weight from batch
+    nonterminals = nonterminals.bool()
+    nonterminals = ~nonterminals
     return tree_idxs, states, actions, returns, next_states, nonterminals, weights
 
   def update_priorities(self, idxs, priorities):
@@ -164,7 +166,7 @@ class ReplayMemory():
     return self
 
   # Return valid states for validation
-  def __next__(self):
+  """def __next__(self):
     if self.current_idx == self.capacity:
       raise StopIteration
     transitions = self.transitions.data[np.arange(self.current_idx - self.history + 1, self.current_idx + 1)]
@@ -177,4 +179,4 @@ class ReplayMemory():
     self.current_idx += 1
     return state
 
-  next = __next__  # Alias __next__ for Python 2 compatibility
+  next = __next__  # Alias __next__ for Python 2 compatibility"""

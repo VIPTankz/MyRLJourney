@@ -1,6 +1,6 @@
 import numpy as np
 np.set_printoptions(suppress=True)
-runs = 2
+runs = 5
 
 
 human_scores = np.array([7127.80,1719.53,742.00,8503.33,753.13,\
@@ -28,6 +28,8 @@ print(x)
 games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
+
+games = ["Amidar"]
 
 print_ind = True
 
