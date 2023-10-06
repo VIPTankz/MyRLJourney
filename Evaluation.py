@@ -1,6 +1,6 @@
 import numpy as np
 np.set_printoptions(suppress=True)
-runs = 5
+runs = 10
 
 
 human_scores = np.array([7127.80,1719.53,742.00,8503.33,753.13,\
