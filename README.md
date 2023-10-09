@@ -10,9 +10,9 @@ Algorithms and Components Implemented and Respective Median Human-Normalised Per
 
 DDQN :white_check_mark: 0.082
 
-Image Augmentations (DrQ style, replay ratio=1) :white_check_mark: 0.160
+DDQN + Image Augmentations :white_check_mark: 0.160
 
-Duelling DDQN :white_check_mark: 0.075
+DDQN + Duelling :white_check_mark: 0.075
 
 Data Efficient Rainbow :white_check_mark: Running In Progress...
 
