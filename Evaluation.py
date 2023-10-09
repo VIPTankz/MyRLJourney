@@ -1,6 +1,6 @@
 import numpy as np
 np.set_printoptions(suppress=True)
-runs = 10
+runs = 5
 
 
 human_scores = np.array([7127.80,1719.53,742.00,8503.33,753.13,\
@@ -24,19 +24,16 @@ x = np.divide(DrQ_baseline - random_scores,human_scores)
 x = np.median(x)
 print(x)
 
-#"Breakout","Pong",
 games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
-
-games = ["Amidar"]
 
 print_ind = True
 
 print(len(games))
 
 hns = []
-labels = ["DER"]
+labels = ["DDQN_targetUpdate1000"]
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
 count = 0

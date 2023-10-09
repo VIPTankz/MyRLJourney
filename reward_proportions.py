@@ -7,7 +7,7 @@ games = ["Alien", "Amidar", "Assault", "Asterix", "BankHeist", "BattleZone", "Bo
          "DemonAttack", "Freeway", "Frostbite", "Gopher", "Hero", "Jamesbond", "Kangaroo", "Krull", "KungFuMaster", \
          "MsPacman", "Pong", "PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]
 
-algorithms = ["DDQN_n20"]
+algorithms = ["DDQN_n3"]
 labels = ["n=10"]
 
 

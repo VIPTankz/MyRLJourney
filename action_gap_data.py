@@ -4,7 +4,7 @@ games = ["Alien", "Amidar", "Assault", "Asterix", "BankHeist", "BattleZone", "Bo
          "CrazyClimber", "DemonAttack", "Freeway", "Frostbite", "Gopher", "Hero", "Jamesbond", "Kangaroo", "Krull",
          "KungFuMaster", "MsPacman", "Pong", "PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]
 
-names = ["DDQN_n20"]
+names = ["DDQN_n3"]
 runs = 1
 
 data_files = [[] for i in range(len(names))]
