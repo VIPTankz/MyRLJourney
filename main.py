@@ -16,7 +16,7 @@ def make_env(game, eval):
                              frame_skip=4,
                              max_random_noops=30,
                              terminal_on_life_loss=True)
-    env = TimeLimit(env, max_episode_steps=108000)
+    env = TimeLimit(env, max_episode_steps=27000)
     env = FrameStack(env, k=4)
     env = ImageToPyTorch(env)
 
@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     from DER import Agent
 
-    agent_name = "DrQAgent"
+    agent_name = "DER"
 
     # 12 sets - Iridis cpu
     gameset = [["Alien"],["Amidar"],["Assault"],["Asterix"],["BankHeist"],["BattleZone"],["Boxing"],["Breakout"],
@@ -69,7 +69,7 @@ if __name__ == '__main__':
                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
     """
-    gameset = [["Amidar"]]
+    gameset = [["Hero"]]
 
     gameset_idx = int(sys.argv[1])
 

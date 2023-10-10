@@ -202,12 +202,6 @@ class Agent():
         for param in self.tgt_net.parameters():
             param.requires_grad = False
 
-        #n-step
-        self.n = 20
-        self.nstep_states = deque([], self.n)
-        self.nstep_rewards = deque([], self.n)
-        self.nstep_actions = deque([], self.n)
-
         if self.gen_data:
             self.net.optimizer = optim.RMSprop(self.net.parameters(), lr=lr)
             self.tgt_net.optimizer = optim.RMSprop(self.net.parameters(), lr=lr)
@@ -359,6 +353,8 @@ class Agent():
         self.net.optimizer.step()
 
         self.grad_steps += 1
+        if self.grad_steps % 10000 == 0:
+            print("Completed " + str(self.grad_steps) + " gradient steps")
 
         self.memory.update_priorities(idxs, loss_v.cpu().detach().numpy())
 
