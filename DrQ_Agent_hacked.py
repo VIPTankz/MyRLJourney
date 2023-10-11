@@ -253,19 +253,19 @@ class Agent():
         #MAKE SURE YOU CHECKED THE NAME AND DATA COLLETION
 
         # IMPORTANT params, check these
-        self.n = 10
-        self.gamma = 0.99
-        self.batch_size = 32
+        self.n = 3 #CHANGED
+        self.gamma = 0.967 #CHANGED
+        self.batch_size = 16 #CHANGED
         self.duelling = False
-        self.aug = False
+        self.aug = True
         self.replace_target_cnt = 1
         self.replay_ratio = 1
         self.network = "normal"
 
         #data collection
-        self.collecting_churn_data = True
-        self.action_gap_data = True
-        self.reward_proportions = True
+        self.collecting_churn_data = False
+        self.action_gap_data = False
+        self.reward_proportions = False
         self.gen_data = False
         self.identify_data = False
 

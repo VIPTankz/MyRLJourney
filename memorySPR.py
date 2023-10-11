@@ -161,7 +161,7 @@ class ReplayMemory():
 
       if i != 0:
         #these are next states
-        spr_states.append(torch.tensor(spr_temp_states[:, 1: 1 + self.history], device=self.device, dtype=torch.uint8))
+        spr_states.append(torch.tensor(spr_temp_states[:, 0: self.history], device=self.device, dtype=torch.uint8))
       if i != self.K:
         spr_actions.append(torch.tensor(np.copy(spr_transitions['action'][:, self.history - 1]), dtype=torch.int64, device=self.device))
         spr_nonterminals.append(torch.tensor(np.expand_dims(spr_transitions['nonterminal'][:, self.history], axis=1), dtype=torch.float32, device=self.device))

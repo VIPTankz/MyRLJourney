@@ -69,7 +69,7 @@ if __name__ == '__main__':
                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
     """
-    gameset = [["UpNDown"]]
+    gameset = [["Breakout"]]
 
     gameset_idx = int(sys.argv[1])
 
@@ -119,6 +119,7 @@ if __name__ == '__main__':
                     steps += 1
                     action = agent.choose_action(observation)
                     observation_, reward, done_, info = env.step(action)
+                    #env.render()
 
                     time_limit = 'TimeLimit.truncated' in info
                     done = info['game_over'] or time_limit

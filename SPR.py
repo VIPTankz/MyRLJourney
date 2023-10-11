@@ -30,7 +30,7 @@ class Intensity(nn.Module):
         return x * noise
 
 class NoisyLinear(nn.Module):
-  def __init__(self, in_features, out_features, std_init=0.1):
+  def __init__(self, in_features, out_features, std_init=0.5):
     super(NoisyLinear, self).__init__()
     self.in_features = in_features
     self.out_features = out_features
@@ -222,7 +222,7 @@ class Agent():
 
         self.action_space = [i for i in range(self.n_actions)]
         self.learn_step_counter = 0
-        self.min_sampling_size = 1600
+        self.min_sampling_size = 2000
 
         self.chkpt_dir = ""
 
@@ -235,7 +235,7 @@ class Agent():
         # IMPORTANT params, check these
         self.n = 10
         self.gamma = 0.99
-        self.batch_size = 32
+        self.batch_size = 2 #CHANGED
         self.replace_target_cnt = 1
         self.replay_ratio = 2
         self.network = "normal"
@@ -300,7 +300,6 @@ class Agent():
         self.eval_mode = False
 
         self.priority_weight_increase = (1 - 0.4) / (total_frames - self.min_sampling_size)
-
 
         # check the dim on this?
         self.cosine = torch.nn.CosineSimilarity(dim=2)
@@ -430,6 +429,7 @@ class Agent():
         prediction_actions = prediction_actions.clone().detach().to(self.net.device)
         prediction_terminals = prediction_terminals.clone().detach().to(self.net.device).squeeze()
 
+
         tgt_states = torch.reshape(tgt_states, (self.K * self.batch_size, 4, 84, 84))
 
         # perform augmentations on target states
@@ -442,14 +442,17 @@ class Agent():
         # Calculate online latents
         latents = self.produce_latents(states, prediction_actions)
 
+        # do OR operations on terminals
+        prediction_terminals = process_tensor(prediction_terminals)
+
         # mask out terminals
         prediction_terminals = prediction_terminals.flatten().unsqueeze(1)
         latents = latents * prediction_terminals
         tgt_latents = tgt_latents * prediction_terminals
 
         # reshape back to K,batch size,512
-        latents = torch.reshape(latents, (5, 32, 512))
-        tgt_latents = torch.reshape(tgt_latents, (5, 32, 512))
+        latents = torch.reshape(latents, (self.K, self.batch_size, 512))
+        tgt_latents = torch.reshape(tgt_latents, (self.K, self.batch_size, 512))
 
         # might need to check the dim on cosine.
         # latents and tgt_latents are 5,32,512? and we want to get sum of differences in the last dim
@@ -464,6 +467,16 @@ class Agent():
         self.grad_steps += 1
 
         self.memory.update_priorities(idxs, loss_v.cpu().detach().numpy())
+
+
+def process_tensor(tensor):
+    for col in range(tensor.shape[1]):
+        col_values = tensor[:, col]
+        zero_indices = torch.nonzero(col_values == 0)
+        if zero_indices.numel() > 0:
+            first_zero_row = zero_indices[0, 0].item()
+            tensor[first_zero_row:, col] = 0
+    return tensor
 
 def distr_projection(next_distr, rewards, dones, Vmin, Vmax, n_atoms, gamma):
     """
