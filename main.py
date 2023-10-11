@@ -25,9 +25,9 @@ def make_env(game, eval):
 
 if __name__ == '__main__':
 
-    from DER import Agent
+    from SPR import Agent
 
-    agent_name = "DER"
+    agent_name = "SPR"
 
     # 12 sets - Iridis cpu
     gameset = [["Alien"],["Amidar"],["Assault"],["Asterix"],["BankHeist"],["BattleZone"],["Boxing"],["Breakout"],
@@ -69,7 +69,7 @@ if __name__ == '__main__':
                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
     """
-    gameset = [["Hero"]]
+    gameset = [["UpNDown"]]
 
     gameset_idx = int(sys.argv[1])
 

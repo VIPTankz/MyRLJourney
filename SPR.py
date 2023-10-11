@@ -18,6 +18,17 @@ from Identify import Identify
 import mgzip
 import math
 
+
+class Intensity(nn.Module):
+    def __init__(self, scale):
+        super().__init__()
+        self.scale = scale
+
+    def forward(self, x):
+        r = T.randn((x.size(0), 1, 1, 1), device=x.device)
+        noise = 1.0 + (self.scale * r.clamp(-2.0, 2.0))
+        return x * noise
+
 class NoisyLinear(nn.Module):
   def __init__(self, in_features, out_features, std_init=0.1):
     super(NoisyLinear, self).__init__()
@@ -72,8 +83,8 @@ class C51(nn.Module):
         self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, 3)
 
-        self.fc1V = NoisyLinear(64 * 3 * 3, 256)
-        self.fc1A = NoisyLinear(64 * 3 * 3, 256)
+        self.fc1V = NoisyLinear(64 * 7 * 7, 256)
+        self.fc1A = NoisyLinear(64 * 7 * 7, 256)
         self.fcV2 = NoisyLinear(256, atoms)
         self.fcA2 = NoisyLinear(256, n_actions * atoms)
 
@@ -113,7 +124,7 @@ class C51(nn.Module):
         v_latent = F.relu(self.fc1V(x, no_noise=True))
         a_latent = F.relu(self.fc1A(x, no_noise=True))
 
-        latent = torch.cat((v_latent, a_latent), 0)
+        latent = torch.cat((v_latent, a_latent), 1)
 
         pred = self.prediction_head(latent)
 
@@ -129,7 +140,7 @@ class C51(nn.Module):
         v_latent = F.relu(self.fc1V(conv_out, no_noise=True))
         a_latent = F.relu(self.fc1A(conv_out, no_noise=True))
 
-        latent = torch.cat((v_latent, a_latent), 0)
+        latent = torch.cat((v_latent, a_latent), 1)
 
         return latent
 
@@ -172,17 +183,18 @@ class C51(nn.Module):
 
 
 class TransitionModel(nn.Module):
-    def __init__(self, n_actions):
+    def __init__(self, n_actions, device):
         super(TransitionModel, self).__init__()
         self.n_actions = n_actions
 
-        self.conv1 = nn.Conv2d(64 + n_actions, 64, 3)
+        self.conv1 = nn.Conv2d(64 + n_actions, 64, 3, padding=1)
         self.batch_norm = nn.BatchNorm2d(64)
-        self.conv2 = nn.Conv2d(64, 64, 3)
+        self.conv2 = nn.Conv2d(64, 64, 3, padding=1)
+
+        self.to(device)
 
     def forward(self, x, action):
         # takes z, (the output of the encoder or the output of this model)
-
         # create the action onehot vector
         batch_range = torch.arange(action.shape[0], device=action.device)
         action_onehot = torch.zeros(action.shape[0], self.n_actions,
@@ -241,12 +253,20 @@ class Agent():
         if self.gen_data:
             self.batch_size = 1
 
-        #c51
+        # c51
         self.Vmax = 10
         self.Vmin = -10
         self.N_ATOMS = 51
 
-        self.memory = ReplayMemory(max_mem_size, self.n, self.gamma, device)
+        # spr loss
+        self.K = 5
+        self.spr_loss_coef = 2
+
+        # augmentations
+        self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
+        self.intensity = Intensity(scale=0.05)
+
+        self.memory = ReplayMemory(max_mem_size, self.n, self.gamma, device, self.K)
 
         self.net = C51(self.lr, self.n_actions,
                                           input_dims=self.input_dims, name='DER_eval',
@@ -256,6 +276,8 @@ class Agent():
                                           input_dims=self.input_dims,name='DER_next',
                                           chkpt_dir=self.chkpt_dir,atoms=self.N_ATOMS,Vmax=self.Vmax,Vmin=self.Vmin, device=device)
 
+        self.transition_model = TransitionModel(self.n_actions, device)
+
         self.net.train()
         self.tgt_net.train()
 
@@ -264,7 +286,6 @@ class Agent():
 
         #n-step
         self.n = 10
-
 
         self.env_steps = 0
         self.grad_steps = 0
@@ -280,8 +301,6 @@ class Agent():
 
         self.priority_weight_increase = (1 - 0.4) / (total_frames - self.min_sampling_size)
 
-        self.spr_loss_coef = 2
-        self.K = 5
 
         # check the dim on this?
         self.cosine = torch.nn.CosineSimilarity(dim=2)
@@ -290,15 +309,16 @@ class Agent():
         # takes states as input
 
         # first pass through CNN
-
-        z = self.net.conv(x).view(self.batch_size, -1)
+        x = x.float() / 256
+        z = self.net.conv(x)
 
         latents = []
 
         for i in range(self.K):
 
             z = self.transition_model(z, actions[i])
-            latent = self.net.prediction(z)
+            bs = len(z)
+            latent = self.net.prediction(torch.reshape(z, (bs, -1)))
             latents.append(latent)
 
         latents = torch.cat(latents, 0)
@@ -371,6 +391,10 @@ class Agent():
         plt.show()
         """
 
+        states = (self.intensity(self.random_shift(states.float()))).to(T.uint8)
+        states_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
+        states_policy_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
+
         ############ Rainbow Loss
         distr_v, qvals_v = self.net.both(states)
         state_action_values = distr_v[range(self.batch_size), actions.data]
@@ -379,7 +403,7 @@ class Agent():
         with torch.no_grad():
             self.tgt_net.reset_noise()
             next_distr_v, next_qvals_v = self.tgt_net.both(states_)
-            action_distr_v, action_qvals_v = self.net.both(states_)
+            action_distr_v, action_qvals_v = self.net.both(states_policy_)
 
             next_actions_v = action_qvals_v.max(1)[1]
 
@@ -401,22 +425,40 @@ class Agent():
         # SPR Loss
 
         # fetch tgt states and actions
-        tgt_states, prediction_actions, prediction_nonterminals = self.memory.get_spr_sample()
+        tgt_states, prediction_actions, prediction_terminals = self.memory.get_spr_sample()
+        tgt_states = tgt_states.clone().detach().to(self.net.device)
+        prediction_actions = prediction_actions.clone().detach().to(self.net.device)
+        prediction_terminals = prediction_terminals.clone().detach().to(self.net.device).squeeze()
+
+        tgt_states = torch.reshape(tgt_states, (self.K * self.batch_size, 4, 84, 84))
+
+        # perform augmentations on target states
+        tgt_states = (self.intensity(self.random_shift(tgt_states.float()))).to(T.uint8)
 
         # Calculate target latents
         tgt_latents = self.tgt_net.target_prediction(tgt_states)
+        #tgt_latents = torch.reshape(tgt_latents, (self.K, self.batch_size, -1))
 
         # Calculate online latents
         latents = self.produce_latents(states, prediction_actions)
 
+        # mask out terminals
+        prediction_terminals = prediction_terminals.flatten().unsqueeze(1)
+        latents = latents * prediction_terminals
+        tgt_latents = tgt_latents * prediction_terminals
+
+        # reshape back to K,batch size,512
+        latents = torch.reshape(latents, (5, 32, 512))
+        tgt_latents = torch.reshape(tgt_latents, (5, 32, 512))
+
         # might need to check the dim on cosine.
         # latents and tgt_latents are 5,32,512? and we want to get sum of differences in the last dim
-        spr_loss = self.cosine(latents, tgt_latents)
+        spr_loss = (self.cosine(latents, tgt_latents).sum()) * -1
 
         ################
         final_loss = self.spr_loss_coef * spr_loss + rainbow_loss
         final_loss.backward()
-        T.nn.utils.clip_grad_norm_(self.net.parameters(), 10)
+        torch.nn.utils.clip_grad_norm_(self.net.parameters(), 10)
         self.net.optimizer.step()
 
         self.grad_steps += 1

@@ -114,14 +114,16 @@ class ReplayMemory():
     return self.spr_states, self.spr_actions, self.spr_nonterminals
 
   # Returns the transitions with blank states where appropriate
-  def _get_transitions(self, idxs):
-    transition_idxs = np.arange(-self.history + 1, self.n + 1) + np.expand_dims(idxs, axis=1)
+  def _get_transitions(self, idxs, k=None):
+    if k == None:
+      k = self.n
+    transition_idxs = np.arange(-self.history + 1, k + 1) + np.expand_dims(idxs, axis=1)
     transitions = self.transitions.get(transition_idxs)
     transitions_firsts = transitions['timestep'] == 0
     blank_mask = np.zeros_like(transitions_firsts, dtype=np.bool_)
     for t in range(self.history - 2, -1, -1):  # e.g. 2 1 0
       blank_mask[:, t] = np.logical_or(blank_mask[:, t + 1], transitions_firsts[:, t + 1]) # True if future frame has timestep 0
-    for t in range(self.history, self.history + self.n):  # e.g. 4 5 6
+    for t in range(self.history, self.history + k):  # e.g. 4 5 6
       blank_mask[:, t] = np.logical_or(blank_mask[:, t - 1], transitions_firsts[:, t]) # True if current or past frame has timestep 0
     transitions[blank_mask] = blank_trans
     return transitions
@@ -153,13 +155,21 @@ class ReplayMemory():
     spr_states = []
     spr_actions = []
     spr_nonterminals = []
-    for i in range(self.K):
-      spr_states.append(torch.tensor(all_states[:, i+1: i+1 + self.history], device=self.device, dtype=torch.uint8))
-      spr_actions.append(torch.tensor(np.copy(transitions['action'][:, self.history - 1 + i]), dtype=torch.int64, device=self.device))
-      spr_nonterminals.append(torch.tensor(np.expand_dims(transitions['nonterminal'][:, self.history + i], axis=1), dtype=torch.float32, device=self.device))
+    for i in range(self.K + 1):
+      spr_transitions = self._get_transitions(idxs + i, k=self.K)
+      spr_temp_states = spr_transitions['state']
+
+      if i != 0:
+        #these are next states
+        spr_states.append(torch.tensor(spr_temp_states[:, 1: 1 + self.history], device=self.device, dtype=torch.uint8))
+      if i != self.K:
+        spr_actions.append(torch.tensor(np.copy(spr_transitions['action'][:, self.history - 1]), dtype=torch.int64, device=self.device))
+        spr_nonterminals.append(torch.tensor(np.expand_dims(spr_transitions['nonterminal'][:, self.history], axis=1), dtype=torch.float32, device=self.device))
 
     #this definately needs checking. Should be shape [5, bs, state_dim]. Could be H or Vstack?
     self.spr_states = torch.stack(spr_states)
+    self.spr_actions = torch.stack(spr_actions)
+    self.spr_nonterminals = torch.stack(spr_nonterminals)
 
     states = torch.tensor(all_states[:, :self.history], device=self.device, dtype=torch.uint8)
     next_states = torch.tensor(all_states[:, self.n:self.n + self.history], device=self.device, dtype=torch.uint8)
