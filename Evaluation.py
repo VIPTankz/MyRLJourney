@@ -33,7 +33,7 @@ print_ind = True
 print(len(games))
 
 hns = []
-labels = ["DDQN_targetUpdate1000"]
+labels = ["DER"]
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
 count = 0

@@ -9,7 +9,10 @@ from AtariSetup import AtariPreprocessing, TimeLimit, FrameStack, ImageToPyTorch
 
 
 def make_env(game, eval):
-    env = gym.make('ALE/' + game + '-v5')
+    if eval:
+        env = gym.make('ALE/' + game + '-v5', render_mode='human')
+    else:
+        env = gym.make('ALE/' + game + '-v5')
     env.seed(runs + eval * 10000)
 
     env = AtariPreprocessing(env.env,
@@ -25,9 +28,9 @@ def make_env(game, eval):
 
 if __name__ == '__main__':
 
-    from SPR import Agent
+    from DrQ_Agent_hacked import Agent
 
-    agent_name = "SPR"
+    agent_name = "Delete"
 
     # 12 sets - Iridis cpu
     gameset = [["Alien"],["Amidar"],["Assault"],["Asterix"],["BankHeist"],["BattleZone"],["Boxing"],["Breakout"],
@@ -69,7 +72,7 @@ if __name__ == '__main__':
                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
     """
-    gameset = [["Breakout"]]
+    gameset = [["RoadRunner"]]
 
     gameset_idx = int(sys.argv[1])
 

@@ -235,7 +235,7 @@ class Agent():
         # IMPORTANT params, check these
         self.n = 10
         self.gamma = 0.99
-        self.batch_size = 2 #CHANGED
+        self.batch_size = 32 #CHANGED
         self.replace_target_cnt = 1
         self.replay_ratio = 2
         self.network = "normal"
@@ -284,9 +284,6 @@ class Agent():
         for param in self.tgt_net.parameters():
             param.requires_grad = False
 
-        #n-step
-        self.n = 10
-
         self.env_steps = 0
         self.grad_steps = 0
         self.reset_churn = False
@@ -301,7 +298,6 @@ class Agent():
 
         self.priority_weight_increase = (1 - 0.4) / (total_frames - self.min_sampling_size)
 
-        # check the dim on this?
         self.cosine = torch.nn.CosineSimilarity(dim=2)
 
     def produce_latents(self, x, actions):
@@ -429,7 +425,6 @@ class Agent():
         prediction_actions = prediction_actions.clone().detach().to(self.net.device)
         prediction_terminals = prediction_terminals.clone().detach().to(self.net.device).squeeze()
 
-
         tgt_states = torch.reshape(tgt_states, (self.K * self.batch_size, 4, 84, 84))
 
         # perform augmentations on target states
@@ -456,7 +451,7 @@ class Agent():
 
         # might need to check the dim on cosine.
         # latents and tgt_latents are 5,32,512? and we want to get sum of differences in the last dim
-        spr_loss = (self.cosine(latents, tgt_latents).sum()) * -1
+        spr_loss = ((self.cosine(latents, tgt_latents).sum()) * -1) / self.batch_size
 
         ################
         final_loss = self.spr_loss_coef * spr_loss + rainbow_loss
