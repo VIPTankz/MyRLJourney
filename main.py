@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked import Agent
 
-    agent_name = "Delete"
+    agent_name = "DDQN_n3_discount967_per"
 
     # 12 sets - Iridis cpu
     gameset = [["Alien"],["Amidar"],["Assault"],["Asterix"],["BankHeist"],["BattleZone"],["Boxing"],["Breakout"],
@@ -50,6 +50,7 @@ if __name__ == '__main__':
                ["MsPacman", "Pong"],
                ["PrivateEye", "Qbert"],
                ["RoadRunner", "Seaquest", "UpNDown"]]
+    """
 
     # 12 sets - Iridis gpu
     gameset = [["Alien","Amidar","Assault","Asterix","BankHeist"],
@@ -59,7 +60,7 @@ if __name__ == '__main__':
                ["Krull","KungFuMaster", "MsPacman", "Pong"],
                ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
-
+    """
     # 3 Sets - RTX 4090
     gameset = [["Alien","Amidar","Assault","Asterix", "BankHeist","BattleZone","Boxing","Breakout"],
                ["ChopperCommand","CrazyClimber","DemonAttack","Freeway", "Frostbite","Gopher","Hero","Jamesbond", "Kangaroo"],
@@ -72,7 +73,7 @@ if __name__ == '__main__':
                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
     """
-    gameset = [["RoadRunner"]]
+
 
     gameset_idx = int(sys.argv[1])
 

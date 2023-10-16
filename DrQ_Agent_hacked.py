@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 #from torchsummary import summary
 from Identify import Identify
 import mgzip
+from memory import ReplayMemory
 
 class Intensity(nn.Module):
     def __init__(self, scale):
@@ -255,19 +256,21 @@ class Agent():
         # IMPORTANT params, check these
         self.n = 3 #CHANGED
         self.gamma = 0.967 #CHANGED
-        self.batch_size = 16 #CHANGED
+        self.batch_size = 32
         self.duelling = False
-        self.aug = True
+        self.aug = False
         self.replace_target_cnt = 1
         self.replay_ratio = 1
         self.network = "normal"
+        self.per = True
 
         #data collection
-        self.collecting_churn_data = False
+        self.collecting_churn_data = True
         self.action_gap_data = False
         self.reward_proportions = False
         self.gen_data = False
         self.identify_data = False
+
 
         if self.identify_data:
             self.identify = Identify(self.min_sampling_size)
@@ -275,7 +278,11 @@ class Agent():
         if self.gen_data:
             self.batch_size = 1
 
-        self.memory = NStepExperienceReplay(input_dims, max_mem_size, self.batch_size, self.n, self.gamma)
+        if not self.per:
+            self.memory = NStepExperienceReplay(input_dims, max_mem_size, self.batch_size, self.n, self.gamma)
+        else:
+            self.memory = ReplayMemory(max_mem_size, self.n, self.gamma, device)
+
 
         if self.network == "normal" and self.duelling:
             self.net = DuelingDeepQNetwork(self.lr, self.n_actions,
@@ -368,6 +375,10 @@ class Agent():
 
         self.replay_ratio_cnt = 0
 
+        if self.per:
+            self.priority_weight_increase = (1 - 0.4) / (total_frames - self.min_sampling_size)
+
+
     def get_grad_steps(self):
         return self.grad_steps
 
@@ -376,7 +387,7 @@ class Agent():
         self.epsilon.eps = 0.05
 
     def choose_action(self, observation):
-        if self.identify_data and self.memory.mem_cntr >= self.min_sampling_size:
+        if self.identify_data and self.env_steps >= self.min_sampling_size:
             state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
             q_vals = self.net.forward(state)
             action_exploit = T.argmax(q_vals).item()
@@ -401,10 +412,13 @@ class Agent():
         return action
 
     def store_transition(self, state, action, reward, state_, done):
-
-        self.memory.store_transition(state, action, reward, state_, done)
         self.env_steps += 1
         self.total_actions[action] += 1
+
+        if self.per:
+            self.memory.append(torch.from_numpy(state), action, reward, done)
+        else:
+            self.memory.store_transition(state, action, reward, state_, done)
 
         if self.identify_data:
             if self.memory.mem_cntr >= self.min_sampling_size:
@@ -438,7 +452,7 @@ class Agent():
 
     def learn_call(self):
 
-        if self.memory.mem_cntr < self.min_sampling_size:
+        if self.env_steps < self.min_sampling_size:
             return
 
         self.net.optimizer.zero_grad()
@@ -449,13 +463,21 @@ class Agent():
         if self.grad_steps % self.replace_target_cnt == 0:
             self.replace_target_network()
 
-        states, actions, rewards, new_states, dones = self.memory.sample_memory()
-
-        states = T.tensor(states).to(self.net.device)
-        rewards = T.tensor(rewards).to(self.net.device)
-        dones = T.tensor(dones).to(self.net.device)
-        actions = T.tensor(actions).to(self.net.device)
-        states_ = T.tensor(new_states).to(self.net.device)
+        if self.per:
+            self.memory.priority_weight = min(self.memory.priority_weight + self.priority_weight_increase, 1)
+            idxs, states, actions, rewards, next_states, dones, weights = self.memory.sample(self.batch_size)
+            states = states.clone().detach().to(self.net.device)
+            rewards = rewards.clone().detach().to(self.net.device)
+            dones = dones.clone().detach().to(self.net.device).squeeze()
+            actions = actions.clone().detach().to(self.net.device)
+            states_ = next_states.clone().detach().to(self.net.device)
+        else:
+            states, actions, rewards, new_states, dones = self.memory.sample_memory()
+            states = T.tensor(states).to(self.net.device)
+            rewards = T.tensor(rewards).to(self.net.device)
+            dones = T.tensor(dones).to(self.net.device)
+            actions = T.tensor(actions).to(self.net.device)
+            states_ = T.tensor(new_states).to(self.net.device)
 
         indices = np.arange(self.batch_size)
 
@@ -487,11 +509,19 @@ class Agent():
                 self.reward_target_avg.append(abs(float(rewards.mean().cpu())))
                 self.bootstrap_target_avg.append(abs(float(((self.gamma ** self.n) * q_targets[indices, max_actions]).mean().cpu())))
 
-        loss = self.net.loss(q_target, q_pred).to(self.net.device)
+        if not self.per:
+            loss = self.net.loss(q_target, q_pred).to(self.net.device)
+        else:
+            td_error = q_target - q_pred
+            loss = (td_error.pow(2)*weights.to(self.net.device)).mean().to(self.net.device)
+
 
         loss.backward()
         T.nn.utils.clip_grad_norm_(self.net.parameters(), 10)
         self.net.optimizer.step()
+
+        if self.per:
+            self.memory.update_priorities(idxs, abs(td_error.cpu().detach().numpy()))
 
         self.grad_steps += 1
 
@@ -698,8 +728,12 @@ class Agent():
             pickle.dump(churn_data, outp, pickle.HIGHEST_PROTOCOL)
 
     def collect_churn_data(self):
-        sample_size = min(self.churn_sample, self.memory.mem_cntr - self.n)
-        states, _, _, _, _ = self.memory.sample_memory(bs=sample_size)
+        sample_size = min(self.churn_sample, self.env_steps - self.n)
+        if not self.per:
+
+            states, _, _, _, _ = self.memory.sample_memory(bs=sample_size)
+        else:
+            _, states, _, _, _, _, _ = self.memory.sample(sample_size)
 
         states = T.tensor(states).to(self.net.device)
 
