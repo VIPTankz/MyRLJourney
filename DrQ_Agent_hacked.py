@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from Identify import Identify
 import mgzip
 from memory import ReplayMemory
+import math
 
 class Intensity(nn.Module):
     def __init__(self, scale):
@@ -271,7 +272,6 @@ class Agent():
         self.gen_data = False
         self.identify_data = False
 
-
         if self.identify_data:
             self.identify = Identify(self.min_sampling_size)
 
@@ -455,6 +455,8 @@ class Agent():
         if self.env_steps < self.min_sampling_size:
             return
 
+        print("Call")
+
         self.net.optimizer.zero_grad()
 
         if self.replace_target_cnt > 1:
@@ -464,6 +466,7 @@ class Agent():
             self.replace_target_network()
 
         if self.per:
+            print("Regular Sample")
             self.memory.priority_weight = min(self.memory.priority_weight + self.priority_weight_increase, 1)
             idxs, states, actions, rewards, next_states, dones, weights = self.memory.sample(self.batch_size)
             states = states.clone().detach().to(self.net.device)
@@ -728,12 +731,16 @@ class Agent():
             pickle.dump(churn_data, outp, pickle.HIGHEST_PROTOCOL)
 
     def collect_churn_data(self):
-        sample_size = min(self.churn_sample, self.env_steps - self.n)
+        sample_size = min(self.churn_sample, self.env_steps - self.n) - (min(self.churn_sample, self.env_steps - self.n) % self.batch_size)
         if not self.per:
 
             states, _, _, _, _ = self.memory.sample_memory(bs=sample_size)
         else:
-            _, states, _, _, _, _, _ = self.memory.sample(sample_size)
+            print("Churn Sample")
+            _, states, _, _, _, _, _ = self.memory.sample(self.batch_size)
+            for i in range(math.floor(min(self.churn_sample, self.env_steps - self.n) / self.batch_size)):
+                _, statesX, _, _, _, _, _ = self.memory.sample(self.batch_size)
+                states = torch.cat((states, statesX))
 
         states = T.tensor(states).to(self.net.device)
 

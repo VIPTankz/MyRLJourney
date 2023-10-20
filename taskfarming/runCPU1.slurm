@@ -10,7 +10,7 @@
 module load conda/py3-latest
 source activate atari_work
 
-cd /home/$USER/MyRLJourney
+cd /home/$USER/MyRLJourney/taskfarming
 pip install -e .
 
 staskfarm farm_atari_cpu1.txt
