@@ -30,7 +30,12 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked import Agent
 
-    agent_name = "DDQN_n3_discount967_per"
+    agent_name = "DDQN_n10_3_bs16"
+    """
+    Changes:
+    Games
+    collecting churn
+    """
 
     # 12 sets - Iridis cpu
     gameset = [["Alien"],["Amidar"],["Assault"],["Asterix"],["BankHeist"],["BattleZone"],["Boxing"],["Breakout"],
@@ -73,7 +78,6 @@ if __name__ == '__main__':
                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
     """
-
 
     gameset_idx = int(sys.argv[1])
 

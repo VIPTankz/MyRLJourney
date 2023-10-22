@@ -255,15 +255,21 @@ class Agent():
         #MAKE SURE YOU CHECKED THE NAME AND DATA COLLETION
 
         # IMPORTANT params, check these
-        self.n = 3 #CHANGED
-        self.gamma = 0.967 #CHANGED
-        self.batch_size = 32
+        self.n = 10 #CHANGED
+        self.gamma = 0.99 #CHANGED
+        self.batch_size = 16
         self.duelling = False
         self.aug = False
         self.replace_target_cnt = 1
         self.replay_ratio = 1
         self.network = "normal"
-        self.per = True
+        self.per = False
+        self.annealing_n = True
+
+        self.final_n = 3
+        self.anneal_steps = 10000
+        self.n_dec = (self.n - self.final_n) / self.anneal_steps
+        self.n_float = float(self.n)
 
         #data collection
         self.collecting_churn_data = True
@@ -375,6 +381,8 @@ class Agent():
 
         self.replay_ratio_cnt = 0
 
+        self.batch_q_vals = []
+
         if self.per:
             self.priority_weight_increase = (1 - 0.4) / (total_frames - self.min_sampling_size)
 
@@ -455,18 +463,21 @@ class Agent():
         if self.env_steps < self.min_sampling_size:
             return
 
-        print("Call")
-
         self.net.optimizer.zero_grad()
 
         if self.replace_target_cnt > 1:
             self.churn_net.load_state_dict(self.net.state_dict())
 
+        if self.annealing_n:
+            self.n_float = max(self.final_n, self.n_float - self.n_dec)
+            if self.n_float <= self.n - 1:
+                self.n = int(round(self.n_float))
+                self.memory.n = self.n
+
         if self.grad_steps % self.replace_target_cnt == 0:
             self.replace_target_network()
 
         if self.per:
-            print("Regular Sample")
             self.memory.priority_weight = min(self.memory.priority_weight + self.priority_weight_increase, 1)
             idxs, states, actions, rewards, next_states, dones, weights = self.memory.sample(self.batch_size)
             states = states.clone().detach().to(self.net.device)
@@ -502,9 +513,12 @@ class Agent():
 
         q_pred = q_pred[indices, actions]
 
+
+
         with torch.no_grad():
             max_actions = T.argmax(q_actions, dim=1)
             q_targets[dones] = 0.0
+
 
             q_target = rewards + (self.gamma ** self.n) * q_targets[indices, max_actions]
 
@@ -517,7 +531,6 @@ class Agent():
         else:
             td_error = q_target - q_pred
             loss = (td_error.pow(2)*weights.to(self.net.device)).mean().to(self.net.device)
-
 
         loss.backward()
         T.nn.utils.clip_grad_norm_(self.net.parameters(), 10)
@@ -800,3 +813,16 @@ class Agent():
         """
 
 
+def running_average_with_window(input_list, window_size):
+    if window_size <= 0:
+        raise ValueError("Window size should be a positive integer.")
+
+    averages = []
+    window = deque(maxlen=window_size)
+
+    for value in input_list:
+        window.append(value)
+        current_average = sum(window) / len(window)
+        averages.append(current_average)
+
+    return averages
