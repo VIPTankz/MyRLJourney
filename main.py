@@ -10,7 +10,7 @@ from AtariSetup import AtariPreprocessing, TimeLimit, FrameStack, ImageToPyTorch
 
 def make_env(game, eval):
     if eval:
-        env = gym.make('ALE/' + game + '-v5', render_mode='human')
+        env = gym.make('ALE/' + game + '-v5')
     else:
         env = gym.make('ALE/' + game + '-v5')
     env.seed(runs + eval * 10000)
