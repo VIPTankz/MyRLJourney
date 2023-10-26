@@ -256,7 +256,7 @@ class Agent():
 
         # IMPORTANT params, check these
         self.n = 10 #CHANGED
-        self.gamma = 0.99 #CHANGED
+        self.gamma = 0.967 #CHANGED
         self.batch_size = 16
         self.duelling = False
         self.aug = False
@@ -265,6 +265,11 @@ class Agent():
         self.network = "normal"
         self.per = False
         self.annealing_n = True
+        self.annealing_gamma = True
+
+        self.final_gamma = 0.997
+        self.anneal_steps_gamma = 10000
+        self.gamma_dec = (self.gamma - self.final_gamma) / self.anneal_steps_gamma
 
         self.final_n = 3
         self.anneal_steps = 10000
@@ -473,6 +478,10 @@ class Agent():
             if self.n_float <= self.n - 1:
                 self.n = int(round(self.n_float))
                 self.memory.n = self.n
+
+        if self.annealing_gamma:
+            self.gamma = max(self.final_gamma, self.gamma - self.gamma_dec)
+            self.memory.discount = self.gamma
 
         if self.grad_steps % self.replace_target_cnt == 0:
             self.replace_target_network()
