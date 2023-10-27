@@ -256,7 +256,7 @@ class Agent():
 
         # IMPORTANT params, check these
         self.n = 10 #CHANGED
-        self.gamma = 0.967 #CHANGED
+        self.gamma = 0.9 #CHANGED
         self.batch_size = 16
         self.duelling = False
         self.aug = False
@@ -267,7 +267,7 @@ class Agent():
         self.annealing_n = True
         self.annealing_gamma = True
 
-        self.final_gamma = 0.997
+        self.final_gamma = 0.967
         self.anneal_steps_gamma = 10000
         self.gamma_dec = (self.gamma - self.final_gamma) / self.anneal_steps_gamma
 

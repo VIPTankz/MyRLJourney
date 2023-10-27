@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked import Agent
 
-    agent_name = "DDQN_n10_3_bs16_discount967_997"
+    agent_name = "DDQN_n10_3_bs16_discount9_967"
     """
     Changes:
     Games
