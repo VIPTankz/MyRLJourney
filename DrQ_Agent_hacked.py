@@ -269,7 +269,7 @@ class Agent():
 
         self.final_gamma = 0.967
         self.anneal_steps_gamma = 10000
-        self.gamma_dec = (self.gamma - self.final_gamma) / self.anneal_steps_gamma
+        self.gamma_inc = (self.final_gamma - self.gamma) / self.anneal_steps_gamma
 
         self.final_n = 3
         self.anneal_steps = 10000
@@ -480,7 +480,7 @@ class Agent():
                 self.memory.n = self.n
 
         if self.annealing_gamma:
-            self.gamma = max(self.final_gamma, self.gamma - self.gamma_dec)
+            self.gamma = min(self.final_gamma, self.gamma + self.gamma_inc)
             self.memory.discount = self.gamma
 
         if self.grad_steps % self.replace_target_cnt == 0:
@@ -522,12 +522,9 @@ class Agent():
 
         q_pred = q_pred[indices, actions]
 
-
-
         with torch.no_grad():
             max_actions = T.argmax(q_actions, dim=1)
             q_targets[dones] = 0.0
-
 
             q_target = rewards + (self.gamma ** self.n) * q_targets[indices, max_actions]
 
