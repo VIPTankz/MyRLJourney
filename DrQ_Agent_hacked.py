@@ -18,6 +18,7 @@ from Identify import Identify
 import mgzip
 from memory import ReplayMemory
 import math
+from EMA import EMA
 
 class Intensity(nn.Module):
     def __init__(self, scale):
@@ -266,6 +267,10 @@ class Agent():
         self.per = False
         self.annealing_n = True
         self.annealing_gamma = True
+        self.target_ema = True
+
+
+        self.ema_tau = 0.005
 
         self.final_gamma = 0.967
         self.anneal_steps_gamma = 10000
@@ -310,12 +315,18 @@ class Agent():
             self.net = QNetwork(self.lr, self.n_actions,
                                            input_dims=self.input_dims, device=device)
 
-            self.tgt_net = QNetwork(self.lr, self.n_actions,
-                                               input_dims=self.input_dims, device=device)
 
-            if self.replace_target_cnt > 1:
+            if not self.target_ema:
+                self.tgt_net = QNetwork(self.lr, self.n_actions,
+                                                   input_dims=self.input_dims, device=device)
+
+                if self.replace_target_cnt > 1:
+                    self.churn_net = QNetwork(self.lr, self.n_actions,
+                                            input_dims=self.input_dims, device=device)
+            if self.target_ema:
+                self.tgt_net = EMA(self.net, self.ema_tau)
                 self.churn_net = QNetwork(self.lr, self.n_actions,
-                                        input_dims=self.input_dims, device=device)
+                                          input_dims=self.input_dims, device=device)
 
 
 
@@ -470,7 +481,7 @@ class Agent():
 
         self.net.optimizer.zero_grad()
 
-        if self.replace_target_cnt > 1:
+        if self.replace_target_cnt > 1 or self.target_ema:
             self.churn_net.load_state_dict(self.net.state_dict())
 
         if self.annealing_n:
@@ -483,8 +494,11 @@ class Agent():
             self.gamma = min(self.final_gamma, self.gamma + self.gamma_inc)
             self.memory.discount = self.gamma
 
-        if self.grad_steps % self.replace_target_cnt == 0:
+        if self.grad_steps % self.replace_target_cnt == 0 and not self.target_ema:
             self.replace_target_network()
+
+        if self.target_ema:
+            self.tgt_net.update()
 
         if self.per:
             self.memory.priority_weight = min(self.memory.priority_weight + self.priority_weight_increase, 1)
