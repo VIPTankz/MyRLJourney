@@ -30,123 +30,6 @@ class Intensity(nn.Module):
         noise = 1.0 + (self.scale * r.clamp(-2.0, 2.0))
         return x * noise
 
-
-class HydraQNetwork(nn.Module):
-    def __init__(self, lr, n_actions, name, input_dims, chkpt_dir, device):
-        super(HydraQNetwork, self).__init__()
-        self.checkpoint_dir = chkpt_dir
-        self.checkpoint_file = os.path.join(self.checkpoint_dir, name)
-
-        self.n_actions = n_actions
-
-        self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
-        self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
-        self.conv3 = nn.Conv2d(64, 64, 3)
-
-        self.fc1s = nn.ParameterList([nn.Linear(64 * 7 * 7, 512) for i in range(n_actions)])
-        self.Qs = nn.ParameterList([nn.Linear(512, 1) for i in range(n_actions)])
-
-        self.optimizer = optim.SGD(self.parameters(), lr=lr)
-        self.loss = nn.MSELoss()
-        self.device = device
-        self.to(self.device)
-
-    def forward(self, observation):
-        observation = T.div(observation, 255)
-        observation = observation.view(-1, 4, 84, 84)
-        observation = F.relu(self.conv1(observation))
-        observation = F.relu(self.conv2(observation))
-        observation = F.relu(self.conv3(observation))
-        observation = observation.view(-1, 64 * 7 * 7)
-
-        A = []
-        for i in range(self.n_actions):
-            fc1 = F.relu(self.fc1s[i](observation))
-            A.append(self.Qs[i](fc1))
-
-        Q = torch.stack(A, dim=1).squeeze(dim=-1)
-
-        return Q
-
-    def save_checkpoint(self):
-        print('... saving checkpoint ...')
-        T.save(self.state_dict(), self.checkpoint_file)
-
-    def load_checkpoint(self):
-        print('... loading checkpoint ...')
-        self.load_state_dict(T.load(self.checkpoint_file))
-
-class LeggedQNetwork(nn.Module):
-    def __init__(self, lr, n_actions, input_dims, device):
-        super(LeggedQNetwork, self).__init__()
-
-        self.n_actions = n_actions
-
-        self.conv1 = nn.ParameterList([nn.Conv2d(4, 32, 8, stride=4, padding=1) for i in range(n_actions)])
-        #self.conv2 = nn.ParameterList([nn.Conv2d(32, 64, 4, stride=2) for i in range(n_actions)])
-        #self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
-        self.conv2 = nn.ParameterList([nn.Conv2d(32, 64, 4, stride=2) for i in range(n_actions)])
-        #self.conv3 = nn.Conv2d(64, 64, 3)
-        self.conv3 = nn.ParameterList([nn.Conv2d(64, 64, 3) for i in range(n_actions)])
-
-        self.fc1s = nn.Linear(64 * 7 * 7, 512)
-        self.Qs = nn.Linear(512, n_actions)
-
-        self.optimizer = optim.SGD(self.parameters(), lr=lr)
-        self.loss = nn.MSELoss()
-        self.device = device
-        self.to(self.device)
-
-    def forward(self, observation):
-        observation = T.div(observation, 255)
-        observation = observation.view(-1, 4, 84, 84)
-
-        A = []
-        for i in range(self.n_actions):
-            observationI = F.relu(self.conv1[i](observation))
-            observationI = F.relu(self.conv2[i](observationI))
-            observationI = F.relu(self.conv3[i](observationI))
-            observationI = observationI.view(-1, 64 * 7 * 7)
-
-            fc1 = F.relu(self.fc1s(observationI))
-            A.append(self.Qs(fc1)[:, i])
-
-        Q = torch.stack(A, dim=1)
-
-        return Q
-
-    def save_checkpoint(self):
-        print('... saving checkpoint ...')
-        T.save(self.state_dict(), self.checkpoint_file)
-
-    def load_checkpoint(self):
-        print('... loading checkpoint ...')
-        self.load_state_dict(T.load(self.checkpoint_file))
-
-
-class ActionNetwork(nn.Module):
-    def __init__(self):
-        super(ActionNetwork, self).__init__()
-
-        self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
-        self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
-        self.conv3 = nn.Conv2d(64, 64, 3)
-
-        self.fc1 = nn.Linear(64 * 7 * 7, 512)
-        self.A = nn.Linear(512, 1)
-
-    def forward(self, observation):
-        observation = T.div(observation, 255)
-        observation = observation.view(-1, 4, 84, 84)
-        observation = F.relu(self.conv1(observation))
-        observation = F.relu(self.conv2(observation))
-        observation = F.relu(self.conv3(observation))
-        observation = observation.view(-1, 64 * 7 * 7)
-        observation = F.relu(self.fc1(observation))
-        A = self.A(observation)
-        return A
-
-
 class QNetwork(nn.Module):
     def __init__(self, lr, n_actions, input_dims, device):
         super(QNetwork, self).__init__()
@@ -264,11 +147,17 @@ class Agent():
         self.replace_target_cnt = 1
         self.replay_ratio = 1
         self.network = "normal"
-        self.per = False
+        self.per = True
         self.annealing_n = True
         self.annealing_gamma = True
-        self.target_ema = True
+        self.target_ema = False
+        self.double = True
+        self.trust_regions = False
 
+        if self.trust_regions:
+            self.running_std = -999
+            self.trust_tau = 0.005
+            self.trust_alpha = 2
 
         self.ema_tau = 0.005
 
@@ -348,7 +237,6 @@ class Agent():
                                                input_dims=self.input_dims, device=device)
         else:
             raise Exception("Invalid Network type")
-
 
         if self.gen_data:
             self.net.optimizer = optim.RMSprop(self.net.parameters(), lr=lr)
@@ -452,7 +340,6 @@ class Agent():
                 self.identify.rewards.append(reward)
                 self.identify.dones.append(done)
 
-
     def replace_target_network(self):
         self.tgt_net.load_state_dict(self.net.state_dict())
 
@@ -488,7 +375,7 @@ class Agent():
             self.n_float = max(self.final_n, self.n_float - self.n_dec)
             if self.n_float <= self.n - 1:
                 self.n = int(round(self.n_float))
-                self.memory.n = self.n
+                self.memory.update_n(self.n)
 
         if self.annealing_gamma:
             self.gamma = min(self.final_gamma, self.gamma + self.gamma_inc)
@@ -528,8 +415,18 @@ class Agent():
 
         else:
             q_pred = self.net.forward(states)  # states_aug
-            q_targets = self.tgt_net.forward(states_)  # states_aug_
-            q_actions = self.net.forward(states_)
+
+            if not self.trust_regions:
+                q_targets = self.tgt_net.forward(states_)  # states_aug_
+
+            if self.double:
+                q_actions = self.net.forward(states_)
+            else:
+                q_actions = q_targets.clone().detach()
+
+            if self.trust_regions:
+                q_targets = q_actions.clone()
+
 
         if self.identify_data or self.action_gap_data:
             q_pred_og = q_pred.detach().cpu()
@@ -546,11 +443,40 @@ class Agent():
                 self.reward_target_avg.append(abs(float(rewards.mean().cpu())))
                 self.bootstrap_target_avg.append(abs(float(((self.gamma ** self.n) * q_targets[indices, max_actions]).mean().cpu())))
 
+
+        if self.trust_regions:
+            with torch.no_grad():
+                losses = q_target - q_pred
+
+                if self.running_std != -999:
+                    self.running_std = torch.std(losses).detach().cpu() * self.trust_tau + (1 - self.trust_tau) * self.running_std
+
+                    if self.aug:
+                        target_network_pred = self.tgt_net.forward(states_aug)[indices, actions]
+                    else:
+                        target_network_pred = self.tgt_net.forward(states)[indices, actions]
+
+                    sigma_j = max(self.running_std, torch.std(losses).detach().cpu())
+                    simga_j = max(sigma_j, 0.01)
+
+                    outside_region = torch.abs(q_pred - target_network_pred) > self.trust_alpha * simga_j
+                    diff_sign = torch.sign(q_pred - target_network_pred) != torch.sign(q_pred - q_target)
+
+                    mask = torch.logical_and(outside_region, diff_sign)
+                    print(mask)
+
+                    q_pred[mask] = 0
+                    q_target[mask] = 0
+
+                else:
+                    self.running_std = torch.std(losses).detach().cpu()
+
         if not self.per:
             loss = self.net.loss(q_target, q_pred).to(self.net.device)
         else:
             td_error = q_target - q_pred
             loss = (td_error.pow(2)*weights.to(self.net.device)).mean().to(self.net.device)
+
 
         loss.backward()
         T.nn.utils.clip_grad_norm_(self.net.parameters(), 10)
@@ -704,6 +630,7 @@ class Agent():
 
                 # save data
                 self.save_churn_data()
+                self.save_churn_data()
 
                 self.total_churn = 0
                 self.churn_data = []
@@ -769,7 +696,7 @@ class Agent():
 
             states, _, _, _, _ = self.memory.sample_memory(bs=sample_size)
         else:
-            print("Churn Sample")
+
             _, states, _, _, _, _, _ = self.memory.sample(self.batch_size)
             for i in range(math.floor(min(self.churn_sample, self.env_steps - self.n) / self.batch_size)):
                 _, statesX, _, _, _, _, _ = self.memory.sample(self.batch_size)
@@ -779,7 +706,7 @@ class Agent():
 
         cur_vals = self.net(states)
 
-        if self.replace_target_cnt > 1:
+        if self.replace_target_cnt > 1 or self.target_ema:
             tgt_vals = self.churn_net(states)
         else:
             tgt_vals = self.tgt_net(states)
