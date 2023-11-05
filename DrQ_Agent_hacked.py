@@ -30,16 +30,177 @@ class Intensity(nn.Module):
         noise = 1.0 + (self.scale * r.clamp(-2.0, 2.0))
         return x * noise
 
-class QNetwork(nn.Module):
-    def __init__(self, lr, n_actions, input_dims, device):
-        super(QNetwork, self).__init__()
+class NoisyLinear(nn.Module):
+  def __init__(self, in_features, out_features, std_init=0.5):
+    super(NoisyLinear, self).__init__()
+    self.in_features = in_features
+    self.out_features = out_features
+    self.std_init = std_init
+    self.using_noise = True
+    self.weight_mu = nn.Parameter(torch.empty(out_features, in_features))
+    self.weight_sigma = nn.Parameter(torch.empty(out_features, in_features))
+    self.register_buffer('weight_epsilon', torch.empty(out_features, in_features))
+    self.bias_mu = nn.Parameter(torch.empty(out_features))
+    self.bias_sigma = nn.Parameter(torch.empty(out_features))
+    self.register_buffer('bias_epsilon', torch.empty(out_features))
+    self.reset_parameters()
+    self.reset_noise()
+
+  def reset_parameters(self):
+    mu_range = 1 / math.sqrt(self.in_features)
+    self.weight_mu.data.uniform_(-mu_range, mu_range)
+    self.weight_sigma.data.fill_(self.std_init / math.sqrt(self.in_features))
+    self.bias_mu.data.uniform_(-mu_range, mu_range)
+    self.bias_sigma.data.fill_(self.std_init / math.sqrt(self.out_features))
+
+  def _scale_noise(self, size):
+    x = torch.randn(size, device=self.weight_mu.device)
+    return x.sign().mul_(x.abs().sqrt_())
+
+  def reset_noise(self):
+    epsilon_in = self._scale_noise(self.in_features)
+    epsilon_out = self._scale_noise(self.out_features)
+    self.weight_epsilon.copy_(epsilon_out.ger(epsilon_in))
+    self.bias_epsilon.copy_(epsilon_out)
+
+  def forward(self, input):
+    if self.using_noise:
+      return F.linear(input, self.weight_mu + self.weight_sigma * self.weight_epsilon, self.bias_mu + self.bias_sigma * self.bias_epsilon)
+    else:
+      return F.linear(input, self.weight_mu, self.bias_mu)
+
+
+class C51DeepQNetwork(nn.Module):
+    def __init__(self, lr, n_actions, name, input_dims, chkpt_dir,atoms,Vmax,Vmin, device, noisy, dueling):
+        super(C51DeepQNetwork, self).__init__()
+        self.checkpoint_dir = chkpt_dir
+        self.checkpoint_file = os.path.join(self.checkpoint_dir, name)
+        self.atoms = atoms
+        self.Vmax = Vmax
+        self.Vmin = Vmin
+        self.DELTA_Z = (self.Vmax - self.Vmin) / (self.atoms - 1)
+        self.n_actions = n_actions
+        self.dueling = dueling
+        self.noisy = noisy
 
         self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
         self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, 3)
 
-        self.fc1 = nn.Linear(64 * 7 * 7, 512)
-        self.Q = nn.Linear(512, n_actions)
+        if self.dueling:
+            if self.noisy:
+                self.fc1V = NoisyLinear(64 * 7 * 7, 256)
+                self.fc1A = NoisyLinear(64 * 7 * 7, 256)
+                self.fcV2 = NoisyLinear(256, atoms)
+                self.fcA2 = NoisyLinear(256, n_actions * atoms)
+            else:
+                self.fc1V = nn.Linear(64 * 7 * 7, 256)
+                self.fc1A = nn.Linear(64 * 7 * 7, 256)
+                self.fcV2 = nn.Linear(256, atoms)
+                self.fcA2 = nn.Linear(256, n_actions * atoms)
+        else:
+            if self.noisy:
+                self.fc1 = NoisyLinear(64 * 7 * 7, 512)
+                self.fc2 = NoisyLinear(512, n_actions * atoms)
+            else:
+                self.fc1 = nn.Linear(64 * 7 * 7, 512)
+                self.fc2 = nn.Linear(512, n_actions * atoms)
+
+        self.register_buffer("supports", T.arange(Vmin, Vmax + self.DELTA_Z, self.DELTA_Z))
+        self.softmax = nn.Softmax(dim=1)
+
+        self.optimizer = optim.Adam(self.parameters(), lr=lr, eps=0.00015)
+        self.loss = nn.MSELoss()
+        self.device = device
+        self.use_noise = True
+        print("Device: " + str(self.device),flush=True)
+        self.to(self.device)
+
+    def conv(self, x):
+
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+
+        return x
+    def reset_noise(self):
+        for name, module in self.named_children():
+            if 'fc' in name:
+                module.reset_noise()
+
+    def fc_val(self, x):
+        x = F.relu(self.fc1V(x))
+        x = self.fcV2(x)
+
+        return x
+
+    def fc_adv(self, x):
+        x = F.relu(self.fc1A(x))
+        x = self.fcA2(x)
+
+        return x
+
+    def forward(self, x):
+        batch_size = x.size()[0]
+        fx = x.float() / 256
+        conv_out = self.conv(fx).view(batch_size, -1)
+        if self.dueling:
+            val_out = self.fc_val(conv_out).view(batch_size, 1, self.atoms)
+            adv_out = self.fc_adv(conv_out).view(batch_size, -1, self.atoms)
+            adv_mean = adv_out.mean(dim=1, keepdim=True)
+            return val_out + (adv_out - adv_mean)
+        else:
+            x = F.relu(self.fc1(conv_out))
+            x = self.fc2(x).view(batch_size, -1, self.atoms)
+            return x
+
+    def both(self, x):
+        cat_out = self(x)
+        probs = self.apply_softmax(cat_out)
+        weights = probs * self.supports
+        res = weights.sum(dim=2)
+        return cat_out, res
+
+    def qvals(self, x):
+        return self.both(x)[1]
+
+    def apply_softmax(self, t):
+        return self.softmax(t.view(-1, self.atoms)).view(t.size())
+
+    def disable_noise(self):
+        for name, module in self.named_children():
+            if 'fc' in name:
+                module.using_noise = False
+
+    def enable_noise(self):
+        for name, module in self.named_children():
+            if 'fc' in name:
+                module.using_noise = True
+
+    def save_checkpoint(self):
+        print('... saving checkpoint ...')
+        T.save(self.state_dict(), self.checkpoint_file)
+
+    def load_checkpoint(self):
+        print('... loading checkpoint ...')
+        self.load_state_dict(T.load(self.checkpoint_file))
+
+class QNetwork(nn.Module):
+    def __init__(self, lr, n_actions, input_dims, device, noisy):
+        super(QNetwork, self).__init__()
+
+        self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
+        self.conv3 = nn.Conv2d(64, 64, 3)
+        self.noisy = noisy
+
+        if self.noisy:
+
+            self.fc1 = NoisyLinear(64 * 7 * 7, 512)
+            self.fc2 = NoisyLinear(512, n_actions)
+        else:
+            self.fc1 = nn.Linear(64 * 7 * 7, 512)
+            self.fc2 = nn.Linear(512, n_actions)
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr, eps=0.00015)
 
@@ -55,12 +216,27 @@ class QNetwork(nn.Module):
         observation = F.relu(self.conv3(observation))
         observation = observation.view(-1, 64 * 7 * 7)
         observationQ = F.relu(self.fc1(observation))
-        Q = self.Q(observationQ)
+        Q = self.fc2(observationQ)
 
         return Q
 
+    def reset_noise(self):
+        for name, module in self.named_children():
+            if 'fc' in name:
+                module.reset_noise()
+
+    def disable_noise(self):
+        for name, module in self.named_children():
+            if 'fc' in name:
+                module.using_noise = False
+
+    def enable_noise(self):
+        for name, module in self.named_children():
+            if 'fc' in name:
+                module.using_noise = True
+
 class DuelingDeepQNetwork(nn.Module):
-    def __init__(self, lr, n_actions, name, input_dims, chkpt_dir, device):
+    def __init__(self, lr, n_actions, name, input_dims, chkpt_dir, device, noisy):
         super(DuelingDeepQNetwork, self).__init__()
         self.checkpoint_dir = chkpt_dir
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name)
@@ -69,16 +245,40 @@ class DuelingDeepQNetwork(nn.Module):
         self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, 3)
 
-        self.fc1V = nn.Linear(64 * 7 * 7, 512)
-        self.fc1A = nn.Linear(64 * 7 * 7, 512)
-        self.V = nn.Linear(512, 1)
-        self.A = nn.Linear(512, n_actions)
+        self.noisy = noisy
+
+        if self.noisy:
+            self.fc1V = NoisyLinear(64 * 7 * 7, 512)
+            self.fc1A = NoisyLinear(64 * 7 * 7, 512)
+            self.fc2V = NoisyLinear(512, 1)
+            self.fc2A = NoisyLinear(512, n_actions)
+        else:
+            self.fc1V = nn.Linear(64 * 7 * 7, 512)
+            self.fc1A = nn.Linear(64 * 7 * 7, 512)
+            self.fc2V = nn.Linear(512, 1)
+            self.fc2A = nn.Linear(512, n_actions)
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr, eps=0.00015)
 
         self.loss = nn.MSELoss()
         self.device = device
         self.to(self.device)
+
+    def reset_noise(self):
+        for name, module in self.named_children():
+            if 'fc' in name:
+                module.reset_noise()
+
+
+    def disable_noise(self):
+        for name, module in self.named_children():
+            if 'fc' in name:
+                module.using_noise = False
+
+    def enable_noise(self):
+        for name, module in self.named_children():
+            if 'fc' in name:
+                module.using_noise = True
 
     def forward(self, observation):
         observation = T.div(observation, 255)
@@ -89,8 +289,8 @@ class DuelingDeepQNetwork(nn.Module):
         observation = observation.view(-1, 64 * 7 * 7)
         observationV = F.relu(self.fc1V(observation))
         observationA = F.relu(self.fc1A(observation))
-        V = self.V(observationV)
-        A = self.A(observationA)
+        V = self.fc2V(observationV)
+        A = self.fc2A(observationA)
 
         Q = V + A - A.mean(dim=1, keepdim=True)
 
@@ -146,13 +346,24 @@ class Agent():
         self.aug = False
         self.replace_target_cnt = 1
         self.replay_ratio = 1
-        self.network = "normal"
-        self.per = True
+        self.per = False
         self.annealing_n = True
         self.annealing_gamma = True
         self.target_ema = False
         self.double = True
-        self.trust_regions = False
+        self.trust_regions = False # Not implemented for c51
+        self.noisy = True
+        self.c51 = False
+
+        if self.c51:
+            self.Vmax = 10
+            self.Vmin = -10
+            self.N_ATOMS = 51
+
+        if self.noisy:
+            self.epsilon.eps = 0.0
+            self.epsilon.steps = 1
+            self.epsilon.eps_final = 0.0
 
         if self.trust_regions:
             self.running_std = -999
@@ -189,54 +400,62 @@ class Agent():
             self.memory = ReplayMemory(max_mem_size, self.n, self.gamma, device)
 
 
-        if self.network == "normal" and self.duelling:
+        if self.duelling and not self.c51:
             self.net = DuelingDeepQNetwork(self.lr, self.n_actions,
                                               input_dims=self.input_dims,
                                               name='lunar_lander_dueling_ddqn_q_eval',
-                                              chkpt_dir=self.chkpt_dir, device=device)
+                                              chkpt_dir=self.chkpt_dir, device=device, noisy=self.noisy)
 
             self.tgt_net = DuelingDeepQNetwork(self.lr, self.n_actions,
                                               input_dims=self.input_dims,
                                               name='lunar_lander_dueling_ddqn_q_next',
-                                              chkpt_dir=self.chkpt_dir, device=device)
+                                              chkpt_dir=self.chkpt_dir, device=device, noisy=self.noisy)
+        if self.c51:
+            self.net = C51DeepQNetwork(self.lr, self.n_actions,
+                                           input_dims=self.input_dims, name='DER_eval',
+                                           chkpt_dir=self.chkpt_dir, atoms=self.N_ATOMS, Vmax=self.Vmax, Vmin=self.Vmin,
+                                           device=device, noisy=self.noisy, dueling=self.duelling)
 
-        elif self.network == "normal":
+            if not self.target_ema:
+                self.tgt_net = C51DeepQNetwork(self.lr, self.n_actions,
+                                                   input_dims=self.input_dims, name='DER_next',
+                                                   chkpt_dir=self.chkpt_dir, atoms=self.N_ATOMS, Vmax=self.Vmax,
+                                                   Vmin=self.Vmin, device=device, noisy=self.noisy, dueling=self.duelling)
+
+                if self.replace_target_cnt > 1 or self.noisy:
+                    self.churn_net = C51DeepQNetwork(self.lr, self.n_actions,
+                                                   input_dims=self.input_dims, name='DER_next',
+                                                   chkpt_dir=self.chkpt_dir, atoms=self.N_ATOMS, Vmax=self.Vmax,
+                                                   Vmin=self.Vmin, device=device, noisy=self.noisy, dueling=self.duelling)
+
+            if self.target_ema:
+                self.tgt_net = EMA(self.net, self.ema_tau)
+                self.tgt_net = C51DeepQNetwork(self.lr, self.n_actions,
+                                                   input_dims=self.input_dims, name='DER_next',
+                                                   chkpt_dir=self.chkpt_dir, atoms=self.N_ATOMS, Vmax=self.Vmax,
+                                                   Vmin=self.Vmin, device=device, noisy=self.noisy, dueling=self.duelling)
+
+
+        else:
             self.net = QNetwork(self.lr, self.n_actions,
-                                           input_dims=self.input_dims, device=device)
+                                           input_dims=self.input_dims, device=device, noisy=self.noisy)
 
 
             if not self.target_ema:
                 self.tgt_net = QNetwork(self.lr, self.n_actions,
-                                                   input_dims=self.input_dims, device=device)
+                                                   input_dims=self.input_dims, device=device, noisy=self.noisy)
 
-                if self.replace_target_cnt > 1:
+                if self.replace_target_cnt > 1 or self.noisy:
                     self.churn_net = QNetwork(self.lr, self.n_actions,
-                                            input_dims=self.input_dims, device=device)
+                                            input_dims=self.input_dims, device=device, noisy=self.noisy)
+
             if self.target_ema:
                 self.tgt_net = EMA(self.net, self.ema_tau)
                 self.churn_net = QNetwork(self.lr, self.n_actions,
-                                          input_dims=self.input_dims, device=device)
+                                          input_dims=self.input_dims, device=device, noisy=self.noisy)
 
-
-
-        elif self.network == "split":
-            self.net = HydraQNetwork(self.lr, self.n_actions,
-                                           input_dims=self.input_dims,
-                                           name='lunar_lander_dueling_ddqn_q_eval',
-                                           chkpt_dir=self.chkpt_dir, device=device)
-
-            self.tgt_net = HydraQNetwork(self.lr, self.n_actions,
-                                               input_dims=self.input_dims,
-                                               name='lunar_lander_dueling_ddqn_q_next',
-                                               chkpt_dir=self.chkpt_dir, device=device)
-        elif self.network == "legged":
-            self.net = LeggedQNetwork(self.lr, self.n_actions,
-                                           input_dims=self.input_dims, device=device)
-
-            self.tgt_net = LeggedQNetwork(self.lr, self.n_actions,
-                                               input_dims=self.input_dims, device=device)
-        else:
-            raise Exception("Invalid Network type")
+        for param in self.tgt_net.parameters():
+            param.requires_grad = False
 
         if self.gen_data:
             self.net.optimizer = optim.RMSprop(self.net.parameters(), lr=lr)
@@ -297,6 +516,8 @@ class Agent():
     def set_eval_mode(self):
         self.epsilon.eps_final = 0.05
         self.epsilon.eps = 0.05
+        if self.noisy:
+            self.net.disable_noise()
 
     def choose_action(self, observation):
         if self.identify_data and self.env_steps >= self.min_sampling_size:
@@ -315,8 +536,15 @@ class Agent():
             return action
 
         if np.random.random() > self.epsilon.eps:
+            with torch.no_grad():
+                if self.noisy:
+                    self.net.reset_noise()
+
             state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
-            q_vals = self.net.forward(state)
+            if not self.c51:
+                q_vals = self.net.forward(state)
+            else:
+                q_vals = self.net.qvals(state)
             action = T.argmax(q_vals).item()
         else:
             action = np.random.choice(self.action_space)
@@ -368,7 +596,7 @@ class Agent():
 
         self.net.optimizer.zero_grad()
 
-        if self.replace_target_cnt > 1 or self.target_ema:
+        if self.replace_target_cnt > 1 or self.target_ema or self.noisy:
             self.churn_net.load_state_dict(self.net.state_dict())
 
         if self.annealing_n:
@@ -387,9 +615,15 @@ class Agent():
         if self.target_ema:
             self.tgt_net.update()
 
+        with torch.no_grad():
+            if self.noisy:
+                self.tgt_net.reset_noise()
+
         if self.per:
             self.memory.priority_weight = min(self.memory.priority_weight + self.priority_weight_increase, 1)
             idxs, states, actions, rewards, next_states, dones, weights = self.memory.sample(self.batch_size)
+            if idxs is False:
+                return
             states = states.clone().detach().to(self.net.device)
             rewards = rewards.clone().detach().to(self.net.device)
             dones = dones.clone().detach().to(self.net.device).squeeze()
@@ -406,42 +640,67 @@ class Agent():
         indices = np.arange(self.batch_size)
 
         if self.aug:
-            states_aug = (self.intensity(self.random_shift(states.float()))).to(T.uint8)
-            states_aug_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
-            states_aug_policy_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
-            q_pred = self.net.forward(states_aug)  # states_aug
-            q_targets = self.tgt_net.forward(states_aug_)  # states_aug_
-            q_actions = self.net.forward(states_aug_policy_)  # states_aug_policy_
-
+            states = (self.intensity(self.random_shift(states.float()))).to(T.uint8)
+            states_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
+            states_policy_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
         else:
+            states_policy_ = states_
+
+        if not self.c51:
             q_pred = self.net.forward(states)  # states_aug
 
             if not self.trust_regions:
-                q_targets = self.tgt_net.forward(states_)  # states_aug_
+                q_targets = self.tgt_net.forward(states_)
 
             if self.double:
-                q_actions = self.net.forward(states_)
+                q_actions = self.net.forward(states_policy_)
             else:
                 q_actions = q_targets.clone().detach()
 
             if self.trust_regions:
                 q_targets = q_actions.clone()
+        else:
+            distr_v, q_pred = self.net.both(states)
+            state_action_values = distr_v[range(self.batch_size), actions.data]
+            state_log_sm_v = F.log_softmax(state_action_values, dim=1)
+
+            next_distr_v, next_qvals_v = self.tgt_net.both(states_)
+            if self.double:
+                action_distr_v, action_qvals_v = self.net.both(states_)
+            else:
+                action_distr_v = next_distr_v
+                action_qvals_v = next_qvals_v
 
 
         if self.identify_data or self.action_gap_data:
             q_pred_og = q_pred.detach().cpu()
 
-        q_pred = q_pred[indices, actions]
+        if not self.c51:
+            q_pred = q_pred[indices, actions]
 
         with torch.no_grad():
-            max_actions = T.argmax(q_actions, dim=1)
-            q_targets[dones] = 0.0
+            if not self.c51:
+                max_actions = T.argmax(q_actions, dim=1)
+                q_targets[dones] = 0.0
 
-            q_target = rewards + (self.gamma ** self.n) * q_targets[indices, max_actions]
+                q_target = rewards + (self.gamma ** self.n) * q_targets[indices, max_actions]
 
-            if self.reward_proportions:
-                self.reward_target_avg.append(abs(float(rewards.mean().cpu())))
-                self.bootstrap_target_avg.append(abs(float(((self.gamma ** self.n) * q_targets[indices, max_actions]).mean().cpu())))
+                if self.reward_proportions:
+                    self.reward_target_avg.append(abs(float(rewards.mean().cpu())))
+                    self.bootstrap_target_avg.append(abs(float(((self.gamma ** self.n) * q_targets[indices, max_actions]).mean().cpu())))
+            else:
+
+                next_actions_v = action_qvals_v.max(1)[1]
+
+                next_best_distr_v = next_distr_v[range(self.batch_size), next_actions_v.data]
+                next_best_distr_v = self.tgt_net.apply_softmax(next_best_distr_v)
+                next_best_distr = next_best_distr_v.data.cpu()
+
+                proj_distr = distr_projection(next_best_distr, rewards.cpu(), dones.cpu(), self.Vmin, self.Vmax,
+                                              self.N_ATOMS,
+                                              self.gamma ** self.n)
+
+                proj_distr_v = proj_distr.to(self.net.device)
 
 
         if self.trust_regions:
@@ -451,10 +710,7 @@ class Agent():
                 if self.running_std != -999:
                     self.running_std = torch.std(losses).detach().cpu() * self.trust_tau + (1 - self.trust_tau) * self.running_std
 
-                    if self.aug:
-                        target_network_pred = self.tgt_net.forward(states_aug)[indices, actions]
-                    else:
-                        target_network_pred = self.tgt_net.forward(states)[indices, actions]
+                    target_network_pred = self.tgt_net.forward(states)[indices, actions]
 
                     sigma_j = max(self.running_std, torch.std(losses).detach().cpu())
                     simga_j = max(sigma_j, 0.01)
@@ -471,11 +727,23 @@ class Agent():
                 else:
                     self.running_std = torch.std(losses).detach().cpu()
 
-        if not self.per:
-            loss = self.net.loss(q_target, q_pred).to(self.net.device)
+
+        if self.c51:
+            loss_v = (-state_log_sm_v * proj_distr_v)
+            if self.per:
+                weights = T.squeeze(weights)
+                loss_v = weights.to(self.net.device) * loss_v.sum(dim=1)
+            else:
+                loss_v = loss_v.sum(dim=1)
+
+            loss = loss_v.mean()
         else:
-            td_error = q_target - q_pred
-            loss = (td_error.pow(2)*weights.to(self.net.device)).mean().to(self.net.device)
+
+            if not self.per:
+                loss = self.net.loss(q_target, q_pred).to(self.net.device)
+            else:
+                td_error = q_target - q_pred
+                loss = (td_error.pow(2)*weights.to(self.net.device)).mean().to(self.net.device)
 
 
         loss.backward()
@@ -483,7 +751,10 @@ class Agent():
         self.net.optimizer.step()
 
         if self.per:
-            self.memory.update_priorities(idxs, abs(td_error.cpu().detach().numpy()))
+            if self.c51:
+                self.memory.update_priorities(idxs, abs(loss_v.cpu().detach().numpy()))
+            else:
+                self.memory.update_priorities(idxs, abs(td_error.cpu().detach().numpy()))
 
         self.grad_steps += 1
 
@@ -698,18 +969,38 @@ class Agent():
         else:
 
             _, states, _, _, _, _, _ = self.memory.sample(self.batch_size)
+            if states is False:
+                return
             for i in range(math.floor(min(self.churn_sample, self.env_steps - self.n) / self.batch_size)):
                 _, statesX, _, _, _, _, _ = self.memory.sample(self.batch_size)
+                if statesX is False:
+                    return
                 states = torch.cat((states, statesX))
 
         states = T.tensor(states).to(self.net.device)
 
-        cur_vals = self.net(states)
+        if self.noisy:
+            self.net.disable_noise()
+            self.churn_net.disable_noise()
 
-        if self.replace_target_cnt > 1 or self.target_ema:
-            tgt_vals = self.churn_net(states)
+        if not self.c51:
+            cur_vals = self.net(states)
+
+            if self.replace_target_cnt > 1 or self.target_ema or self.noisy:
+                tgt_vals = self.churn_net(states)
+            else:
+                tgt_vals = self.tgt_net(states)
         else:
-            tgt_vals = self.tgt_net(states)
+            cur_vals = self.net.qvals(states)
+
+            if self.replace_target_cnt > 1 or self.target_ema or self.noisy:
+                tgt_vals = self.churn_net.qvals(states)
+            else:
+                tgt_vals = self.tgt_net.qvals(states)
+
+        if self.noisy:
+            self.net.enable_noise()
+            self.churn_net.enable_noise()
 
         output = torch.argmax(cur_vals, dim=1)
         tgt_output = torch.argmax(tgt_vals, dim=1)
@@ -773,3 +1064,42 @@ def running_average_with_window(input_list, window_size):
         averages.append(current_average)
 
     return averages
+
+
+
+def distr_projection(next_distr, rewards, dones, Vmin, Vmax, n_atoms, gamma):
+    """
+    Perform distribution projection aka Catergorical Algorithm from the
+    "A Distributional Perspective on RL" paper
+    """
+    batch_size = len(rewards)
+    proj_distr = T.zeros((batch_size, n_atoms), dtype=T.float32)
+    delta_z = (Vmax - Vmin) / (n_atoms - 1)
+    for atom in range(n_atoms):
+        tz_j = np.minimum(Vmax, np.maximum(Vmin, rewards + (Vmin + atom * delta_z) * gamma))
+        b_j = (tz_j - Vmin) / delta_z
+        l = np.floor(b_j).type(T.int64)
+        u = np.ceil(b_j).type(T.int64)
+        eq_mask = u == l
+        proj_distr[eq_mask, l[eq_mask]] += next_distr[eq_mask, atom]
+        ne_mask = u != l
+        proj_distr[ne_mask, l[ne_mask]] += next_distr[ne_mask, atom] * (u - b_j)[ne_mask]
+        proj_distr[ne_mask, u[ne_mask]] += next_distr[ne_mask, atom] * (b_j - l)[ne_mask]
+    if dones.any():
+        proj_distr[dones] = 0.0
+        tz_j = np.minimum(Vmax, np.maximum(Vmin, rewards[dones]))
+        b_j = (tz_j - Vmin) / delta_z
+        l = np.floor(b_j).type(T.int64)
+        u = np.ceil(b_j).type(T.int64)
+        eq_mask = u == l
+        eq_dones = T.clone(dones)
+        eq_dones[dones] = eq_mask
+        if eq_dones.any():
+            proj_distr[eq_dones, l[eq_mask]] = 1.0
+        ne_mask = u != l
+        ne_dones = T.clone(dones)
+        ne_dones[dones] = ne_mask
+        if ne_dones.any():
+            proj_distr[ne_dones, l[ne_mask]] = (u - b_j)[ne_mask]
+            proj_distr[ne_dones, u[ne_mask]] = (b_j - l)[ne_mask]
+    return proj_distr
