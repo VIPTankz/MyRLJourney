@@ -70,6 +70,9 @@ class NStepExperienceReplay:
 
         self.mem_cntr += 1
 
+    def update_n(self, n):
+        self.n = n
+
     def __len__(self):
         return self.mem_cntr
 
