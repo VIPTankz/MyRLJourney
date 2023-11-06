@@ -400,6 +400,10 @@ class Agent():
         self.reward_proportions = False
         self.gen_data = False
         self.identify_data = False
+        self.variance_data = True
+
+        if self.variance_data:
+            self.variances = []
 
         if self.identify_data:
             self.identify = Identify(self.min_sampling_size)
@@ -743,20 +747,31 @@ class Agent():
 
         if self.c51:
             loss_v = (-state_log_sm_v * proj_distr_v)
+
             if self.per:
                 weights = T.squeeze(weights)
                 loss_v = weights.to(self.net.device) * loss_v.sum(dim=1)
             else:
                 loss_v = loss_v.sum(dim=1)
 
+            if self.variance_data:
+                self.variances.append(torch.var(loss_v).item())
+
             loss = loss_v.mean()
         else:
 
             if not self.per:
                 loss = self.net.loss(q_target, q_pred).to(self.net.device)
+                if self.variance_data:
+                    self.variances.append(torch.var(loss).item())
             else:
                 td_error = q_target - q_pred
-                loss = (td_error.pow(2)*weights.to(self.net.device)).mean().to(self.net.device)
+                loss_v = (td_error.pow(2)*weights.to(self.net.device))
+                loss = loss_v.mean().to(self.net.device)
+                if self.variance_data:
+                    self.variances.append(torch.var(loss_v).item())
+
+
 
 
         loss.backward()
@@ -772,6 +787,11 @@ class Agent():
         self.grad_steps += 1
 
         self.epsilon.update_eps()
+
+        if self.variance_data and self.grad_steps == 99000 - self.min_sampling_size:
+            variance_data = np.array(self.variances)
+            np.save(self.algo_name + "_varianceData" + self.game + str(self.run) + ".npy", variance_data)
+
 
         if self.action_gap_data:
             #print(q_pred_og)
