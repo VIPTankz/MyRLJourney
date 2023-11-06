@@ -71,7 +71,7 @@ class NoisyLinear(nn.Module):
 
 
 class C51DeepQNetwork(nn.Module):
-    def __init__(self, lr, n_actions, name, input_dims, chkpt_dir,atoms,Vmax,Vmin, device, noisy, dueling):
+    def __init__(self, lr, n_actions, name, input_dims, chkpt_dir,atoms,Vmax,Vmin, device, noisy, dueling, der_archit):
         super(C51DeepQNetwork, self).__init__()
         self.checkpoint_dir = chkpt_dir
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name)
@@ -82,20 +82,27 @@ class C51DeepQNetwork(nn.Module):
         self.n_actions = n_actions
         self.dueling = dueling
         self.noisy = noisy
+        self.der_archit = der_archit
 
-        self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
-        self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
-        self.conv3 = nn.Conv2d(64, 64, 3)
+        if not self.der_archit:
+            self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
+            self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
+            self.conv3 = nn.Conv2d(64, 64, 3)
+            output_size = 64 * 7 * 7
+        else:
+            self.conv1 = nn.Conv2d(4, 32, 5, stride=5, padding=0)
+            self.conv2 = nn.Conv2d(32, 64, 5, stride=5, padding=0)
+            output_size = 64 * 3 * 3
 
         if self.dueling:
             if self.noisy:
-                self.fc1V = NoisyLinear(64 * 7 * 7, 256)
-                self.fc1A = NoisyLinear(64 * 7 * 7, 256)
+                self.fc1V = NoisyLinear(output_size, 256)
+                self.fc1A = NoisyLinear(output_size, 256)
                 self.fcV2 = NoisyLinear(256, atoms)
                 self.fcA2 = NoisyLinear(256, n_actions * atoms)
             else:
-                self.fc1V = nn.Linear(64 * 7 * 7, 256)
-                self.fc1A = nn.Linear(64 * 7 * 7, 256)
+                self.fc1V = nn.Linear(output_size, 256)
+                self.fc1A = nn.Linear(output_size, 256)
                 self.fcV2 = nn.Linear(256, atoms)
                 self.fcA2 = nn.Linear(256, n_actions * atoms)
         else:
@@ -120,7 +127,8 @@ class C51DeepQNetwork(nn.Module):
 
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
-        x = F.relu(self.conv3(x))
+        if not self.der_archit:
+            x = F.relu(self.conv3(x))
 
         return x
     def reset_noise(self):
@@ -339,21 +347,23 @@ class Agent():
         #MAKE SURE YOU CHECKED THE NAME AND DATA COLLETION
 
         # IMPORTANT params, check these
-        self.n = 10 #CHANGED
-        self.gamma = 0.9 #CHANGED
-        self.batch_size = 16
-        self.duelling = False
+        self.n = 20 #CHANGED
+        self.gamma = 0.99 #CHANGED
+        self.batch_size = 32
+        self.duelling = True
         self.aug = False
-        self.replace_target_cnt = 1
+        self.replace_target_cnt = 2000
         self.replay_ratio = 1
-        self.per = False
-        self.annealing_n = True
-        self.annealing_gamma = True
+        self.per = True
+        self.annealing_n = False
+        self.annealing_gamma = False
         self.target_ema = False
         self.double = True
-        self.trust_regions = False # Not implemented for c51
+        self.trust_regions = False  # Not implemented for c51
         self.noisy = True
-        self.c51 = False
+        self.c51 = True
+
+        self.der_archit = True  # This is only implemented for c51
 
         if self.c51:
             self.Vmax = 10
@@ -370,16 +380,19 @@ class Agent():
             self.trust_tau = 0.005
             self.trust_alpha = 2
 
-        self.ema_tau = 0.005
+        if self.target_ema:
+            self.ema_tau = 0.005
 
-        self.final_gamma = 0.967
-        self.anneal_steps_gamma = 10000
-        self.gamma_inc = (self.final_gamma - self.gamma) / self.anneal_steps_gamma
+        if self.annealing_gamma:
+            self.final_gamma = 0.967
+            self.anneal_steps_gamma = 10000
+            self.gamma_inc = (self.final_gamma - self.gamma) / self.anneal_steps_gamma
 
-        self.final_n = 3
-        self.anneal_steps = 10000
-        self.n_dec = (self.n - self.final_n) / self.anneal_steps
-        self.n_float = float(self.n)
+        if self.annealing_n:
+            self.final_n = 3
+            self.anneal_steps = 10000
+            self.n_dec = (self.n - self.final_n) / self.anneal_steps
+            self.n_float = float(self.n)
 
         #data collection
         self.collecting_churn_data = True
@@ -414,19 +427,19 @@ class Agent():
             self.net = C51DeepQNetwork(self.lr, self.n_actions,
                                            input_dims=self.input_dims, name='DER_eval',
                                            chkpt_dir=self.chkpt_dir, atoms=self.N_ATOMS, Vmax=self.Vmax, Vmin=self.Vmin,
-                                           device=device, noisy=self.noisy, dueling=self.duelling)
+                                           device=device, noisy=self.noisy, dueling=self.duelling, der_archit=self.der_archit)
 
             if not self.target_ema:
                 self.tgt_net = C51DeepQNetwork(self.lr, self.n_actions,
                                                    input_dims=self.input_dims, name='DER_next',
                                                    chkpt_dir=self.chkpt_dir, atoms=self.N_ATOMS, Vmax=self.Vmax,
-                                                   Vmin=self.Vmin, device=device, noisy=self.noisy, dueling=self.duelling)
+                                                   Vmin=self.Vmin, device=device, noisy=self.noisy, dueling=self.duelling, der_archit=self.der_archit)
 
                 if self.replace_target_cnt > 1 or self.noisy:
                     self.churn_net = C51DeepQNetwork(self.lr, self.n_actions,
                                                    input_dims=self.input_dims, name='DER_next',
                                                    chkpt_dir=self.chkpt_dir, atoms=self.N_ATOMS, Vmax=self.Vmax,
-                                                   Vmin=self.Vmin, device=device, noisy=self.noisy, dueling=self.duelling)
+                                                   Vmin=self.Vmin, device=device, noisy=self.noisy, dueling=self.duelling, der_archit=self.der_archit)
 
             if self.target_ema:
                 self.tgt_net = EMA(self.net, self.ema_tau)
