@@ -72,8 +72,8 @@ if __name__ == "__main__":
     early_churn_data_total = []
     late_churn_data_total = []
 
-    name = "DDQN_n10_3_bs16_discount9_967_noisy"
-    runs = 5
+    name = "DER"
+    runs = 4
 
     for game in games:
         for run in range(runs):

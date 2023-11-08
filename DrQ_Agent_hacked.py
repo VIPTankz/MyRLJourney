@@ -347,23 +347,25 @@ class Agent():
         #MAKE SURE YOU CHECKED THE NAME AND DATA COLLETION
 
         # IMPORTANT params, check these
-        self.n = 20 #CHANGED
-        self.gamma = 0.99 #CHANGED
-        self.batch_size = 32
-        self.duelling = True
+        self.n = 10
+        self.gamma = 0.9
+        self.batch_size = 16
+        self.duelling = False
         self.aug = False
-        self.replace_target_cnt = 2000
+        self.replace_target_cnt = 1500
         self.replay_ratio = 1
-        self.per = True
-        self.annealing_n = False
-        self.annealing_gamma = False
+        self.per = False
+        self.annealing_n = True
+        self.annealing_gamma = True
         self.target_ema = False
         self.double = True
-        self.trust_regions = False  # Not implemented for c51
-        self.noisy = True
-        self.c51 = True
+        self.trust_regions = True  # Not implemented for c51
+        self.trust_region_disable = True
+        self.noisy = False
 
-        self.der_archit = True  # This is only implemented for c51
+        self.c51 = False
+
+        self.der_archit = False  # This is only implemented for c51
 
         if self.c51:
             self.Vmax = 10
@@ -377,8 +379,9 @@ class Agent():
 
         if self.trust_regions:
             self.running_std = -999
-            self.trust_tau = 0.005
-            self.trust_alpha = 2
+            self.trust_alpha = 1
+
+        self.trust_region_start = 5000
 
         if self.target_ema:
             self.ema_tau = 0.005
@@ -401,6 +404,7 @@ class Agent():
         self.gen_data = False
         self.identify_data = False
         self.variance_data = True
+        self.explosion = False
 
         if self.variance_data:
             self.variances = []
@@ -695,6 +699,12 @@ class Agent():
         if not self.c51:
             q_pred = q_pred[indices, actions]
 
+        if self.explosion:
+            if self.grad_steps % 50 == 0:
+                print("Grad Steps: " + str(self.grad_steps))
+                print(q_pred.mean().item())
+
+
         with torch.no_grad():
             if not self.c51:
                 max_actions = T.argmax(q_actions, dim=1)
@@ -719,27 +729,33 @@ class Agent():
 
                 proj_distr_v = proj_distr.to(self.net.device)
 
-
         if self.trust_regions:
             with torch.no_grad():
                 losses = q_target - q_pred
 
                 if self.running_std != -999:
-                    self.running_std = torch.std(losses).detach().cpu() * self.trust_tau + (1 - self.trust_tau) * self.running_std
+                    current_std = torch.std(losses).item()
+                    self.running_std += current_std
 
-                    target_network_pred = self.tgt_net.forward(states)[indices, actions]
+                    if self.trust_region_disable and self.grad_steps < self.trust_region_start:
+                        pass
+                    else:
+                        target_network_pred = self.tgt_net.forward(states)[indices, actions]
 
-                    sigma_j = max(self.running_std, torch.std(losses).detach().cpu())
-                    simga_j = max(sigma_j, 0.01)
+                        sigma_j = self.running_std / self.grad_steps
 
-                    outside_region = torch.abs(q_pred - target_network_pred) > self.trust_alpha * simga_j
-                    diff_sign = torch.sign(q_pred - target_network_pred) != torch.sign(q_pred - q_target)
+                        sigma_j = max(sigma_j, current_std)
+                        sigma_j = max(sigma_j, 0.01)
 
-                    mask = torch.logical_and(outside_region, diff_sign)
-                    print(mask)
+                        outside_region = torch.abs(q_pred - target_network_pred) > self.trust_alpha * sigma_j
+                        diff_sign = torch.sign(q_pred - target_network_pred) != torch.sign(q_pred - q_target)
 
-                    q_pred[mask] = 0
-                    q_target[mask] = 0
+                        mask = torch.logical_and(outside_region, diff_sign)
+                        #if self.grad_steps % 50 == 0:
+                        #print(mask)
+
+                        q_pred[mask] = 0
+                        q_target[mask] = 0
 
                 else:
                     self.running_std = torch.std(losses).detach().cpu()
@@ -771,9 +787,6 @@ class Agent():
                 if self.variance_data:
                     self.variances.append(torch.var(loss_v).item())
 
-
-
-
         loss.backward()
         T.nn.utils.clip_grad_norm_(self.net.parameters(), 10)
         self.net.optimizer.step()
@@ -788,7 +801,7 @@ class Agent():
 
         self.epsilon.update_eps()
 
-        if self.variance_data and self.grad_steps == 99000 - self.min_sampling_size:
+        if self.variance_data and self.grad_steps == 97000 - self.min_sampling_size:
             variance_data = np.array(self.variances)
             np.save(self.algo_name + "_varianceData" + self.game + str(self.run) + ".npy", variance_data)
 

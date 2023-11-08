@@ -208,7 +208,7 @@ class TransitionModel(nn.Module):
 
         x = F.relu(self.conv2(x))
 
-        # output should be bs*64*7*7
+        # output should be batch_size*64*7*7
         return x
 
 class Agent():
@@ -432,7 +432,6 @@ class Agent():
 
         # Calculate target latents
         tgt_latents = self.tgt_net.target_prediction(tgt_states)
-        #tgt_latents = torch.reshape(tgt_latents, (self.K, self.batch_size, -1))
 
         # Calculate online latents
         latents = self.produce_latents(states, prediction_actions)
@@ -449,8 +448,7 @@ class Agent():
         latents = torch.reshape(latents, (self.K, self.batch_size, 512))
         tgt_latents = torch.reshape(tgt_latents, (self.K, self.batch_size, 512))
 
-        # might need to check the dim on cosine.
-        # latents and tgt_latents are 5,32,512? and we want to get sum of differences in the last dim
+        # latents and tgt_latents are K,batch_size,512 and we want to get sum of differences in the last dim
         spr_loss = ((self.cosine(latents, tgt_latents).sum()) * -1) / self.batch_size
 
         ################
