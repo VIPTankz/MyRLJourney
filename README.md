@@ -14,7 +14,7 @@ DDQN + Image Augmentations :white_check_mark: 0.160
 
 DDQN + Duelling :white_check_mark: 0.075
 
-Data Efficient Rainbow :white_check_mark: 0.154
+Data Efficient Rainbow :white_check_mark: 0.160
 
 Self-Predictive Representations :clock3:
 
