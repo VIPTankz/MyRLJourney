@@ -121,14 +121,15 @@ if __name__ == "__main__":
                     print("\n\n")"""
 
                     if churn_data.start_timesteps == 1600:
-                        churn_25 += churn_data.avg_churn
+                        churn_25 += abs(churn_data.avg_churn)
+                        print(churn_data.avg_churn)
                         churn_std25 += churn_data.churn_std
                         action_std25 += churn_data.action_std
                         percent0_25 += churn_data.percent0churn
                         for i,j in zip(['%.5f' % elem for elem in churn_data.percent_churns_per_action], ['%.5f' % elem for elem in churn_data.total_action_percents]):
                             early_churn_data_total.append([float(i) * 100,float(j) * 100])
                     else:
-                        churn_75 += churn_data.avg_churn
+                        churn_75 += abs(churn_data.avg_churn)
                         churn_std75 += churn_data.churn_std
                         action_std75 += churn_data.action_std
                         percent0_75 += churn_data.percent0churn

@@ -347,20 +347,20 @@ class Agent():
         #MAKE SURE YOU CHECKED THE NAME AND DATA COLLETION
 
         # IMPORTANT params, check these
-        self.n = 10
-        self.gamma = 0.9
-        self.batch_size = 16
+        self.n = 3
+        self.gamma = 0.99
+        self.batch_size = 32
         self.duelling = False
         self.aug = False
-        self.replace_target_cnt = 1500
+        self.replace_target_cnt = 1
         self.replay_ratio = 1
         self.per = False
-        self.annealing_n = True
-        self.annealing_gamma = True
-        self.target_ema = False
+        self.annealing_n = False
+        self.annealing_gamma = False
+        self.target_ema = True
         self.double = True
-        self.trust_regions = True  # Not implemented for c51
-        self.trust_region_disable = True
+        self.trust_regions = False  # Not implemented for c51
+        self.trust_region_disable = False
         self.noisy = False
 
         self.c51 = False
@@ -456,6 +456,9 @@ class Agent():
                                                    chkpt_dir=self.chkpt_dir, atoms=self.N_ATOMS, Vmax=self.Vmax,
                                                    Vmin=self.Vmin, device=device, noisy=self.noisy, dueling=self.duelling)
 
+            for param in self.tgt_net.parameters():
+                param.requires_grad = False
+
 
         else:
             self.net = QNetwork(self.lr, self.n_actions,
@@ -475,8 +478,7 @@ class Agent():
                 self.churn_net = QNetwork(self.lr, self.n_actions,
                                           input_dims=self.input_dims, device=device, noisy=self.noisy)
 
-        for param in self.tgt_net.parameters():
-            param.requires_grad = False
+
 
         if self.gen_data:
             self.net.optimizer = optim.RMSprop(self.net.parameters(), lr=lr)
@@ -704,6 +706,9 @@ class Agent():
                 print("Grad Steps: " + str(self.grad_steps))
                 print(q_pred.mean().item())
 
+            if q_pred.mean().item() > 10:
+                raise Exception("Stop! Grad Steps: " + str(self.grad_steps))
+
 
         with torch.no_grad():
             if not self.c51:
@@ -729,9 +734,40 @@ class Agent():
 
                 proj_distr_v = proj_distr.to(self.net.device)
 
+        if self.c51:
+            loss_v = (-state_log_sm_v * proj_distr_v)
+
+            if self.per:
+                weights = T.squeeze(weights)
+                loss_v = weights.to(self.net.device) * loss_v.sum(dim=1)
+            else:
+                loss_v = loss_v.sum(dim=1)
+
+            if self.variance_data:
+                self.variances.append(torch.var(loss_v).item())
+
+            loss = loss_v.mean()
+        else:
+
+            if not self.per:
+                loss = self.net.loss(q_target, q_pred).to(self.net.device)
+                if self.variance_data:
+                    self.variances.append(torch.var(loss).item())
+            else:
+                td_error = q_target - q_pred
+                loss_v = (td_error.pow(2)*weights.to(self.net.device))
+                loss = loss_v.mean().to(self.net.device)
+                if self.variance_data:
+                    self.variances.append(torch.var(loss_v).item())
+
+
         if self.trust_regions:
             with torch.no_grad():
-                losses = q_target - q_pred
+
+                if not self.c51:
+                    losses = q_target - q_pred
+                else:
+                    losses = (-state_log_sm_v * proj_distr_v).sum(dim=1)
 
                 if self.running_std != -999:
                     current_std = torch.std(losses).item()
@@ -759,33 +795,6 @@ class Agent():
 
                 else:
                     self.running_std = torch.std(losses).detach().cpu()
-
-
-        if self.c51:
-            loss_v = (-state_log_sm_v * proj_distr_v)
-
-            if self.per:
-                weights = T.squeeze(weights)
-                loss_v = weights.to(self.net.device) * loss_v.sum(dim=1)
-            else:
-                loss_v = loss_v.sum(dim=1)
-
-            if self.variance_data:
-                self.variances.append(torch.var(loss_v).item())
-
-            loss = loss_v.mean()
-        else:
-
-            if not self.per:
-                loss = self.net.loss(q_target, q_pred).to(self.net.device)
-                if self.variance_data:
-                    self.variances.append(torch.var(loss).item())
-            else:
-                td_error = q_target - q_pred
-                loss_v = (td_error.pow(2)*weights.to(self.net.device))
-                loss = loss_v.mean().to(self.net.device)
-                if self.variance_data:
-                    self.variances.append(torch.var(loss_v).item())
 
         loss.backward()
         T.nn.utils.clip_grad_norm_(self.net.parameters(), 10)
