@@ -352,12 +352,12 @@ class Agent():
         self.batch_size = 32
         self.duelling = False
         self.aug = False
-        self.replace_target_cnt = 1
+        self.replace_target_cnt = 2000
         self.replay_ratio = 1
         self.per = False
         self.annealing_n = False
         self.annealing_gamma = False
-        self.target_ema = True
+        self.target_ema = False
         self.double = True
         self.trust_regions = False  # Not implemented for c51
         self.trust_region_disable = False
@@ -456,9 +456,6 @@ class Agent():
                                                    chkpt_dir=self.chkpt_dir, atoms=self.N_ATOMS, Vmax=self.Vmax,
                                                    Vmin=self.Vmin, device=device, noisy=self.noisy, dueling=self.duelling)
 
-            for param in self.tgt_net.parameters():
-                param.requires_grad = False
-
 
         else:
             self.net = QNetwork(self.lr, self.n_actions,
@@ -478,7 +475,9 @@ class Agent():
                 self.churn_net = QNetwork(self.lr, self.n_actions,
                                           input_dims=self.input_dims, device=device, noisy=self.noisy)
 
-
+        if not self.target_ema:
+            for param in self.tgt_net.parameters():
+                param.requires_grad = False
 
         if self.gen_data:
             self.net.optimizer = optim.RMSprop(self.net.parameters(), lr=lr)

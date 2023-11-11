@@ -33,7 +33,7 @@ print_ind = True
 print(len(games))
 
 hns = []
-labels = ["DDQN_n10_3_bs16_discount9_967_trust1_disabled5k"]
+labels = ["DDQN_n3_ema"]
 runs = 5
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
