@@ -72,7 +72,7 @@ if __name__ == "__main__":
     early_churn_data_total = []
     late_churn_data_total = []
 
-    name = "DDQN_n3_ema"
+    name = "DDQN_n3_target2k"
     runs = 5
 
     for game in games:

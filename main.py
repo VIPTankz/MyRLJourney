@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked import Agent
 
-    agent_name = "DDQN_n3_target2k"
+    agent_name = "DDQN_n3_trust3"
     """
     Changes:
     Games
@@ -78,6 +78,7 @@ if __name__ == '__main__':
                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
     """
+
     gameset_idx = int(sys.argv[1])
 
     games = gameset[gameset_idx]

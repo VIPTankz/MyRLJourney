@@ -352,14 +352,14 @@ class Agent():
         self.batch_size = 32
         self.duelling = False
         self.aug = False
-        self.replace_target_cnt = 2000
+        self.replace_target_cnt = 1
         self.replay_ratio = 1
         self.per = False
         self.annealing_n = False
         self.annealing_gamma = False
         self.target_ema = False
         self.double = True
-        self.trust_regions = False  # Not implemented for c51
+        self.trust_regions = True  # Not implemented for c51
         self.trust_region_disable = False
         self.noisy = False
 
@@ -379,7 +379,8 @@ class Agent():
 
         if self.trust_regions:
             self.running_std = -999
-            self.trust_alpha = 1
+            self.trust_alpha = 3
+            self.replace_target_cnt = 1500
 
         self.trust_region_start = 5000
 
@@ -399,11 +400,13 @@ class Agent():
 
         #data collection
         self.collecting_churn_data = True
+        self.variance_data = True
+
         self.action_gap_data = False
         self.reward_proportions = False
         self.gen_data = False
         self.identify_data = False
-        self.variance_data = True
+
         self.explosion = False
 
         if self.variance_data:
@@ -475,13 +478,18 @@ class Agent():
                 self.churn_net = QNetwork(self.lr, self.n_actions,
                                           input_dims=self.input_dims, device=device, noisy=self.noisy)
 
-        if not self.target_ema:
+        if self.c51:
             for param in self.tgt_net.parameters():
                 param.requires_grad = False
+
 
         if self.gen_data:
             self.net.optimizer = optim.RMSprop(self.net.parameters(), lr=lr)
             self.tgt_net.optimizer = optim.RMSprop(self.net.parameters(), lr=lr)
+
+
+        if self.trust_regions:
+            self.replace_target_network()
 
         self.random_shift = nn.Sequential(nn.ReplicationPad2d(4), aug.RandomCrop((84, 84)))
         self.intensity = Intensity(scale=0.1)
@@ -708,7 +716,6 @@ class Agent():
             if q_pred.mean().item() > 10:
                 raise Exception("Stop! Grad Steps: " + str(self.grad_steps))
 
-
         with torch.no_grad():
             if not self.c51:
                 max_actions = T.argmax(q_actions, dim=1)
@@ -733,6 +740,52 @@ class Agent():
 
                 proj_distr_v = proj_distr.to(self.net.device)
 
+        # Trust Region Code
+        if self.trust_regions:
+            with torch.no_grad():
+
+                if not self.c51:
+                    losses = torch.abs(q_target - q_pred)
+                else:
+                    losses = (-state_log_sm_v * proj_distr_v).sum(dim=1)
+
+
+                if self.running_std != -999:
+                    current_std = torch.std(losses).item()
+                    self.running_std += current_std
+
+                    if self.trust_region_disable and self.grad_steps < self.trust_region_start:
+                        pass
+                    else:
+                        target_network_pred = self.tgt_net.forward(states)[indices, actions]
+
+                        sigma_j = self.running_std / self.grad_steps
+
+                        sigma_j = max(sigma_j, current_std)
+                        sigma_j = max(sigma_j, 0.01)
+
+                        #print("sigma_j")
+                        #print(sigma_j)
+
+                        #print("Loss online to target")
+                        #print(q_pred - target_network_pred)
+
+                        outside_region = torch.abs(q_pred - target_network_pred) > self.trust_alpha * sigma_j
+
+                        diff_sign = torch.sign(q_pred - target_network_pred) != torch.sign(q_pred - q_target)
+
+                        mask = torch.logical_and(outside_region, diff_sign)
+                        #if self.grad_steps % 50 == 0:
+                        #print(mask)
+
+                        q_pred[mask] = 0
+                        q_target[mask] = 0
+
+                else:
+                    self.running_std = torch.std(losses).detach().cpu()
+
+
+        # Loss Calculations
         if self.c51:
             loss_v = (-state_log_sm_v * proj_distr_v)
 
@@ -760,40 +813,7 @@ class Agent():
                     self.variances.append(torch.var(loss_v).item())
 
 
-        if self.trust_regions:
-            with torch.no_grad():
 
-                if not self.c51:
-                    losses = q_target - q_pred
-                else:
-                    losses = (-state_log_sm_v * proj_distr_v).sum(dim=1)
-
-                if self.running_std != -999:
-                    current_std = torch.std(losses).item()
-                    self.running_std += current_std
-
-                    if self.trust_region_disable and self.grad_steps < self.trust_region_start:
-                        pass
-                    else:
-                        target_network_pred = self.tgt_net.forward(states)[indices, actions]
-
-                        sigma_j = self.running_std / self.grad_steps
-
-                        sigma_j = max(sigma_j, current_std)
-                        sigma_j = max(sigma_j, 0.01)
-
-                        outside_region = torch.abs(q_pred - target_network_pred) > self.trust_alpha * sigma_j
-                        diff_sign = torch.sign(q_pred - target_network_pred) != torch.sign(q_pred - q_target)
-
-                        mask = torch.logical_and(outside_region, diff_sign)
-                        #if self.grad_steps % 50 == 0:
-                        #print(mask)
-
-                        q_pred[mask] = 0
-                        q_target[mask] = 0
-
-                else:
-                    self.running_std = torch.std(losses).detach().cpu()
 
         loss.backward()
         T.nn.utils.clip_grad_norm_(self.net.parameters(), 10)
