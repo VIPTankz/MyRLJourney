@@ -194,12 +194,21 @@ class C51DeepQNetwork(nn.Module):
         self.load_state_dict(T.load(self.checkpoint_file))
 
 class QNetwork(nn.Module):
-    def __init__(self, lr, n_actions, input_dims, device, noisy):
+    def __init__(self, lr, n_actions, input_dims, device, noisy, batchnorm):
         super(QNetwork, self).__init__()
 
         self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
         self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, 3)
+
+        self.batchnorm = batchnorm
+
+        if self.batchnorm:
+            self.bn1 = nn.BatchNorm2d(32)
+            self.bn2 = nn.BatchNorm2d(64)
+            self.bn3 = nn.BatchNorm2d(64)
+            self.bn4 = nn.BatchNorm1d(512)
+
         self.noisy = noisy
 
         if self.noisy:
@@ -220,10 +229,18 @@ class QNetwork(nn.Module):
         observation = T.div(observation, 255)
         observation = observation.view(-1, 4, 84, 84)
         observation = F.relu(self.conv1(observation))
+        if self.batchnorm:
+            observation = self.bn1(observation)
         observation = F.relu(self.conv2(observation))
+        if self.batchnorm:
+            observation = self.bn2(observation)
         observation = F.relu(self.conv3(observation))
+        if self.batchnorm:
+            observation = self.bn3(observation)
         observation = observation.view(-1, 64 * 7 * 7)
         observationQ = F.relu(self.fc1(observation))
+        if self.batchnorm:
+            observationQ = self.bn4(observationQ)
         Q = self.fc2(observationQ)
 
         return Q
@@ -359,9 +376,10 @@ class Agent():
         self.annealing_gamma = False
         self.target_ema = False
         self.double = True
-        self.trust_regions = True  # Not implemented for c51
+        self.trust_regions = False  # Not implemented for c51
         self.trust_region_disable = False
         self.noisy = False
+        self.batch_norm = False # only implemented for vanilla q networks
 
         self.c51 = False
 
@@ -379,8 +397,11 @@ class Agent():
 
         if self.trust_regions:
             self.running_std = -999
-            self.trust_alpha = 3
+            self.trust_alpha = 1
             self.replace_target_cnt = 1500
+
+        if self.batch_norm:
+            self.replace_target_cnt = 1
 
         self.trust_region_start = 5000
 
@@ -399,15 +420,15 @@ class Agent():
             self.n_float = float(self.n)
 
         #data collection
-        self.collecting_churn_data = True
-        self.variance_data = True
+        self.collecting_churn_data = False
+        self.variance_data = False
 
         self.action_gap_data = False
         self.reward_proportions = False
         self.gen_data = False
         self.identify_data = False
 
-        self.explosion = False
+        self.explosion = True
 
         if self.variance_data:
             self.variances = []
@@ -462,21 +483,21 @@ class Agent():
 
         else:
             self.net = QNetwork(self.lr, self.n_actions,
-                                           input_dims=self.input_dims, device=device, noisy=self.noisy)
+                                           input_dims=self.input_dims, device=device, noisy=self.noisy, batchnorm=self.batch_norm)
 
 
             if not self.target_ema:
                 self.tgt_net = QNetwork(self.lr, self.n_actions,
-                                                   input_dims=self.input_dims, device=device, noisy=self.noisy)
+                                                   input_dims=self.input_dims, device=device, noisy=self.noisy, batchnorm=self.batch_norm)
 
                 if self.replace_target_cnt > 1 or self.noisy:
                     self.churn_net = QNetwork(self.lr, self.n_actions,
-                                            input_dims=self.input_dims, device=device, noisy=self.noisy)
+                                            input_dims=self.input_dims, device=device, noisy=self.noisy, batchnorm=self.batch_norm)
 
             if self.target_ema:
                 self.tgt_net = EMA(self.net, self.ema_tau)
                 self.churn_net = QNetwork(self.lr, self.n_actions,
-                                          input_dims=self.input_dims, device=device, noisy=self.noisy)
+                                          input_dims=self.input_dims, device=device, noisy=self.noisy, batchnorm=self.batch_norm)
 
         if self.c51:
             for param in self.tgt_net.parameters():
@@ -571,11 +592,19 @@ class Agent():
                     self.net.reset_noise()
 
             state = T.tensor(np.array([observation]), dtype=T.float).to(self.net.device)
+
+            if self.batch_norm:
+                self.net.eval()
+
             if not self.c51:
                 q_vals = self.net.forward(state)
             else:
                 q_vals = self.net.qvals(state)
             action = T.argmax(q_vals).item()
+
+            if self.batch_norm:
+                self.net.train()
+
         else:
             action = np.random.choice(self.action_space)
 
@@ -677,18 +706,25 @@ class Agent():
             states_policy_ = states_
 
         if not self.c51:
-            q_pred = self.net.forward(states)  # states_aug
+            if not self.batch_norm:
+                q_pred = self.net.forward(states)  # states_aug
 
-            if not self.trust_regions:
-                q_targets = self.tgt_net.forward(states_)
+                if not self.trust_regions:
+                    q_targets = self.tgt_net.forward(states_)
 
-            if self.double:
-                q_actions = self.net.forward(states_policy_)
+                if self.double:
+                    q_actions = self.net.forward(states_policy_)
+                else:
+                    q_actions = q_targets.clone().detach()
+
+                if self.trust_regions:
+                    q_targets = q_actions.clone()
             else:
+                states_and_next = torch.cat((states, states_))
+                output = self.net.forward(states_and_next)
+                q_pred, q_targets = torch.chunk(output, 2)
                 q_actions = q_targets.clone().detach()
 
-            if self.trust_regions:
-                q_targets = q_actions.clone()
         else:
             distr_v, q_pred = self.net.both(states)
             state_action_values = distr_v[range(self.batch_size), actions.data]
@@ -811,8 +847,6 @@ class Agent():
                 loss = loss_v.mean().to(self.net.device)
                 if self.variance_data:
                     self.variances.append(torch.var(loss_v).item())
-
-
 
 
         loss.backward()
