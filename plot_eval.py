@@ -1,7 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
+import pandas as pd
 
+
+games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
+             "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
+             "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
+
+
+games_to_include = [x.lower() for x in games]
 
 # This is Using IQMs NOT Median-Normalised
 #DrQ scores taken from BBF
@@ -25,6 +33,9 @@ DrQ_baseline = np.array([771.2,102.8,452.4,603.5,168.9,12954,6,16.1,780.3,20516.
 
 #drq = np.divide(DrQ_baseline - human_scores, human_scores - random_scores)
 #drq = np.divide(DrQ_baseline - random_scores, human_scores - random_scores)
+
+# old method
+"""
 print("BBF:")
 bbf = (bbf_baseline - random_scores) / (human_scores - random_scores)
 print(bbf)
@@ -34,7 +45,48 @@ print("DrQ(e)")
 drq = np.divide(DrQ_baseline - random_scores, human_scores - random_scores)
 print(scipy.stats.trim_mean(drq, 0.25, axis=None))
 
-raise Exception("Stop")
+raise Exception("Stop")"""
+
+
+############# Using their method
+csv_file_path = 'RR8_BBF.csv'
+
+# List of games to include
+
+# Read the CSV file into a pandas DataFrame
+df = pd.read_csv(csv_file_path)
+
+# Filter the DataFrame to include only the specified games
+df_filtered = df[df['game'].isin(games_to_include)]
+grouped_by_game = df_filtered.groupby('game')
+
+matrix = []
+for game, group in grouped_by_game:
+    matrix.append(group['GameScoreNormalized'].to_numpy()[:52])
+
+# Create a NumPy array with a shape of "runs" x "game"
+mat = np.array(matrix).swapaxes(1, 0)
+print(mat.shape)
+iqm = scipy.stats.trim_mean(mat, 0.25, axis=None)
+print(iqm)
+
+# Now, 'numpy_array' is a NumPy array with a shape of "runs" x "game" for the specified games
+
+
+#to calc things, just get results in runs x game matrix and use the following:
+
+#optimality gap
+#return gamma - np.mean(np.minimum(scores, gamma))
+
+#IQM
+#return scipy.stats.trim_mean(scores, 0.25, axis=None)
+
+#median
+#return np.median(np.mean(scores, axis=-2, keepdims=keepdims), axis=-1)
+
+#mean
+#return np.mean(np.mean(scores, axis=-2, keepdims=keepdims), axis=-1)
+
 #formula is ( (algo - human) / (human - random))
 
 
@@ -43,7 +95,7 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
 hns = []
-labels = ["DER"]
+labels = ["DDQN_n3_discount967_trust075_update2k"]
 runs = 5
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
@@ -58,12 +110,21 @@ for game in games:
         for run in range(runs):
             print(np.mean(np.load(data_files[i][-1] + " (" + str(run) + ').npy')))
 
-#print(data_files)
+# get data in for runs x games
 
-results = np.zeros((len(labels),len(games)),dtype=np.float64)
+#results = np.zeros((len(labels),len(games)),dtype=np.float64)
+results = []
 for i in range(len(labels)):
     for j in range(len(games)):
         x = []
         for run in range(runs):
-            x.append(np.mean(np.load(data_files[i][j] + " (" + str(run) + ').npy')))
-        results[i, j] = sum(x) / len(x)
+            average_score = np.mean(np.load(data_files[i][j] + " (" + str(run) + ').npy'),axis=-1)
+            human_normed = (average_score - random_scores[j]) / (human_scores[j] - random_scores[j])
+            x.append(human_normed)
+        results.append(x)
+
+results = np.array(results).swapaxes(1, 0)
+print(results.shape)
+
+print("IQM:")
+print(round(scipy.stats.trim_mean(results, 0.25, axis=None),3))

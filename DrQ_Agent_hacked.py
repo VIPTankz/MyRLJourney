@@ -364,22 +364,25 @@ class Agent():
         #MAKE SURE YOU CHECKED THE NAME AND DATA COLLETION
 
         # IMPORTANT params, check these
-        self.n = 3
-        self.gamma = 0.99
-        self.batch_size = 32
+        self.n = 10
+        self.gamma = 0.967
+        self.batch_size = 16
         self.duelling = False
         self.aug = False
         self.replace_target_cnt = 1
         self.replay_ratio = 1
         self.per = False
-        self.annealing_n = False
+        self.annealing_n = True
         self.annealing_gamma = False
         self.target_ema = False
         self.double = True
         self.trust_regions = False  # Not implemented for c51
         self.trust_region_disable = False
+
+        self.my_trust_region = True
+
         self.noisy = False
-        self.batch_norm = False # only implemented for vanilla q networks
+        self.batch_norm = False  # only implemented for vanilla q networks
 
         self.c51 = False
 
@@ -408,6 +411,11 @@ class Agent():
         if self.target_ema:
             self.ema_tau = 0.005
 
+        if self.my_trust_region:
+            self.target_ema = True
+            self.ema_tau = 0.005
+            self.trust_alpha = 0.3
+
         if self.annealing_gamma:
             self.final_gamma = 0.967
             self.anneal_steps_gamma = 10000
@@ -420,15 +428,15 @@ class Agent():
             self.n_float = float(self.n)
 
         #data collection
-        self.collecting_churn_data = False
-        self.variance_data = False
+        self.collecting_churn_data = True
+        self.variance_data = True
 
         self.action_gap_data = False
         self.reward_proportions = False
         self.gen_data = False
         self.identify_data = False
 
-        self.explosion = True
+        self.explosion = False
 
         if self.variance_data:
             self.variances = []
@@ -639,6 +647,7 @@ class Agent():
         self.net.load_checkpoint()
         self.tgt_net.load_checkpoint()
 
+
     def learn(self):
         if self.replay_ratio < 1:
             if self.replay_ratio_cnt == 0:
@@ -709,7 +718,7 @@ class Agent():
             if not self.batch_norm:
                 q_pred = self.net.forward(states)  # states_aug
 
-                if not self.trust_regions:
+                if not self.trust_regions or not self.my_trust_region:
                     q_targets = self.tgt_net.forward(states_)
 
                 if self.double:
@@ -717,7 +726,7 @@ class Agent():
                 else:
                     q_actions = q_targets.clone().detach()
 
-                if self.trust_regions:
+                if self.trust_regions or self.my_trust_region:
                     q_targets = q_actions.clone()
             else:
                 states_and_next = torch.cat((states, states_))
@@ -745,7 +754,7 @@ class Agent():
             q_pred = q_pred[indices, actions]
 
         if self.explosion:
-            if self.grad_steps % 50 == 0:
+            if self.grad_steps % 100 == 0:
                 print("Grad Steps: " + str(self.grad_steps))
                 print(q_pred.mean().item())
 
@@ -820,6 +829,24 @@ class Agent():
                 else:
                     self.running_std = torch.std(losses).detach().cpu()
 
+
+        if self.my_trust_region:
+            with torch.no_grad():
+
+                #print("OG Q_targets")
+                #print(q_target)
+                target_network_pred = self.tgt_net.forward(states)[indices, actions]
+
+                mask_1 = torch.where(q_target > q_pred, 1.0, 0.0)
+                mask_1 = torch.logical_and(mask_1, torch.where(q_pred > target_network_pred, 1.0, 0.0))
+
+                mask_2 = torch.where(target_network_pred > q_pred, 1.0, 0.0)
+                mask_2 = torch.logical_and(mask_2, torch.where(q_pred > q_target, 1.0, 0.0))
+
+                mask = torch.logical_or(mask_1, mask_2)
+                q_target[mask] = q_target[mask] * self.trust_alpha + q_pred[mask] * (1 - self.trust_alpha)
+                #print("New Q-targets")
+                #print(q_target)
 
         # Loss Calculations
         if self.c51:

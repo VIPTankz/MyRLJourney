@@ -20,7 +20,7 @@ game = "Asterix"
 
 averaging = 500
 
-names = ["DDQN_n3_ema"]
+names = ["DDQN_n3_discount967_trust075_update2k"]
 data = []
 
 for i in names:
