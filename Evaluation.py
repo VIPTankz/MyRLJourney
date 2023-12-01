@@ -33,7 +33,7 @@ print_ind = True
 print(len(games))
 
 hns = []
-labels = ["DDQN_n3_discount967_trust075_update2k"]
+labels = ["DER2"]
 runs = 5
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
@@ -46,7 +46,7 @@ for game in games:
         print("\n" + game + " Evaluation Scores")
 
         for run in range(runs):
-            print(np.mean(np.load(data_files[i][-1] + " (" + str(run) + ').npy')))
+            print(round(np.mean(np.load(data_files[i][-1] + " (" + str(run) + ').npy')), 3))
 
 #print(data_files)
 
@@ -61,7 +61,7 @@ for i in range(len(labels)):
 print("\nAverages: ")
 for j in range(len(results)):
     for i in range(len(results[0])):
-        print(games[i] + ": " + str(results[j,i]))
+        print(games[i] + ": " + str(round(results[j, i], 1)))
 results = np.subtract(results, random_scores)
 results = np.divide(results, human_scores)
 #print(results)

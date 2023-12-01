@@ -95,7 +95,7 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
 hns = []
-labels = ["DDQN_n3_discount967_trust075_update2k"]
+labels = ["DER_n3_discount967"]
 runs = 5
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
@@ -128,3 +128,12 @@ print(results.shape)
 
 print("IQM:")
 print(round(scipy.stats.trim_mean(results, 0.25, axis=None),3))
+
+print("Optimality Gap:")
+print(round(np.mean(np.minimum(results, 1.0)), 3))
+
+print("Median:")
+print(round(np.median(np.mean(results, axis=-2, keepdims=False), axis=-1), 3))
+
+print("Mean:")
+print(round(np.mean(np.mean(results, axis=-2, keepdims=False), axis=-1), 3))

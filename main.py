@@ -78,6 +78,7 @@ if __name__ == '__main__':
                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
     """
+    gameset = [["BattleZone"]]
 
     gameset_idx = int(sys.argv[1])
 

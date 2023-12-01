@@ -55,6 +55,9 @@ class EMA(nn.Module):
                 target_param.data.copy_(self.tau * param.data +
                                         (1 - self.tau) * target_param.data)
 
+    def load_state_dict(self, state_dict):
+        self.ema_net.load_state_dict(state_dict)
+
 
 if __name__ == "__main__":
     pass
