@@ -95,8 +95,8 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
 hns = []
-labels = ["DER_n3_discount967"]
-runs = 5
+labels = ["DER_n3_discount967_no_target_net"]
+runs = 1
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
 count = 0

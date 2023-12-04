@@ -139,9 +139,20 @@ class ReplayMemory():
       else:
         count += 1
 
-      if count > 10000:
-        print("Skipped Step!")
-        return False, False, False, False, False, False, False, False
+      if count > 500:
+        print("Ignoring PER!")
+        while not valid:
+
+          #return False, False, False, False, False, False, False, False
+          #sample uniformly    while not valid:
+          samples = np.random.uniform(0.0, p_total, [batch_size])  # Uniformly sample from within all segments
+          probs, idxs, tree_idxs = self.transitions.find(samples)  # Retrieve samples from tree with un-normalised probability
+          if np.all((self.transitions.index - idxs) % self.capacity > self.n) and np.all((idxs - self.transitions.index) % self.capacity >= self.history) and np.all(probs != 0):
+            valid = True  # Note that conditions are valid but extra conservative around buffer index 0
+          else:
+            count += 1
+
+
     # Retrieve all required transition data (from t - h to t + n)
     transitions = self._get_transitions(idxs)
     # Create un-discretised states and nth next states
