@@ -380,12 +380,12 @@ class Agent():
         # IMPORTANT params, check these
         self.n = 10
         self.gamma = 0.967
-        self.batch_size = 32
-        self.duelling = True
-        self.aug = False
-        self.replace_target_cnt = 2000
-        self.replay_ratio = 1
-        self.per = True
+        self.batch_size = 16
+        self.duelling = False
+        self.aug = True
+        self.replace_target_cnt = 1
+        self.replay_ratio = 2
+        self.per = False
         self.annealing_n = True
         self.annealing_gamma = False
         self.target_ema = False
@@ -396,14 +396,14 @@ class Agent():
         self.my_trust_region = False  # not implemented for c51
         self.my_trust_region2 = False
 
-        self.resets = False  # not implemented for c51 or duelling
+        self.resets = True  # not implemented for c51 or duelling
 
-        self.noisy = True
+        self.noisy = False
         self.batch_norm = False  # only implemented for vanilla q networks
 
-        self.c51 = True
+        self.c51 = False
 
-        self.der_archit = True  # This is only implemented for c51
+        self.der_archit = False  # This is only implemented for c51
 
         if self.resets:
             self.reset_period = 40000
@@ -424,7 +424,7 @@ class Agent():
         if self.trust_regions:
             self.running_std = -999
             self.trust_alpha = 1
-            self.replace_target_cnt = 1500
+            self.replace_target_cnt = 1500 * self.replay_ratio
 
         if self.batch_norm:
             self.replace_target_cnt = 1
@@ -724,7 +724,7 @@ class Agent():
 
         self.net.optimizer.zero_grad()
 
-        if (self.replace_target_cnt > 1 or self.target_ema or self.noisy) and  self.collecting_churn_data:
+        if (self.replace_target_cnt > 1 or self.target_ema or self.noisy) and self.collecting_churn_data:
             self.churn_net.load_state_dict(self.net.state_dict())
 
         if self.annealing_n:
@@ -900,10 +900,16 @@ class Agent():
 
                         #print("Loss online to target")
                         #print(q_pred - target_network_pred)
+                        if self.c51:
+                            outside_region = torch.abs(q_pred[indices, actions] - target_network_pred) > self.trust_alpha * sigma_j
 
-                        outside_region = torch.abs(q_pred[indices, actions] - target_network_pred) > self.trust_alpha * sigma_j
+                            diff_sign = torch.sign(q_pred[indices, actions] - target_network_pred) != torch.sign(q_pred[indices, actions] - q_target)
+                        else:
+                            outside_region = torch.abs(
+                                q_pred - target_network_pred) > self.trust_alpha * sigma_j
 
-                        diff_sign = torch.sign(q_pred[indices, actions] - target_network_pred) != torch.sign(q_pred[indices, actions] - q_target)
+                            diff_sign = torch.sign(q_pred - target_network_pred) != torch.sign(
+                                q_pred - q_target)
 
                         mask = torch.logical_and(outside_region, diff_sign)
                         #if self.grad_steps % 50 == 0:

@@ -151,6 +151,8 @@ class ReplayMemory():
             valid = True  # Note that conditions are valid but extra conservative around buffer index 0
           else:
             count += 1
+          if count > 1000:
+            return False, False, False, False, False, False, False, False
 
 
     # Retrieve all required transition data (from t - h to t + n)

@@ -30,7 +30,8 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked import Agent
 
-    agent_name = "DER_optim"
+    #GAMESET IS WRONG
+    agent_name = "Replay_test"
     """
     Changes:
     Games
@@ -58,12 +59,14 @@ if __name__ == '__main__':
     """
 
     # 12 sets - Iridis gpu
-    gameset = [["Alien","Amidar","Assault","Asterix","BankHeist"],
+
+    # 12 sets - Iridis gpu - TEMP Add this back in
+    """gameset = [["Alien","Amidar","Assault","Asterix","BankHeist"],
                ["BattleZone","Boxing", "Breakout","ChopperCommand"],
                ["CrazyClimber","DemonAttack", "Freeway","Frostbite"],
                ["Gopher","Hero", "Jamesbond","Kangaroo"],
                ["Krull","KungFuMaster", "MsPacman", "Pong"],
-               ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
+               ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]"""
 
     """
     # 3 Sets - RTX 4090
@@ -78,7 +81,8 @@ if __name__ == '__main__':
                "Kangaroo","Krull","KungFuMaster","MsPacman", "Pong","PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
     """
-    gameset = [["BattleZone"]]
+
+    gameset = [["UpNDown"]]
 
     gameset_idx = int(sys.argv[1])
 
