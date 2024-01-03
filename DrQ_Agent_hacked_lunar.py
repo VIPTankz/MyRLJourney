@@ -328,7 +328,7 @@ class EpsilonGreedy():
 
 class Agent():
     def __init__(self, n_actions, input_dims, device,
-                 max_mem_size=100000, total_frames=100000, lr=0.0005,
+                 max_mem_size=100000, total_frames=100000, lr=0.0001,
                  game=None, run=None, name=None):
 
         self.epsilon = EpsilonGreedy()
@@ -357,7 +357,7 @@ class Agent():
         self.batch_size = 32
         self.duelling = False
         self.aug = False
-        self.replace_target_cnt = 1
+        self.replace_target_cnt = 1500
         self.replay_ratio = 1
         self.per = False
 

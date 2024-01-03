@@ -9,7 +9,9 @@ import torch as T
 
 def make_env(game, eval):
 
-    env = gym.make('LunarLander-v2')
+    #env = gym.make('LunarLander-v2')
+    env = gym.make('CartPole-v1')
+    #MountainCar-v0
     return env
 
 
@@ -17,7 +19,7 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked_lunar import Agent
 
-    agent_name = "LunarDQN"
+    agent_name = "LunarDQNReplace1500"
     """
     Changes:
     Games
@@ -96,7 +98,7 @@ if __name__ == '__main__':
             print(env.observation_space)
             print(env.action_space)
 
-            agent = Agent(n_actions=env.action_space.n, input_dims=[8], total_frames=100000, device=device,
+            agent = Agent(n_actions=env.action_space.n, input_dims=[4], total_frames=100000, device=device,
                           game=game, run=runs, name=agent_name)
 
             scores = []
