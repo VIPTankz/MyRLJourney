@@ -197,28 +197,13 @@ class QNetwork(nn.Module):
     def __init__(self, lr, n_actions, input_dims, device, noisy, batchnorm):
         super(QNetwork, self).__init__()
 
-        self.conv1 = nn.Conv2d(4, 32, 8, stride=4, padding=1)
-        self.conv2 = nn.Conv2d(32, 64, 4, stride=2)
-        self.conv3 = nn.Conv2d(64, 64, 3)
         self.n_actions = n_actions
 
         self.batchnorm = batchnorm
-
-        if self.batchnorm:
-            self.bn1 = nn.BatchNorm2d(32)
-            self.bn2 = nn.BatchNorm2d(64)
-            self.bn3 = nn.BatchNorm2d(64)
-            self.bn4 = nn.BatchNorm1d(512)
-
         self.noisy = noisy
 
-        if self.noisy:
-
-            self.fc1 = NoisyLinear(64 * 7 * 7, 512)
-            self.fc2 = NoisyLinear(512, n_actions)
-        else:
-            self.fc1 = nn.Linear(64 * 7 * 7, 512)
-            self.fc2 = nn.Linear(512, n_actions)
+        self.fc1 = nn.Linear(*input_dims, 512)
+        self.fc2 = nn.Linear(512, n_actions)
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr, eps=0.00015)
 
@@ -227,21 +212,9 @@ class QNetwork(nn.Module):
         self.to(self.device)
 
     def forward(self, observation):
-        observation = T.div(observation, 255)
-        observation = observation.view(-1, 4, 84, 84)
-        observation = F.relu(self.conv1(observation))
-        if self.batchnorm:
-            observation = self.bn1(observation)
-        observation = F.relu(self.conv2(observation))
-        if self.batchnorm:
-            observation = self.bn2(observation)
-        observation = F.relu(self.conv3(observation))
-        if self.batchnorm:
-            observation = self.bn3(observation)
-        observation = observation.view(-1, 64 * 7 * 7)
+
+
         observationQ = F.relu(self.fc1(observation))
-        if self.batchnorm:
-            observationQ = self.bn4(observationQ)
         Q = self.fc2(observationQ)
 
         return Q
@@ -256,8 +229,6 @@ class QNetwork(nn.Module):
             self.fc2 = nn.Linear(512, self.n_actions)
 
         self.to(self.device)
-
-
 
     def reset_noise(self):
         for name, module in self.named_children():
@@ -357,7 +328,7 @@ class EpsilonGreedy():
 
 class Agent():
     def __init__(self, n_actions, input_dims, device,
-                 max_mem_size=100000, total_frames=100000, lr=0.0001,
+                 max_mem_size=100000, total_frames=100000, lr=0.0005,
                  game=None, run=None, name=None):
 
         self.epsilon = EpsilonGreedy()
@@ -378,25 +349,28 @@ class Agent():
         #MAKE SURE YOU CHECKED THE NAME AND DATA COLLETION
 
         # IMPORTANT params, check these
-        self.n = 10
-        self.gamma = 0.967
-        self.batch_size = 16
+        self.n = 3
+        self.gamma = 0.99
+        self.trust_regions = False  # Not implemented for c51
+        self.annealing_n = False
+
+        self.batch_size = 32
         self.duelling = False
         self.aug = False
         self.replace_target_cnt = 1
-        self.replay_ratio = 2
+        self.replay_ratio = 1
         self.per = False
-        self.annealing_n = True
+
         self.annealing_gamma = False
         self.target_ema = False
         self.double = True
-        self.trust_regions = True  # Not implemented for c51
+
         self.trust_region_disable = False
 
         self.my_trust_region = False  # not implemented for c51
         self.my_trust_region2 = False
 
-        self.resets = True  # not implemented for c51 or duelling
+        self.resets = False  # not implemented for c51 or duelling
 
         self.noisy = False
         self.batch_norm = False  # only implemented for vanilla q networks
@@ -479,7 +453,7 @@ class Agent():
             self.batch_size = 1
 
         if not self.per:
-            self.memory = NStepExperienceReplay(input_dims, max_mem_size, self.batch_size, self.n, self.gamma)
+            self.memory = NStepExperienceReplay(input_dims, max_mem_size, self.batch_size, self.n, self.gamma, state_dtype=np.float32)
         else:
             self.memory = ReplayMemory(max_mem_size, self.n, self.gamma, device)
 
@@ -777,11 +751,13 @@ class Agent():
             states_ = next_states.clone().detach().to(self.net.device)
         else:
             states, actions, rewards, new_states, dones = self.memory.sample_memory()
+
             states = T.tensor(states).to(self.net.device)
             rewards = T.tensor(rewards).to(self.net.device)
             dones = T.tensor(dones).to(self.net.device)
             actions = T.tensor(actions).to(self.net.device)
             states_ = T.tensor(new_states).to(self.net.device)
+
 
         indices = np.arange(self.batch_size)
 
@@ -959,7 +935,6 @@ class Agent():
                     sigma_j = max(sigma_j, 0.01)
                     #print("OG Q_targets")
                     #print(q_target)
-
 
                     #self.running_std += current_std
                     #sigma_j = self.running_std / self.grad_steps

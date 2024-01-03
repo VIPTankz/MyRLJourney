@@ -1,16 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
-runs = 5
+runs = 2
 smoothing = 20
 """
 games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 """
-games = ["Alien"]
+games = ["LunarLander"]
 
 for game in games:
-    labels = ["DrQ","DrQOld"]
+    labels = ["LunarStableDQN"]
     data_files = []
     for i in labels:
         data_files.append(i + game + "Experiment")

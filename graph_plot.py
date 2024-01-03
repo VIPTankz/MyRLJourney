@@ -28,7 +28,7 @@ plt.ylabel("Performance (IQM)")
 plt.show()
 """
 
-
+"""
 # Nstep vs performance - needs N=5
 
 performance = [0.04, 0.214, 0.145, 0.103]
@@ -59,7 +59,7 @@ plt.ylabel("Performance (IQM)")
 
 # Display the plot
 plt.show()
-
+"""
 
 """
 # gamma vs performance - needs gamma=0.95
@@ -108,11 +108,11 @@ plt.show()
 """
 
 # WallTime vs IQM
-"""
+
 fig = plt.figure()
 ax = fig.add_subplot(1,1,1)
 
-labels = ["StableDQN", "DER", "DrQ (eps)", "SPR"] #, "SR-SPR", "BBF"
+labels = [" StableDQN", " DER", " DrQ (eps)", "SPR"] #, "SR-SPR", "BBF"
 iqms = [0.304,  0.183, 0.280,  0.337] #,  0.631, 1.045
 walltimes = [12, 40, 62, 340] #, 430, 420
 markers = ["*", None, None, None] #, None, None
@@ -137,6 +137,10 @@ ax.set_yscale('log', base=2)
 ax.yaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
 #plt.xticks([20, 200, 500])
 
+matplotlib.rcParams.update({'font.size': 20})
+
+for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+    label.set_fontsize(16) # Size here overrides font_prop
+
 # Display the plot
 plt.show()
-"""
