@@ -7,10 +7,10 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 """
-games = ["LunarLander"]
+games = ["CartPole"]
 
 for game in games:
-    labels = ["LunarStableDQN"]
+    labels = ["CartPoleDQNReplace1500", "CartPoleStableDQNReplace1"]
     data_files = []
     for i in labels:
         data_files.append(i + game + "Experiment")
@@ -21,7 +21,7 @@ for game in games:
     for exper in data_files:
         temp = []
         for i in range(runs):
-            temp.append(np.load(exper + " (" + str(i) + ').npy'))
+            temp.append(np.load("sep_env_results\\" + exper + " (" + str(i) + ').npy'))
         expers.append(temp[:])
 
     def find_nearest(array, value):

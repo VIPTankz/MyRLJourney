@@ -84,12 +84,13 @@ plt.legend()
 plt.show()
 """
 
-"""
-# gamma vs policy churn
 
-early = [3.6, 3.9, 4.4, 5.8]
-late = [1.8, 2, 2.2, 2.8]
-N = [0.9, 0.95, 0.97, 0.99]
+# gamma or N vs policy churn
+
+early = [12.7, 5.8, 4.1, 3.7, 3.3]
+late = [6, 2.8, 2, 1.8, 1.6]
+
+N = [1, 3, 7, 10, 20]
 
 
 N_label = [str(i) for i in N]
@@ -98,15 +99,15 @@ plt.plot(N, early, label="Early")
 plt.plot(N, late, label="Late")
 plt.xticks(N, N_label)
 
-plt.xlabel("Discount Rate")
+plt.xlabel("Value of N")
 plt.ylabel("Policy Churn (%)")
 
 plt.legend()
 
 # Display the plot
 plt.show()
-"""
 
+"""
 # WallTime vs IQM
 
 fig = plt.figure()
@@ -143,4 +144,4 @@ for label in (ax.get_xticklabels() + ax.get_yticklabels()):
     label.set_fontsize(16) # Size here overrides font_prop
 
 # Display the plot
-plt.show()
+plt.show()"""

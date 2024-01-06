@@ -72,7 +72,7 @@ if __name__ == "__main__":
     early_churn_data_total = []
     late_churn_data_total = []
 
-    name = "DER2"
+    name = "DDQN_n7"
     runs = 5
 
     for game in games:
@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
             files = []
             for i in file_:
-                files.append(i + "1600_" + str(run) + ".pkl")
+                files.append(i + "2000_" + str(run) + ".pkl")
                 files.append(i + "75000_" + str(run) + ".pkl")
 
             for filename in files:
@@ -120,7 +120,7 @@ if __name__ == "__main__":
 
                     print("\n\n")"""
 
-                    if churn_data.start_timesteps == 1600:
+                    if churn_data.start_timesteps == 2000:
                         churn_25 += abs(churn_data.avg_churn)
                         print(churn_data.avg_churn)
                         churn_std25 += churn_data.churn_std
