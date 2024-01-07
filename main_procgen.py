@@ -9,7 +9,7 @@ from AtariSetup import AtariPreprocessing, TimeLimit, FrameStack, ImageToPyTorch
 from gym.wrappers import GrayScaleObservation
 
 def make_env(game, eval):
-    env = gym.make("procgen:procgen-" + game + "-v0")
+    env = gym.make("procgen:procgen-" + game + "-v0", distribution_mode="easy")
 
     env = GrayScaleObservation(env, keep_dim=True)
     env = FrameStack(env, k=4)
@@ -30,7 +30,8 @@ if __name__ == '__main__':
     """
 
     # 3 sets - Iridis cpu
-    gameset = [["bigfish", "bossfight", "caveflyer"], ["chaser", "coinrun", "dodgeball"], ["fruitbot", "heist", "jumper"]]
+    gameset = [["bigfish", "bossfight", "caveflyer", "chaser", "climber", "coinrun"], ["dodgeball", "fruitbot", "heist", "jumper", "leaper"],
+               ["maze", "miner", "ninja", "plunder", "starpilot"]]
     """
     # 12 sets - Iridis alpha
     gameset = [["Alien","Amidar","Assault"],

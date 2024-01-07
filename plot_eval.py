@@ -90,20 +90,24 @@ print(iqm)
 #formula is ( (algo - human) / (human - random))
 
 
+
 games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
 hns = []
-labels = ["DDQN_n7"]
-runs = 1
+labels = ["StableDQN"]
+runs = 5
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
 count = 0
 for game in games:
 
     for i in range(len(labels)):
-        data_files[i].append("results\\" + labels[i] + "\\" + labels[i] + game + "Evaluation")
+        if games[0] == "bigfish":
+            data_files[i].append("procgen_results\\" + labels[i] + "\\" + labels[i] + game + "Evaluation")
+        else:
+            data_files[i].append("results\\" + labels[i] + "\\" + labels[i] + game + "Evaluation")
 
         print("\n" + game + " Evaluation Scores")
 
