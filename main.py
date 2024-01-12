@@ -30,17 +30,18 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked import Agent
 
-    agent_name = "Replay_test"
+    agent_name = "StableDQN"
     """
     Changes:
     Games
     collecting churn
     """
 
+    """
     # 12 sets - Iridis cpu
     gameset = [["Alien"],["Amidar"],["Assault"],["Asterix"],["BankHeist"],["BattleZone"],["Boxing"],["Breakout"],
                 ["ChopperCommand"],["CrazyClimber"],["DemonAttack"],["Freeway"],["Frostbite"],["Gopher"],["Hero"],["Jamesbond"],
-               ["Kangaroo"],["Krull"],["KungFuMaster"],["MsPacman"], ["Pong"],["PrivateEye"], ["Qbert"], ["RoadRunner"], ["Seaquest"], ["UpNDown"]]
+               ["Kangaroo"],["Krull"],["KungFuMaster"],["MsPacman"], ["Pong"],["PrivateEye"], ["Qbert"], ["RoadRunner"], ["Seaquest"], ["UpNDown"]]"""
     """
     # 12 sets - Iridis alpha
     gameset = [["Alien","Amidar","Assault"],
@@ -59,13 +60,13 @@ if __name__ == '__main__':
 
     # 12 sets - Iridis gpu
 
-    # 12 sets - Iridis gpu - TEMP Add this back in
-    """gameset = [["Alien","Amidar","Assault","Asterix","BankHeist"],
+    # 6 sets - Iridis gpu - TEMP Add this back in
+    gameset = [["Alien","Amidar","Assault","Asterix","BankHeist"],
                ["BattleZone","Boxing", "Breakout","ChopperCommand"],
                ["CrazyClimber","DemonAttack", "Freeway","Frostbite"],
                ["Gopher","Hero", "Jamesbond","Kangaroo"],
                ["Krull","KungFuMaster", "MsPacman", "Pong"],
-               ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]"""
+               ["PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]]
 
     """
     # 3 Sets - RTX 4090

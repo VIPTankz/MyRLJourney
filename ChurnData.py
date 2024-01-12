@@ -58,6 +58,9 @@ if __name__ == "__main__":
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
+    games = ["bigfish", "bossfight", "caveflyer", "chaser", "climber", "coinrun", "dodgeball", "fruitbot", "heist",
+             "jumper", "leaper", "maze", "miner", "ninja", "plunder", "starpilot"]
+
     game_stds = {}
 
     churn_25 = 0
@@ -72,16 +75,17 @@ if __name__ == "__main__":
     early_churn_data_total = []
     late_churn_data_total = []
 
-    name = "DDQN_n7"
+    name = "DDQN_n3_gamma9"
     runs = 5
 
     for game in games:
         for run in range(runs):
-            file_ = ["churn_results\\" + name + "\\" + name + "_" + game]
+            #file_ = ["churn_results\\" + name + "\\" + name + "_" + game]
+            file_ = ["procgen_results\\" + name + "\\" + name + "_" + game]
 
             files = []
             for i in file_:
-                files.append(i + "2000_" + str(run) + ".pkl")
+                files.append(i + "1600_" + str(run) + ".pkl")
                 files.append(i + "75000_" + str(run) + ".pkl")
 
             for filename in files:
@@ -120,7 +124,7 @@ if __name__ == "__main__":
 
                     print("\n\n")"""
 
-                    if churn_data.start_timesteps == 2000:
+                    if churn_data.start_timesteps == 1600:
                         churn_25 += abs(churn_data.avg_churn)
                         print(churn_data.avg_churn)
                         churn_std25 += churn_data.churn_std

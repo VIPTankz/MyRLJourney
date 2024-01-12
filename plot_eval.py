@@ -90,13 +90,12 @@ print(iqm)
 #formula is ( (algo - human) / (human - random))
 
 
-
 games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
 hns = []
-labels = ["StableDQN"]
+labels = ["DDQN_n10_3_30k"]
 runs = 5
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
@@ -141,3 +140,33 @@ print(round(np.median(np.mean(results, axis=-2, keepdims=False), axis=-1), 3))
 
 print("Mean:")
 print(round(np.mean(np.mean(results, axis=-2, keepdims=False), axis=-1), 3))
+
+#############################
+from rliable import library as rly
+from rliable import metrics
+from rliable import plot_utils
+
+algorithms = ['StableDQN']
+# Load ALE scores as a dictionary mapping algorithms to their human normalized
+# score matrices, each of which is of size `(num_runs x num_games)`.
+atari_100k_normalized_score_dict = {'StableDQN': results}
+aggregate_func = lambda x: np.array([
+  metrics.aggregate_median(x),
+  metrics.aggregate_iqm(x),
+  metrics.aggregate_mean(x),
+  metrics.aggregate_optimality_gap(x)])
+aggregate_scores, aggregate_score_cis = rly.get_interval_estimates(
+  atari_100k_normalized_score_dict, aggregate_func, reps=50000)
+
+print(aggregate_score_cis)
+print("CIs:")
+print("Lower: " + str(round(aggregate_score_cis["StableDQN"][0][1], 3)))
+print("Upper: " + str(round(aggregate_score_cis["StableDQN"][1][1], 3)))
+
+"""
+fig, axes = plot_utils.plot_interval_estimates(
+  aggregate_scores, aggregate_score_cis,
+  metric_names=['Median', 'IQM', 'Mean', 'Optimality Gap'],
+  algorithms=algorithms, xlabel='Human Normalized Score')
+
+plt.show()"""

@@ -1,19 +1,22 @@
 import numpy as np
 import matplotlib.pyplot as plt
-runs = 2
-smoothing = 20
+runs = 5
+smoothing = 200
 """
 games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 """
-games = ["CartPole"]
+#games = ["CartPole"]
+
+games = ["bigfish", "bossfight", "caveflyer", "chaser", "climber", "coinrun", "dodgeball", "fruitbot", "heist", "jumper",
+         "leaper", "maze", "miner", "ninja", "plunder", "starpilot"]
 
 for game in games:
-    labels = ["CartPoleDQNReplace1500", "CartPoleStableDQNReplace1"]
+    labels = ["StableDQN", "DQNReplace1"]
     data_files = []
     for i in labels:
-        data_files.append(i + game + "Experiment")
+        data_files.append(i + "\\" + i + game + "Experiment")
 
 
     expers = []
@@ -21,7 +24,7 @@ for game in games:
     for exper in data_files:
         temp = []
         for i in range(runs):
-            temp.append(np.load("sep_env_results\\" + exper + " (" + str(i) + ').npy'))
+            temp.append(np.load("procgen_results\\" + exper + " (" + str(i) + ').npy'))
         expers.append(temp[:])
 
     def find_nearest(array, value):

@@ -16,16 +16,22 @@ def moving_average(input_list, x):
 
 
 # this is for asterix only
-game = "Asterix"
+games = ["Alien", "Amidar", "Assault", "Asterix", "BankHeist", "BattleZone", "Boxing", "Breakout", "ChopperCommand",
+         "CrazyClimber", \
+         "DemonAttack", "Freeway", "Frostbite", "Gopher", "Hero", "Jamesbond", "Kangaroo", "Krull", "KungFuMaster", \
+         "MsPacman", "Pong", "PrivateEye", "Qbert", "RoadRunner", "Seaquest", "UpNDown"]
 
+game = "Asterix"
 averaging = 500
 
-names = ["DDQN_n3_discount967_trust075_update2k"]
+names = ["DDQN_n3_discount95"]
 data = []
+
 
 for i in names:
     data.append(np.load("variance_results\\" + i + "\\" + i + "_varianceData" + game + "0.npy"))
 
+print(data)
 for i in range(len(data)):
     data[i] = moving_average(data[i], averaging)
 

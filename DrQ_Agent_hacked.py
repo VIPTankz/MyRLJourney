@@ -380,11 +380,11 @@ class Agent():
         # IMPORTANT params, check these
         self.n = 10
         self.gamma = 0.967
-        self.batch_size = 16
+        self.batch_size = 32
         self.duelling = False
         self.aug = False
         self.replace_target_cnt = 1
-        self.replay_ratio = 2
+        self.replay_ratio = 1
         self.per = False
         self.annealing_n = True
         self.annealing_gamma = False
@@ -454,12 +454,12 @@ class Agent():
 
         if self.annealing_n:
             self.final_n = 3
-            self.anneal_steps = 10000
+            self.anneal_steps = 30000
             self.n_dec = (self.n - self.final_n) / self.anneal_steps
             self.n_float = float(self.n)
 
         #data collection
-        self.collecting_churn_data = False
+        self.collecting_churn_data = True
         self.variance_data = False
 
         self.action_gap_data = False

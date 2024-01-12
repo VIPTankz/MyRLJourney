@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import scipy
 import pandas as pd
 
-games = ["bigfish", "bossfight", "caveflyer", "chaser", "coinrun", "dodgeball", "fruitbot", "heist", "jumper"]
+games = ["bigfish", "bossfight", "caveflyer", "chaser", "climber", "coinrun", "dodgeball", "fruitbot", "heist", "jumper",
+         "leaper", "maze", "miner", "ninja", "plunder", "starpilot"]
 
 games_to_include = [x.lower() for x in games]
 
@@ -12,13 +13,13 @@ games_to_include = [x.lower() for x in games]
 
 
 
-human_scores_easy = np.array([40, 13, 12, 13, 10, 19, 32.4, 10, 10],dtype=np.float64)
+human_scores = np.array([40, 13, 12, 13, 12.6, 10, 19, 32.4, 10, 10, 10, 10, 13, 10, 30, 64],dtype=np.float64)
 
-random_scores_easy = np.array([1, .5, 3.5, .5, 5, 1.5, -1.5, 3.5, 3],dtype=np.float64)
+random_scores = np.array([1, .5, 3.5, .5, 2, 5, 1.5, -1.5, 3.5, 3, 3, 5, 1.5, 3.5, 4.5, 2.5],dtype=np.float64)
 
-human_scores_hard = np.array([40, 13, 13.4, 14.2, 10, 19, 27.2, 10, 10],dtype=np.float64)
+#human_scores_hard = np.array([40, 13, 13.4, 14.2, 10, 19, 27.2, 10, 10],dtype=np.float64)
 
-random_scores_hard = np.array([0, .5, 2, .5, 5, 1.5, -.5, 2, 1],dtype=np.float64)
+#random_scores_hard = np.array([0, .5, 2, .5, 5, 1.5, -.5, 2, 1],dtype=np.float64)
 
 
 # Now, 'numpy_array' is a NumPy array with a shape of "runs" x "game" for the specified games
@@ -40,10 +41,11 @@ random_scores_hard = np.array([0, .5, 2, .5, 5, 1.5, -.5, 2, 1],dtype=np.float64
 
 #formula is ( (algo - human) / (human - random))
 
-games = ["bigfish", "bossfight", "caveflyer", "chaser", "coinrun", "dodgeball", "fruitbot", "heist", "jumper"]
+games = ["bigfish", "bossfight", "caveflyer", "chaser", "climber", "coinrun", "dodgeball", "fruitbot", "heist", "jumper",
+         "leaper", "maze", "miner", "ninja", "plunder", "starpilot"]
 
 hns = []
-labels = ["StableDQN"]
+labels = ["DDQN_n3_gamma9"]
 runs = 5
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
