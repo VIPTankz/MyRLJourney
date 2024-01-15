@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     from DrQ_Agent_hacked import Agent
 
-    agent_name = "StableDQN"
+    agent_name = "StableDQN_DER_Optim_Ready_Commit"
     """
     Changes:
     Games

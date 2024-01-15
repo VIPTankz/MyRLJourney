@@ -2,24 +2,28 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib
 import numpy as np
-"""
+
 #Interventions Graphs
 
 # Example usage:
 fontsize = 14
 rotation = 15
 
-plt.scatter(2.7, 0.201)
-plt.text(2.7, 0.201, "Target Network", fontsize=fontsize, ha='left', rotation=rotation)
+#plt.scatter(2.7, 0.201)
+plt.errorbar(2.7, 0.201, yerr=0.012, fmt='o')
+plt.text(2.7, 0.195, "Target Network", fontsize=fontsize, ha='left', rotation=rotation, va='bottom')
 
-plt.scatter(4.3, 0.214)
+#plt.scatter(4.3, 0.214)
+plt.errorbar(4.3, 0.214, yerr=0.015, fmt='o')
 plt.text(4.3, 0.214, "None", fontsize=fontsize, ha='right', rotation=rotation, va='top')
 
-plt.scatter(3.45, 0.216)
+#plt.scatter(3.45, 0.216)
+plt.errorbar(3.45, 0.216, yerr=0.01, fmt='o')
 plt.text(3.45, 0.216, "EMA Network", fontsize=fontsize, ha='right', rotation=rotation, va='top')
 
-plt.scatter(3.8, 0.232, marker="*", s=70)
-plt.text(3.8, 0.232, "Trust Regions", fontsize=fontsize, ha='right', rotation=rotation, va='top')
+#plt.scatter(3.8, 0.232, marker="*", s=70)
+plt.errorbar(3.8, 0.232, yerr=0.012, fmt='o')
+plt.text(3.8, 0.242, "Trust Regions", fontsize=fontsize, ha='left', rotation=rotation, va='top')
 
 plt.gca().xaxis.set_major_locator(ticker.MaxNLocator(nbins=6))  # Reducing x-ticks to at most 4
 plt.gca().yaxis.set_major_locator(ticker.MaxNLocator(nbins=7))
@@ -33,7 +37,7 @@ plt.tick_params(axis='x', labelsize=14)
 
 # Display the plot
 plt.show()
-"""
+
 
 """
 # Nstep vs performance
@@ -42,17 +46,23 @@ performance = [0.04, 0.214, 0.182, 0.145, 0.103]
 #medians = [0.036, 0.108, 0.082, 0.067]
 N = [1, 3, 7, 10, 20]
 
+lower_bounds = [0.031, 0.199, 0.172, 0.136, 0.096]
+upper_bounds = [0.051, 0.231, 0.202, 0.155, 0.113]
+
 fontsize = 13
 rotation = 15
 N_label = [str(i) for i in N]
 
-plt.scatter(4, 0.218, color="red")
+#plt.scatter(4, 0.218, color="red")
+plt.errorbar(4, 0.218, yerr=0.017, fmt='o')
 plt.text(4, 0.218, "10k", fontsize=fontsize, ha='left', rotation=rotation, va='bottom')
 
-plt.scatter(6, 0.257, color="green", marker="*")
+#plt.scatter(6, 0.257, color="green", marker="*")
+plt.errorbar(6, 0.257, yerr=0.019, fmt='o')
 plt.text(6, 0.257, "30k", fontsize=fontsize, ha='right', rotation=rotation, va='top')
 
-plt.scatter(8, 0.24, color="purple")
+#plt.scatter(8, 0.24, color="purple")
+plt.errorbar(8, 0.24, yerr=0.019, fmt='o')
 plt.text(8, 0.24, "50k", fontsize=fontsize, ha='left', rotation=rotation, va='bottom')
 
 plt.plot(N, performance, label="IQM")
@@ -61,6 +71,7 @@ plt.xticks(N, N_label)
 
 plt.xlabel("N-Step", fontsize=14)
 plt.ylabel("Performance (IQM)", fontsize=14)
+plt.fill_between(N, lower_bounds, upper_bounds, color='orange', alpha=0.1)
 
 plt.tick_params(axis='y', labelsize=14)
 plt.tick_params(axis='x', labelsize=14)
@@ -75,23 +86,27 @@ plt.show()
 # gamma vs performance
 
 performance = [0.232, 0.264, 0.272, 0.214]
-medians = [0.183, 0.215, 0.192, 0.108]
+#medians = [0.183, 0.215, 0.192, 0.108]
 N = [0.9, 0.95, 0.97, 0.99]
+lower_bounds = [0.222, 0.25, 0.258, 0.199]
+upper_bounds = [0.243, 0.278, 0.285, 0.231]
 
-
+# Generate labels for your x-ticks
 N_label = [str(i) for i in N]
 
+# Plot the main lines
 plt.plot(N, performance, label="IQM")
-plt.plot(N, medians, label="Median")
+
+# Add the shaded area
+plt.fill_between(N, lower_bounds, upper_bounds, color='blue', alpha=0.1)
+
+# Setting x-ticks, labels and plot properties
 plt.xticks(N, N_label)
-
 plt.xlabel("Discount Rate", fontsize=14)
-plt.ylabel("Performance", fontsize=14)
-
+plt.ylabel("Performance (IQM)", fontsize=14)
 plt.tick_params(axis='y', labelsize=14)
 plt.tick_params(axis='x', labelsize=14)
-
-plt.legend(loc='lower left', fontsize=14)
+#plt.legend(loc='lower left', fontsize=14)
 
 # Display the plot
 plt.show()
@@ -214,7 +229,7 @@ plt.show()
 """
 
 
-
+"""
 #Ablation graph
 
 import matplotlib.pyplot as plt
@@ -271,3 +286,4 @@ axes[1].tick_params(axis='y', labelsize=12)
 plt.tight_layout()
 plt.show()
 
+"""
