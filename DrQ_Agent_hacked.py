@@ -901,9 +901,9 @@ class Agent():
                         #print("Loss online to target")
                         #print(q_pred - target_network_pred)
 
-                        outside_region = torch.abs(q_pred[indices, actions] - target_network_pred) > self.trust_alpha * sigma_j
+                        outside_region = torch.abs(q_pred - target_network_pred) > self.trust_alpha * sigma_j
 
-                        diff_sign = torch.sign(q_pred[indices, actions] - target_network_pred) != torch.sign(q_pred[indices, actions] - q_target)
+                        diff_sign = torch.sign(q_pred - target_network_pred) != torch.sign(q_pred - q_target)
 
                         mask = torch.logical_and(outside_region, diff_sign)
                         #if self.grad_steps % 50 == 0:
