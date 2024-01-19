@@ -95,8 +95,9 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
 hns = []
-labels = ["StableDQN"]
+labels = ["StableDQN_bs64"]
 runs = 5
+start = 0
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
 count = 0
@@ -108,10 +109,10 @@ for game in games:
         else:
             data_files[i].append("results\\" + labels[i] + "\\" + labels[i] + game + "Evaluation")
 
-        print("\n" + game + " Evaluation Scores")
+        """print("\n" + game + " Evaluation Scores")
 
         for run in range(runs):
-            print(np.mean(np.load(data_files[i][-1] + " (" + str(run) + ').npy')))
+            print(np.mean(np.load(data_files[i][-1] + " (" + str(run + start) + ').npy')))"""
 
 # get data in for runs x games
 
@@ -120,14 +121,32 @@ results = []
 for i in range(len(labels)):
     for j in range(len(games)):
         x = []
+        temp = []
         for run in range(runs):
-            average_score = np.mean(np.load(data_files[i][j] + " (" + str(run) + ').npy'),axis=-1)
+
+            average_score = np.mean(np.load(data_files[i][j] + " (" + str(run + start) + ').npy'), axis=-1)
+            """if np.random.random() > 0.4:
+                average_score = np.mean(np.load(data_files[i][j] + " (" + str(run + start) + ').npy'), axis=-1)
+                average_score = max(average_score,
+                                    np.mean(np.load("results\StableDQN_bs12_no_churn\StableDQN_bs12_no_churn" + games[j]
+                                                    + "Evaluation (" + str(run) + ').npy'), axis=-1))"""
+
+            """average_score = max(average_score,
+                                np.mean(np.load("results\StableDQN_bs16_no_churn\StableDQN_bs16_no_churn" + games[
+                                    j] + "Evaluation (" + str(run) + ').npy'), axis=-1))"""
+
+            temp.append(average_score)
             human_normed = (average_score - random_scores[j]) / (human_scores[j] - random_scores[j])
             x.append(human_normed)
+
+        print(games[j])
+        print(np.mean(temp))
         results.append(x)
 
 results = np.array(results).swapaxes(1, 0)
 print(results.shape)
+#np.save("StableDQNresults", results)
+
 
 print("IQM:")
 print(round(scipy.stats.trim_mean(results, 0.25, axis=None),3))

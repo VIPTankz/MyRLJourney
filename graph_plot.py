@@ -4,7 +4,7 @@ import matplotlib
 import numpy as np
 
 #Interventions Graphs
-
+"""
 # Example usage:
 fontsize = 14
 rotation = 15
@@ -37,7 +37,7 @@ plt.tick_params(axis='x', labelsize=14)
 
 # Display the plot
 plt.show()
-
+"""
 
 """
 # Nstep vs performance
@@ -194,8 +194,8 @@ fig = plt.figure()
 ax = fig.add_subplot(1,1,1)
 
 labels = [" StableDQN", " DER", " DrQ (eps)", "SPR"] #, "SR-SPR", "BBF"
-iqms = [0.304,  0.183, 0.280,  0.337] #,  0.631, 1.045
-walltimes = [12, 40, 62, 340] #, 430, 420
+iqms = [0.325,  0.183, 0.280,  0.337] #,  0.631, 1.045
+walltimes = [8, 40, 62, 340] #, 430, 420
 markers = ["*", None, None, None] #, None, None
 sizes = [70, 30, 30, 30] #, 30, 30
 
@@ -203,12 +203,17 @@ fontsize = 14
 rotation = 15
 
 for i in range(len(labels)):
-    if i > 2:
-        ax.scatter(iqms[i], walltimes[i], marker=markers[i], s=sizes[i])
-        ax.text(iqms[i], walltimes[i], labels[i], fontsize=fontsize, ha='right', rotation=rotation, va='top')
-    else:
+    if i == 1:
         ax.scatter(iqms[i], walltimes[i], marker=markers[i], s=sizes[i])
         ax.text(iqms[i], walltimes[i], labels[i], fontsize=fontsize, ha='left', rotation=rotation)
+    else:
+        if i == 0:
+            ax.scatter(iqms[i], walltimes[i], marker=markers[i], s=sizes[i])
+            ax.text(iqms[i], walltimes[i], labels[i], fontsize=fontsize, ha='right', rotation=rotation, va='bottom')
+        else:
+            ax.scatter(iqms[i], walltimes[i], marker=markers[i], s=sizes[i])
+            ax.text(iqms[i], walltimes[i], labels[i], fontsize=fontsize, ha='right', rotation=rotation, va='top')
+
 
 # Adding labels and title
 ax.set_xlabel("Performance (IQM)", fontsize=14)
@@ -236,19 +241,22 @@ import matplotlib.pyplot as plt
 
 # Data for DQN with Components Added
 dqn_labels = ["DQN", "+Trust Regions", "Gamma=0.97", "+Annealing N"]
-dqn_iqm = [0.214, 0.232, 0.272, 0.257]
+dqn_iqm = np.array([0.214, 0.232, 0.272, 0.257])
 
-lower_bounds_dqn = [0.199, 0.22, 0.258, 0.246]
-upper_bounds_dqn = [0.231, 0.245, 0.285, 0.284]
-
-dqn_err = np.array(upper_bounds_dqn) - np.array(lower_bounds_dqn)
+dqn_err = np.array([dqn_iqm - np.array([0.199, 0.22, 0.258, 0.246]), np.array([0.231, 0.245, 0.285, 0.284]) - dqn_iqm])
+print(dqn_err.shape)
 
 # Data for StableDQN with Components Removed (with switched order)
 stabledqn_labels = ["StableDQN", "-Trust Regions", "Gamma=0.99", "-Annealing N"]
-stabledqn_iqm = [0.316, 0.28, 0.277, 0.286]
+stabledqn_iqm = np.array([0.325, 0.28, 0.277, 0.286])
 
-lower_bounds_sta = [0.302, 0.272, 0.262, 0.275]
-upper_bounds_sta = [0.324, 0.289, 0.29, 0.298]
+#lower_bounds_sta = [0.308, 0.272, 0.262, 0.275]
+#upper_bounds_sta = [0.339, 0.289, 0.29, 0.298]
+
+stabledqn_err = np.array([stabledqn_iqm - np.array([0.308, 0.272, 0.262, 0.275]), np.array([0.339, 0.289, 0.29, 0.298]) - stabledqn_iqm])
+print(stabledqn_err.shape)
+
+#stabledqn_err = np.array(upper_bounds_sta) - np.array(lower_bounds_sta)
 
 # Creating side-by-side bar charts
 fig, axes = plt.subplots(1, 2, figsize=(12, 6))
@@ -258,10 +266,10 @@ axes[0].yaxis.grid(True, linestyle='-', linewidth=0.5, alpha=0.5)  # Fainter gri
 axes[1].yaxis.grid(True, linestyle='-', linewidth=0.5, alpha=0.5)
 
 # Plot for DQN with components added
-axes[0].bar(dqn_labels, dqn_iqm, color='blue', yerr=dqn_err)
+axes[0].bar(dqn_labels, dqn_iqm, color='grey', yerr=dqn_err)
 axes[0].set_title('DQN with Components Added')
 axes[0].set_ylabel('IQM', fontsize=16)
-axes[0].set_ylim([0.18, 0.35])
+axes[0].set_ylim([0.19, 0.35])
 axes[0].tick_params(axis='x', rotation=45)
 
 axes[0].tick_params(axis='x', labelsize=12, rotation=45)  # Larger x-axis tick labels
@@ -271,10 +279,10 @@ axes[0].tick_params(axis='y', labelsize=12)
 #axes[0].set_yticklabels(axes[0].get_yticks(), fontsize=14)
 
 # Plot for StableDQN with components removed
-axes[1].bar(stabledqn_labels, stabledqn_iqm, color='green', yerr=dqn_err)
+axes[1].bar(stabledqn_labels, stabledqn_iqm, color='green', yerr=stabledqn_err)
 axes[1].set_title('StableDQN with Components Removed')
 axes[1].set_ylabel('IQM', fontsize=16)
-axes[1].set_ylim([0.18, 0.35])
+axes[1].set_ylim([0.19, 0.35])
 axes[1].tick_params(axis='x', rotation=45)
 
 #axes[1].set_xticklabels(stabledqn_labels, fontsize=14)
@@ -285,5 +293,43 @@ axes[1].tick_params(axis='y', labelsize=12)
 # Adjusting layout
 plt.tight_layout()
 plt.show()
-
 """
+
+#batch size vs performance
+
+batch_sizes = [16, 32, 64]
+
+stable = [0.325, 0.292, 0.19]
+
+# stable32 is called "Optim30k"
+# stableDQN uses churn bug
+
+stable_low = [0.308, 0.273, 0.181]
+stable_up = [0.339, 0.31, 0.203]
+
+dqn = [0.202, 0.214, 0.18]
+
+dqn_lower = [0.185, 0.199, 0.165]
+dqn_up = [0.22, 0.231, 0.196]
+
+
+plt.plot(batch_sizes, dqn, label="DQN")
+plt.fill_between(batch_sizes, dqn_lower, dqn_up, color='blue', alpha=0.1)
+
+plt.plot(batch_sizes, stable, label="StableDQN")
+plt.fill_between(batch_sizes, stable_low, stable_up, color='orange', alpha=0.1)
+
+N_label = [str(i) for i in batch_sizes]
+# Setting x-ticks, labels and plot properties
+plt.xticks(batch_sizes, N_label)
+plt.xlabel("Batch Size", fontsize=14)
+plt.ylabel("Performance (IQM)", fontsize=14)
+plt.tick_params(axis='y', labelsize=14)
+plt.tick_params(axis='x', labelsize=14)
+plt.legend(loc='upper right', fontsize=14)
+
+plt.gca().yaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
+matplotlib.rcParams.update({'font.size': 24})
+
+# Display the plot
+plt.show()
