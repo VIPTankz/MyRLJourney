@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import scipy
 import pandas as pd
 
-
+np.random.seed(0)
 games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing","Breakout","ChopperCommand","CrazyClimber",\
              "DemonAttack","Freeway","Frostbite","Gopher","Hero","Jamesbond","Kangaroo","Krull","KungFuMaster",\
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
@@ -95,7 +95,7 @@ games = ["Alien","Amidar","Assault","Asterix","BankHeist","BattleZone","Boxing",
              "MsPacman","Pong","PrivateEye","Qbert","RoadRunner","Seaquest","UpNDown"]
 
 hns = []
-labels = ["StableDQN_bs64"]
+labels = ["DDQN_bs16_N10_3_30k_gamma967_tnet25"]
 runs = 5
 start = 0
 expers = [[] for i in range(len(labels))]
@@ -115,7 +115,6 @@ for game in games:
             print(np.mean(np.load(data_files[i][-1] + " (" + str(run + start) + ').npy')))"""
 
 # get data in for runs x games
-
 #results = np.zeros((len(labels),len(games)),dtype=np.float64)
 results = []
 for i in range(len(labels)):
@@ -125,22 +124,15 @@ for i in range(len(labels)):
         for run in range(runs):
 
             average_score = np.mean(np.load(data_files[i][j] + " (" + str(run + start) + ').npy'), axis=-1)
-            """if np.random.random() > 0.4:
-                average_score = np.mean(np.load(data_files[i][j] + " (" + str(run + start) + ').npy'), axis=-1)
-                average_score = max(average_score,
-                                    np.mean(np.load("results\StableDQN_bs12_no_churn\StableDQN_bs12_no_churn" + games[j]
-                                                    + "Evaluation (" + str(run) + ').npy'), axis=-1))"""
-
-            """average_score = max(average_score,
-                                np.mean(np.load("results\StableDQN_bs16_no_churn\StableDQN_bs16_no_churn" + games[
-                                    j] + "Evaluation (" + str(run) + ').npy'), axis=-1))"""
 
             temp.append(average_score)
             human_normed = (average_score - random_scores[j]) / (human_scores[j] - random_scores[j])
             x.append(human_normed)
 
+
+
         print(games[j])
-        print(np.mean(temp))
+        print(round(np.mean(temp),1))
         results.append(x)
 
 results = np.array(results).swapaxes(1, 0)

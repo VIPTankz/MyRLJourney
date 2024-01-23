@@ -3,6 +3,7 @@ import matplotlib.ticker as ticker
 import matplotlib
 import numpy as np
 
+
 #Interventions Graphs
 """
 # Example usage:
@@ -111,90 +112,91 @@ plt.tick_params(axis='x', labelsize=14)
 # Display the plot
 plt.show()
 """
+fig, axs = plt.subplots(2, 1, figsize=(15, 10))
+axs = axs.flatten()
 
-"""
 # N vs policy churn
 #atari
-#early = [12.7, 5.8, 4.1, 3.7, 3.3]
-#late = [6, 2.8, 2, 1.8, 1.6]
+early = [12.7, 5.8, 4.1, 3.7, 3.3]
+late = [6, 2.8, 2, 1.8, 1.6]
 
 #procgen
-early = [16.4, 7, 5, 4.2]
-late = [8.8, 2.9, 2.3, 2.1]
-N = [1, 3, 7, 10]
+#early = [16.4, 7, 5, 4.2]
+#late = [8.8, 2.9, 2.3, 2.1]
+N = [1, 3, 7, 10, 20]
 
 N_label = [str(i) for i in N]
 
-plt.plot(N, early, label="Early")
-plt.plot(N, late, label="Late")
-plt.xticks(N, N_label)
+axs[0].plot(N, early, label="Early")
+axs[0].plot(N, late, label="Late")
+axs[0].set_xticks(N, N_label)
 
-plt.scatter(6, 4, color="blue", marker="*")
-plt.text(6, 4, "StableDQN", fontsize=13, ha='left', rotation=15, va='bottom')
+axs[0].scatter(6, 4, color="blue", marker="*")
+axs[0].text(6, 4, "StableDQN", fontsize=13, ha='left', rotation=15, va='bottom')
 
-plt.scatter(6, 1.8, color="orange", marker="*")
-plt.text(6, 1.8, "StableDQN", fontsize=13, ha='left', rotation=15, va='bottom')
+axs[0].scatter(6, 1.8, color="orange", marker="*")
+axs[0].text(6, 1.8, "StableDQN", fontsize=13, ha='left', rotation=15, va='bottom')
 
-plt.xlabel("Value of N", fontsize=14)
-plt.ylabel("Policy Churn (%)", fontsize=14)
+axs[0].set_xlabel("Value of N", fontsize=14)
+axs[0].set_ylabel("Policy Churn (%)", fontsize=14)
 
-plt.tick_params(axis='y', labelsize=14)
-plt.tick_params(axis='x', labelsize=14)
+axs[0].tick_params(axis='y', labelsize=14)
+axs[0].tick_params(axis='x', labelsize=14)
 
-plt.legend(fontsize=14)
+axs[0].legend(fontsize=14)
 
 # Display the plot
-plt.show()
-"""
+#plt.show()
 
-"""
+
+
 # gamma vs policy churn
 
 #atari
-#early = [3.6, 3.9, 4.4, 5.8]
-#late = [1.8, 2, 2.2, 2.8]
+early = [3.6, 3.9, 4.4, 5.8]
+late = [1.8, 2, 2.2, 2.8]
 
 #procgen
-early = [3.6, 3.9, 4.4, 7]
-late = [1.8, 2, 2.2, 2.9]
+#early = [3.6, 3.9, 4.4, 7]
+#late = [1.8, 2, 2.2, 2.9]
 
 gamma = [0.9, 0.95, 0.97, 0.99]
 
 
 N_label = [str(i) for i in gamma]
 
-plt.plot(gamma, early, label="Early")
-plt.plot(gamma, late, label="Late")
-plt.xticks(gamma, N_label)
+axs[1].plot(gamma, early, label="Early")
+axs[1].plot(gamma, late, label="Late")
+axs[1].set_xticks(gamma, N_label)
 
-plt.scatter(0.97, 4, color="blue", marker="*")
-plt.text(0.97, 4, "StableDQN", fontsize=13, ha='left', rotation=15, va='bottom')
+axs[1].scatter(0.97, 4, color="blue", marker="*")
+axs[1].text(0.97, 4, "StableDQN", fontsize=13, ha='left', rotation=15, va='bottom')
 
-plt.scatter(0.97, 1.8, color="orange", marker="*")
-plt.text(0.97, 1.8, "StableDQN", fontsize=13, ha='left', rotation=15, va='bottom')
+axs[1].scatter(0.97, 1.8, color="orange", marker="*")
+axs[1].text(0.97, 1.8, "StableDQN", fontsize=13, ha='left', rotation=15, va='bottom')
 
-plt.gca().yaxis.set_major_locator(ticker.MaxNLocator(nbins=7))
+#axs[1].gca().yaxis.set_major_locator(ticker.MaxNLocator(nbins=7))
 
-plt.xlabel("Discount Rate", fontsize=14)
-plt.ylabel("Policy Churn (%)", fontsize=14)
+axs[1].set_xlabel("Discount Rate", fontsize=14)
+axs[1].set_ylabel("Policy Churn (%)", fontsize=14)
 
-plt.tick_params(axis='y', labelsize=14)
-plt.tick_params(axis='x', labelsize=14)
+axs[1].tick_params(axis='y', labelsize=14)
+axs[1].tick_params(axis='x', labelsize=14)
 
-plt.legend(fontsize=14)
+axs[1].legend(fontsize=14)
 
 # Display the plot
 plt.show()
-"""
 
-"""
-# WallTime vs IQM
+
+
+"""# WallTime vs IQM
 
 fig = plt.figure()
 ax = fig.add_subplot(1,1,1)
 
 labels = [" StableDQN", " DER", " DrQ (eps)", "SPR"] #, "SR-SPR", "BBF"
-iqms = [0.325,  0.183, 0.280,  0.337] #,  0.631, 1.045
+iqms = [0.309,  0.183, 0.280,  0.337] #,  0.631, 1.045
 walltimes = [8, 40, 62, 340] #, 430, 420
 markers = ["*", None, None, None] #, None, None
 sizes = [70, 30, 30, 30] #, 30, 30
@@ -227,11 +229,11 @@ plt.gca().xaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
 matplotlib.rcParams.update({'font.size': 20})
 
 for label in (ax.get_xticklabels() + ax.get_yticklabels()):
-    label.set_fontsize(16) # Size here overrides font_prop
+    label.set_fontsize(16)  # Size here overrides font_prop
 
 # Display the plot
-plt.show()
-"""
+plt.show()"""
+
 
 
 """
@@ -248,12 +250,12 @@ print(dqn_err.shape)
 
 # Data for StableDQN with Components Removed (with switched order)
 stabledqn_labels = ["StableDQN", "-Trust Regions", "Gamma=0.99", "-Annealing N"]
-stabledqn_iqm = np.array([0.325, 0.28, 0.277, 0.286])
+stabledqn_iqm = np.array([0.309, 0.28, 0.277, 0.286])
 
 #lower_bounds_sta = [0.308, 0.272, 0.262, 0.275]
 #upper_bounds_sta = [0.339, 0.289, 0.29, 0.298]
 
-stabledqn_err = np.array([stabledqn_iqm - np.array([0.308, 0.272, 0.262, 0.275]), np.array([0.339, 0.289, 0.29, 0.298]) - stabledqn_iqm])
+stabledqn_err = np.array([stabledqn_iqm - np.array([0.295, 0.272, 0.262, 0.275]), np.array([0.322, 0.289, 0.29, 0.298]) - stabledqn_iqm])
 print(stabledqn_err.shape)
 
 #stabledqn_err = np.array(upper_bounds_sta) - np.array(lower_bounds_sta)
@@ -292,25 +294,25 @@ axes[1].tick_params(axis='y', labelsize=12)
 
 # Adjusting layout
 plt.tight_layout()
-plt.show()
-"""
+plt.show()"""
 
+"""
 #batch size vs performance
 
-batch_sizes = [16, 32, 64]
+batch_sizes = [8, 16, 32, 64]
 
-stable = [0.325, 0.292, 0.19]
+stable = [0.292, 0.309, 0.292, 0.19]
 
 # stable32 is called "Optim30k"
 # stableDQN uses churn bug
 
-stable_low = [0.308, 0.273, 0.181]
-stable_up = [0.339, 0.31, 0.203]
+stable_low = [0.274, 0.295, 0.273, 0.181]
+stable_up = [0.312, 0.322, 0.31, 0.203]
 
-dqn = [0.202, 0.214, 0.18]
+dqn = [0.136, 0.202, 0.214, 0.18]
 
-dqn_lower = [0.185, 0.199, 0.165]
-dqn_up = [0.22, 0.231, 0.196]
+dqn_lower = [0.116, 0.185, 0.199, 0.165]
+dqn_up = [0.155, 0.22, 0.231, 0.196]
 
 
 plt.plot(batch_sizes, dqn, label="DQN")
@@ -333,3 +335,4 @@ matplotlib.rcParams.update({'font.size': 24})
 
 # Display the plot
 plt.show()
+"""

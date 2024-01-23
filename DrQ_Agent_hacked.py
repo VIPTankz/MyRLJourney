@@ -380,17 +380,17 @@ class Agent():
         # IMPORTANT params, check these
         self.n = 10
         self.gamma = 0.967
-        self.batch_size = 32
+        self.batch_size = 16
         self.duelling = False
         self.aug = False
-        self.replace_target_cnt = 1
+        self.replace_target_cnt = 25
         self.replay_ratio = 1
         self.per = False
         self.annealing_n = True
         self.annealing_gamma = False
         self.target_ema = False
         self.double = True
-        self.trust_regions = True  # Not implemented for c51
+        self.trust_regions = False  # Not implemented for c51
         self.trust_region_disable = False
 
         self.my_trust_region = False  # not implemented for c51
@@ -459,7 +459,7 @@ class Agent():
             self.n_float = float(self.n)
 
         #data collection
-        self.collecting_churn_data = True
+        self.collecting_churn_data = False
         self.variance_data = False
 
         self.action_gap_data = False
@@ -529,7 +529,7 @@ class Agent():
                 self.tgt_net = QNetwork(self.lr, self.n_actions,
                                                    input_dims=self.input_dims, device=device, noisy=self.noisy, batchnorm=self.batch_norm)
 
-                if self.replace_target_cnt > 1 or self.noisy:
+                if (self.replace_target_cnt > 1 or self.noisy) and self.collecting_churn_data:
                     self.churn_net = QNetwork(self.lr, self.n_actions,
                                             input_dims=self.input_dims, device=device, noisy=self.noisy, batchnorm=self.batch_norm)
 
@@ -724,7 +724,7 @@ class Agent():
 
         self.net.optimizer.zero_grad()
 
-        if (self.replace_target_cnt > 1 or self.target_ema or self.noisy) and  self.collecting_churn_data:
+        if (self.replace_target_cnt > 1 or self.target_ema or self.noisy) and self.collecting_churn_data:
             self.churn_net.load_state_dict(self.net.state_dict())
 
         if self.annealing_n:
@@ -748,18 +748,11 @@ class Agent():
                 self.memory.update_n(self.n)
                 self.memory.discount = self.gamma
 
-        if self.grad_steps % self.replace_target_cnt == 0 and not self.target_ema: # and not self.my_trust_region2
+        if self.grad_steps % self.replace_target_cnt == 0 and not self.target_ema:  # and not self.my_trust_region2
             self.replace_target_network()
 
         if self.target_ema:
             self.tgt_net.update()
-
-        """if self.my_trust_region2:
-            if self.grad_steps % self.target_queue_replace == 0:
-                if len(self.network_queue) == self.network_queue_length:
-                    self.tgt_net.load_state_dict(self.network_queue[0])
-
-                self.network_queue.append(self.net.state_dict())"""
 
         with torch.no_grad():
             if self.noisy:
@@ -790,7 +783,7 @@ class Agent():
             states_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
             states_policy_ = (self.intensity(self.random_shift(states_.float()))).to(T.uint8)
         else:
-            states_policy_ = states_
+            states_policy_ = states_.clone().detach()
 
         if not self.c51:
             if not self.batch_norm:
@@ -1036,7 +1029,6 @@ class Agent():
         if self.variance_data and self.grad_steps == 97000 - self.min_sampling_size:
             variance_data = np.array(self.variances)
             np.save(self.algo_name + "_varianceData" + self.game + str(self.run) + ".npy", variance_data)
-
 
         if self.action_gap_data:
             #print(q_pred_og)

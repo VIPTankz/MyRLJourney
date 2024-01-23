@@ -45,7 +45,7 @@ games = ["bigfish", "bossfight", "caveflyer", "chaser", "climber", "coinrun", "d
          "leaper", "maze", "miner", "ninja", "plunder", "starpilot"]
 
 hns = []
-labels = ["StableDQN_no_TR"]
+labels = ["StableDQN"]
 runs = 5
 expers = [[] for i in range(len(labels))]
 data_files = [[] for i in range(len(labels))]
