@@ -381,16 +381,16 @@ class Agent():
         self.n = 10
         self.gamma = 0.967
         self.batch_size = 16
-        self.duelling = False
+        self.duelling = True
         self.aug = False
-        self.replace_target_cnt = 25
+        self.replace_target_cnt = 1
         self.replay_ratio = 1
-        self.per = False
+        self.per = True
         self.annealing_n = True
         self.annealing_gamma = False
         self.target_ema = False
         self.double = True
-        self.trust_regions = False  # Not implemented for c51
+        self.trust_regions = True
         self.trust_region_disable = False
 
         self.my_trust_region = False  # not implemented for c51
@@ -398,12 +398,12 @@ class Agent():
 
         self.resets = False  # not implemented for c51 or duelling
 
-        self.noisy = False
+        self.noisy = True
         self.batch_norm = False  # only implemented for vanilla q networks
 
-        self.c51 = False
+        self.c51 = True
 
-        self.der_archit = False  # This is only implemented for c51
+        self.der_archit = True  # This is only implemented for c51
 
         if self.resets:
             self.reset_period = 40000
@@ -894,99 +894,33 @@ class Agent():
                         #print("Loss online to target")
                         #print(q_pred - target_network_pred)
 
-                        outside_region = torch.abs(q_pred - target_network_pred) > self.trust_alpha * sigma_j
+                        if not self.c51:
+                            outside_region = torch.abs(q_pred - target_network_pred) > self.trust_alpha * sigma_j
+                            diff_sign = torch.sign(q_pred - target_network_pred) != torch.sign(q_pred - q_target)
 
-                        diff_sign = torch.sign(q_pred - target_network_pred) != torch.sign(q_pred - q_target)
+                        else:
+                            outside_region = torch.abs(q_pred[indices, max_actions] - target_network_pred) > self.trust_alpha * sigma_j
+                            diff_sign = torch.sign(q_pred[indices, max_actions] - target_network_pred) != torch.sign(q_pred[indices, max_actions] - q_target)
 
                         mask = torch.logical_and(outside_region, diff_sign)
                         #if self.grad_steps % 50 == 0:
                         #print(mask)
-
-                        q_pred[mask] = 0
-                        q_target[mask] = 0
-
-                else:
-                    self.running_std = torch.std(losses).detach().cpu()
+                        if not self.c51:
+                            q_pred[mask] = 0
+                            q_target[mask] = 0
 
 
-        if self.my_trust_region:
-            with torch.no_grad():
-
-                #print("OG Q_targets")
-                #print(q_target)
-                target_network_pred = self.tgt_net.forward(states)
-
-                mask_1 = torch.where(q_target > q_pred, 1.0, 0.0)
-                mask_1 = torch.logical_and(mask_1, torch.where(q_pred > target_network_pred, 1.0, 0.0))
-
-                mask_2 = torch.where(target_network_pred > q_pred, 1.0, 0.0)
-                mask_2 = torch.logical_and(mask_2, torch.where(q_pred > q_target, 1.0, 0.0))
-
-                mask = torch.logical_or(mask_1, mask_2)
-                q_target[mask] = q_target[mask] * self.trust_alpha + q_pred[mask] * (1 - self.trust_alpha)
-                #print("New Q-targets")
-                #print(q_target)
-
-        if self.my_trust_region2:
-            with torch.no_grad():
-
-                if not self.c51:
-                    losses = torch.abs(q_target - q_pred)
-                else:
-                    losses = (-state_log_sm_v * proj_distr_v).sum(dim=1)
-                    print(losses)
-
-                if self.running_std != -999:
-                    current_std = torch.std(losses).item()
-                    self.running_std += current_std
-
-                    sigma_j = self.running_std / self.grad_steps
-
-                    sigma_j = max(sigma_j, current_std)
-                    sigma_j = max(sigma_j, 0.01)
-                    #print("OG Q_targets")
-                    #print(q_target)
-
-
-                    #self.running_std += current_std
-                    #sigma_j = self.running_std / self.grad_steps
-                    #self.running_std = current_std * self.std_tau + (1 - self.std_tau) * self.running_std
-
-                    target_network_pred = self.tgt_net.forward(states)[indices, actions]
-
-                    #sigma_j = max(0.01, self.running_std)
-
-
-                    #print("sigma_j")
-                    #print(sigma_j)
-
-                    # print("Loss online to target")
-                    # print(q_pred - target_network_pred)
-
-                    outside_region = torch.abs(q_pred - target_network_pred) > sigma_j
-                    diff_sign = torch.sign(q_pred - target_network_pred) != torch.sign(q_pred - q_target)
-                    mask = torch.logical_and(outside_region, diff_sign)
-                    # if self.grad_steps % 50 == 0:
-                    #print("Mask")
-                    #print(mask)
-
-                    beta = (1 + (torch.abs(q_pred[mask] - target_network_pred[mask]) - sigma_j) / sigma_j) ** -2
-
-                    #print("Betas")
-                    #print(beta)
-
-                    q_target[mask] = q_target[mask] * beta + q_pred[mask] * (1 - beta)
-                    #q_pred[mask] = 0
-                    #q_target[mask] = 0
-                    #print("New Q-targets")
-                    #print(q_target)
 
                 else:
                     self.running_std = torch.std(losses).detach().cpu()
+
 
         # Loss Calculations
         if self.c51:
             loss_v = (-state_log_sm_v * proj_distr_v)
+
+            if self.trust_regions and 'mask' in locals():
+                loss_v[mask] = 0
 
             if self.per:
                 weights = T.squeeze(weights)
@@ -1290,36 +1224,6 @@ class Agent():
 
         for i in range(len(output)):
             self.action_swaps[output[i], tgt_output[i]] += 1
-
-        """
-        if np.random.random() > 0.99 and len(self.churn_data) > 100:
-            percent_actions = self.churn_actions / np.sum(self.churn_actions)
-
-            print("\n\n")
-            print("Avg churn: " + str(self.total_churn / self.count_since_reset))
-            print("90th per: " + str(np.percentile(self.churn_data, 90)))
-            print("99th per: " + str(np.percentile(self.churn_data, 99)))
-            print("99.9th per: " + str(np.percentile(self.churn_data, 99.9)))
-
-            x = torch.FloatTensor(self.churn_data)
-            x = torch.topk(x, 50).values
-            temp = []
-            for i in x:
-                temp.append(i.item())
-            print("Top Churns: " + str(temp))
-
-            print("Percentages of churn by action: " + str(percent_actions))
-            print("Portions of actions taken: " + str(self.total_actions / np.sum(self.total_actions)))
-
-            print("std churn: " + str(np.std(percent_actions)))
-            print("std actions taken: " + str(np.std(self.total_actions / np.sum(self.total_actions))))
-
-            #print(self.churn_data)
-            print("Percent 0 Churn: " + str(self.churn_data.count(0.) / len(self.churn_data)))
-
-            print("Action Swap Matrix: \n" + str(self.action_swaps))
-        """
-
 
 def running_average_with_window(input_list, window_size):
     if window_size <= 0:
